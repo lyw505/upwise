@@ -1,0 +1,391 @@
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/learning_path_model.dart';
+import '../services/gemini_service.dart';
+import '../core/config/env_config.dart';
+
+class LearningPathProvider extends ChangeNotifier {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final GeminiService _geminiService = GeminiService();
+  
+  List<LearningPathModel> _learningPaths = [];
+  LearningPathModel? _currentLearningPath;
+  bool _isLoading = false;
+  bool _isGenerating = false;
+  String? _errorMessage;
+
+  // Getters
+  List<LearningPathModel> get learningPaths => _learningPaths;
+  LearningPathModel? get currentLearningPath => _currentLearningPath;
+  bool get isLoading => _isLoading;
+  bool get isGenerating => _isGenerating;
+  String? get errorMessage => _errorMessage;
+
+  // Analytics
+  int get totalLearningPaths => _learningPaths.length;
+  int get completedLearningPaths => _learningPaths.where((path) => path.isCompleted).length;
+  int get activeLearningPaths => _learningPaths.where((path) => path.isActive).length;
+  double get averageProgress => _learningPaths.isEmpty 
+      ? 0.0 
+      : _learningPaths.map((path) => path.progressPercentage).reduce((a, b) => a + b) / _learningPaths.length;
+
+  Future<void> loadLearningPaths(String userId) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      final response = await _supabase
+          .from('learning_paths')
+          .select('''
+            *,
+            daily_tasks(*),
+            project_recommendations(*)
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      _learningPaths = (response as List)
+          .map((json) => LearningPathModel.fromJson(json))
+          .toList();
+
+    } catch (e) {
+      _setError('Failed to load learning paths: ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<LearningPathModel?> generateLearningPath({
+    required String userId,
+    required String topic,
+    required int durationDays,
+    required int dailyTimeMinutes,
+    required ExperienceLevel experienceLevel,
+    required LearningStyle learningStyle,
+    required String outputGoal,
+    bool includeProjects = false,
+    bool includeExercises = false,
+    String? notes,
+  }) async {
+    try {
+      _setGenerating(true);
+      _clearError();
+
+      // Generate learning path using Gemini AI
+      final generatedPath = await _geminiService.generateLearningPath(
+        topic: topic,
+        durationDays: durationDays,
+        dailyTimeMinutes: dailyTimeMinutes,
+        experienceLevel: experienceLevel,
+        learningStyle: learningStyle,
+        outputGoal: outputGoal,
+        includeProjects: includeProjects,
+        includeExercises: includeExercises,
+        notes: notes,
+      );
+
+      if (generatedPath == null) {
+        _setError('Failed to generate learning path');
+        return null;
+      }
+
+      // Save to database
+      final learningPathData = {
+        'user_id': userId,
+        'topic': topic,
+        'description': generatedPath['description'] ?? '',
+        'duration_days': durationDays,
+        'daily_time_minutes': dailyTimeMinutes,
+        'experience_level': experienceLevel.name,
+        'learning_style': learningStyle.name,
+        'output_goal': outputGoal,
+        'include_projects': includeProjects,
+        'include_exercises': includeExercises,
+        'notes': notes,
+        'status': LearningPathStatus.notStarted.name,
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
+      final pathResponse = await _supabase
+          .from('learning_paths')
+          .insert(learningPathData)
+          .select()
+          .single();
+
+      final learningPathId = pathResponse['id'] as String;
+
+      // Save daily tasks
+      final dailyTasksRaw = generatedPath['daily_tasks'] as List<dynamic>?;
+      if (dailyTasksRaw == null || dailyTasksRaw.isEmpty) {
+        throw Exception('No daily tasks found in generated path');
+      }
+
+      final dailyTasks = dailyTasksRaw.map((task) => task as Map<String, dynamic>).toList();
+
+      if (EnvConfig.isDebugMode) {
+        print('Inserting ${dailyTasks.length} daily tasks for learning path: $learningPathId');
+      }
+
+      int successfulInsertions = 0;
+      final List<String> insertionErrors = [];
+
+      for (int i = 0; i < dailyTasks.length; i++) {
+        final task = dailyTasks[i];
+
+        try {
+          final taskData = {
+            'learning_path_id': learningPathId,
+            'day_number': i + 1,
+            'main_topic': task['main_topic'] ?? 'No topic',
+            'sub_topic': task['sub_topic'] ?? 'No subtopic',
+            'material_url': task['material_url'],
+            'material_title': task['material_title'],
+            'exercise': task['exercise'],
+            'status': TaskStatus.notStarted.name,
+          };
+
+          if (EnvConfig.isDebugMode) {
+            print('Inserting task ${i + 1}: ${task['main_topic']}');
+          }
+
+          await _supabase.from('daily_tasks').insert(taskData);
+          successfulInsertions++;
+
+          if (EnvConfig.isDebugMode) {
+            print('✅ Task ${i + 1} inserted successfully');
+          }
+
+        } catch (taskError) {
+          final errorMsg = 'Failed to insert task ${i + 1} (${task['main_topic']}): $taskError';
+          insertionErrors.add(errorMsg);
+
+          if (EnvConfig.isDebugMode) {
+            print('❌ $errorMsg');
+          }
+        }
+      }
+
+      if (EnvConfig.isDebugMode) {
+        print('Task insertion summary: $successfulInsertions/${dailyTasks.length} successful');
+        if (insertionErrors.isNotEmpty) {
+          print('Insertion errors:');
+          for (final error in insertionErrors) {
+            print('  - $error');
+          }
+        }
+      }
+
+      // If less than half the tasks were inserted, consider it a failure
+      if (successfulInsertions < (dailyTasks.length / 2).ceil()) {
+        throw Exception('Failed to insert sufficient daily tasks: only $successfulInsertions out of ${dailyTasks.length} tasks were inserted successfully');
+      }
+
+      // Save project recommendations if included
+      if (includeProjects && generatedPath['project_recommendations'] != null) {
+        final projectsRaw = generatedPath['project_recommendations'] as List<dynamic>?;
+        if (projectsRaw != null && projectsRaw.isNotEmpty) {
+          final projects = projectsRaw.map((project) => project as Map<String, dynamic>).toList();
+          for (final project in projects) {
+          await _supabase.from('project_recommendations').insert({
+            'learning_path_id': learningPathId,
+            'title': project['title'],
+            'description': project['description'],
+            'url': project['url'],
+            'difficulty': project['difficulty'],
+            'estimated_hours': project['estimated_hours'],
+          });
+          }
+        }
+      }
+
+      // Reload learning paths to get the complete data
+      await loadLearningPaths(userId);
+
+      // Find and return the newly created learning path
+      final newPath = _learningPaths.firstWhere((path) => path.id == learningPathId);
+      _currentLearningPath = newPath;
+
+      return newPath;
+    } catch (e) {
+      _setError('Failed to generate learning path: ${e.toString()}');
+      return null;
+    } finally {
+      _setGenerating(false);
+    }
+  }
+
+  Future<bool> startLearningPath(String learningPathId) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      await _supabase
+          .from('learning_paths')
+          .update({
+            'status': LearningPathStatus.inProgress.name,
+            'started_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', learningPathId);
+
+      // Update local state
+      final pathIndex = _learningPaths.indexWhere((path) => path.id == learningPathId);
+      if (pathIndex != -1) {
+        _learningPaths[pathIndex] = _learningPaths[pathIndex].copyWith(
+          status: LearningPathStatus.inProgress,
+          startedAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        if (_currentLearningPath?.id == learningPathId) {
+          _currentLearningPath = _learningPaths[pathIndex];
+        }
+      }
+
+      return true;
+    } catch (e) {
+      _setError('Failed to start learning path: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> updateTaskStatus({
+    required String taskId,
+    required TaskStatus status,
+    int? timeSpentMinutes,
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      final updates = <String, dynamic>{
+        'status': status.name,
+      };
+
+      if (status == TaskStatus.completed) {
+        updates['completed_at'] = DateTime.now().toIso8601String();
+      }
+
+      if (timeSpentMinutes != null) {
+        updates['time_spent_minutes'] = timeSpentMinutes;
+      }
+
+      await _supabase
+          .from('daily_tasks')
+          .update(updates)
+          .eq('id', taskId);
+
+      // Update local state
+      for (int i = 0; i < _learningPaths.length; i++) {
+        final path = _learningPaths[i];
+        final taskIndex = path.dailyTasks.indexWhere((task) => task.id == taskId);
+        
+        if (taskIndex != -1) {
+          final updatedTasks = List<DailyLearningTask>.from(path.dailyTasks);
+          updatedTasks[taskIndex] = updatedTasks[taskIndex].copyWith(
+            status: status,
+            completedAt: status == TaskStatus.completed ? DateTime.now() : null,
+            timeSpentMinutes: timeSpentMinutes ?? updatedTasks[taskIndex].timeSpentMinutes,
+          );
+          
+          _learningPaths[i] = path.copyWith(dailyTasks: updatedTasks);
+          
+          if (_currentLearningPath?.id == path.id) {
+            _currentLearningPath = _learningPaths[i];
+          }
+          break;
+        }
+      }
+
+      return true;
+    } catch (e) {
+      _setError('Failed to update task status: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> completeLearningPath(String learningPathId) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      await _supabase
+          .from('learning_paths')
+          .update({
+            'status': LearningPathStatus.completed.name,
+            'completed_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', learningPathId);
+
+      // Update local state
+      final pathIndex = _learningPaths.indexWhere((path) => path.id == learningPathId);
+      if (pathIndex != -1) {
+        _learningPaths[pathIndex] = _learningPaths[pathIndex].copyWith(
+          status: LearningPathStatus.completed,
+          completedAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        if (_currentLearningPath?.id == learningPathId) {
+          _currentLearningPath = _learningPaths[pathIndex];
+        }
+      }
+
+      return true;
+    } catch (e) {
+      _setError('Failed to complete learning path: ${e.toString()}');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void setCurrentLearningPath(LearningPathModel? path) {
+    _currentLearningPath = path;
+    notifyListeners();
+  }
+
+  DailyLearningTask? getTodayTask(String learningPathId) {
+    final path = _learningPaths.firstWhere(
+      (path) => path.id == learningPathId,
+      orElse: () => throw Exception('Learning path not found'),
+    );
+    
+    return path.todayTask;
+  }
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setGenerating(bool generating) {
+    _isGenerating = generating;
+    notifyListeners();
+  }
+
+  void _setError(String error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  void _clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _clearError();
+  }
+
+  void clearLearningPaths() {
+    _learningPaths.clear();
+    _currentLearningPath = null;
+    notifyListeners();
+  }
+}
