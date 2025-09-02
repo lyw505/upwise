@@ -89,7 +89,7 @@ class _IntegrationTestScreenState extends State<IntegrationTestScreen> {
 
       // Test 2: All Tables Accessible
       await _addResult('🔄 Testing all tables accessibility...');
-      final tables = ['profiles', 'learning_paths', 'daily_tasks', 'project_recommendations'];
+      final tables = ['profiles', 'learning_paths', 'daily_learning_tasks', 'project_recommendations'];
       
       for (final table in tables) {
         final response = await supabase

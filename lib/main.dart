@@ -29,13 +29,13 @@ void main() async {
   }
 
   // Initialize Supabase
+  if (EnvConfig.supabaseUrl.isEmpty || EnvConfig.supabaseAnonKey.isEmpty) {
+    throw Exception('Supabase configuration is missing. Please check your .env file.');
+  }
+
   await Supabase.initialize(
-    url: EnvConfig.supabaseUrl.isNotEmpty
-        ? EnvConfig.supabaseUrl
-        : 'https://wecizrgxuibhxledozpq.supabase.co',
-    anonKey: EnvConfig.supabaseAnonKey.isNotEmpty
-        ? EnvConfig.supabaseAnonKey
-        : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2l6cmd4dWliaHhsZWRvenBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NzExMjYsImV4cCI6MjA3MDU0NzEyNn0.6uIMc70gVSPsY_h9NZR284J3n3PQByYvfl0vzmp0bXc',
+    url: EnvConfig.supabaseUrl,
+    anonKey: EnvConfig.supabaseAnonKey,
   );
 
   runApp(const UpwiseApp());

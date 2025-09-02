@@ -1,13 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:upwise/core/config/env_config.dart';
 
 void main() {
   group('Supabase Integration Tests', () {
     setUpAll(() async {
-      // Initialize Supabase with real credentials
+      // Load environment variables
+      await dotenv.load(fileName: ".env");
+      
+      // Initialize Supabase with environment credentials
+      if (EnvConfig.supabaseUrl.isEmpty || EnvConfig.supabaseAnonKey.isEmpty) {
+        throw Exception('Supabase configuration missing in .env file');
+      }
+      
       await Supabase.initialize(
-        url: 'https://wecizrgxuibhxledozpq.supabase.co',
-        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2l6cmd4dWliaHhsZWRvenBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NzExMjYsImV4cCI6MjA3MDU0NzEyNn0.6uIMc70gVSPsY_h9NZR284J3n3PQByYvfl0vzmp0bXc',
+        url: EnvConfig.supabaseUrl,
+        anonKey: EnvConfig.supabaseAnonKey,
       );
     });
 
@@ -28,7 +37,7 @@ void main() {
       final supabase = Supabase.instance.client;
 
       // Test all main tables
-      final tables = ['profiles', 'learning_paths', 'daily_tasks', 'project_recommendations'];
+      final tables = ['profiles', 'learning_paths', 'daily_learning_tasks', 'project_recommendations'];
 
       for (final table in tables) {
         final response = await supabase

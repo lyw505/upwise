@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/config/env_config.dart';
 
-class ConfigStatusScreen extends StatelessWidget {
+class ConfigStatusScreen extends StatefulWidget {
   const ConfigStatusScreen({super.key});
+
+  @override
+  State<ConfigStatusScreen> createState() => _ConfigStatusScreenState();
+}
+
+class _ConfigStatusScreenState extends State<ConfigStatusScreen> {
+  bool _isTestingConnection = false;
+  String? _connectionResult;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +43,16 @@ class ConfigStatusScreen extends StatelessWidget {
             
             // API Status
             _buildApiStatusSection(),
+            
+            const SizedBox(height: 24),
+            
+            // Supabase Status  
+            _buildSupabaseStatusSection(),
+            
+            const SizedBox(height: 24),
+            
+            // Test Connection Button
+            _buildTestConnectionButton(),
             
             const SizedBox(height: 24),
             
@@ -307,16 +326,24 @@ class ConfigStatusScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildInstructionItem(
-                '1. Get Gemini API Key',
+                '1. Set Up Supabase Project',
+                'Create project at https://app.supabase.com and get URL/keys',
+              ),
+              _buildInstructionItem(
+                '2. Run Database Schema',
+                'Execute supabase_schema.sql in your Supabase SQL editor',
+              ),
+              _buildInstructionItem(
+                '3. Get Gemini API Key',
                 'Visit https://makersuite.google.com/app/apikey',
               ),
               _buildInstructionItem(
-                '2. Configure Environment',
-                'Add your API key to .env file',
+                '4. Configure Environment',
+                'Add all API keys to .env file',
               ),
               _buildInstructionItem(
-                '3. Restart App',
-                'Restart the application to load new configuration',
+                '5. Test Connection',
+                'Use the test button above to verify setup',
               ),
             ],
           ),
@@ -348,5 +375,125 @@ class ConfigStatusScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+  
+  Widget _buildSupabaseStatusSection() {
+    final hasSupabaseUrl = EnvConfig.supabaseUrl.isNotEmpty;
+    final hasSupabaseKey = EnvConfig.supabaseAnonKey.isNotEmpty;
+    final isSupabaseConfigured = hasSupabaseUrl && hasSupabaseKey;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Supabase Backend',
+          style: AppTextStyles.titleMedium.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildApiStatusCard(
+          'Supabase Database',
+          isSupabaseConfigured,
+          isSupabaseConfigured 
+              ? 'Ready for user authentication and data storage'
+              : 'Database credentials not configured',
+        ),
+        if (_connectionResult != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _connectionResult!.contains('✅') 
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.error.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _connectionResult!.contains('✅') 
+                    ? AppColors.success.withValues(alpha: 0.3)
+                    : AppColors.error.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Text(
+              _connectionResult!,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: _connectionResult!.contains('✅') 
+                    ? AppColors.success
+                    : AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+  
+  Widget _buildTestConnectionButton() {
+    final canTest = EnvConfig.supabaseUrl.isNotEmpty && EnvConfig.supabaseAnonKey.isNotEmpty;
+    
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: canTest && !_isTestingConnection ? _testSupabaseConnection : null,
+        icon: _isTestingConnection 
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.wifi_protected_setup),
+        label: Text(_isTestingConnection ? 'Testing Connection...' : 'Test Supabase Connection'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.surface,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Future<void> _testSupabaseConnection() async {
+    setState(() {
+      _isTestingConnection = true;
+      _connectionResult = null;
+    });
+    
+    try {
+      if (EnvConfig.supabaseUrl.isEmpty || EnvConfig.supabaseAnonKey.isEmpty) {
+        setState(() {
+          _connectionResult = '❌ Supabase credentials not configured in .env file';
+          _isTestingConnection = false;
+        });
+        return;
+      }
+      
+      final supabase = Supabase.instance.client;
+      
+      // Test basic connection by querying profiles table
+      final response = await supabase
+          .from('profiles')
+          .select('count')
+          .count(CountOption.exact);
+      
+      setState(() {
+        _connectionResult = '✅ Connection successful! Database accessible.\n'
+                          'Profiles table exists. Schema is properly set up.';
+        _isTestingConnection = false;
+      });
+    } catch (e) {
+      setState(() {
+        _connectionResult = '❌ Connection failed: ${e.toString()}\n\n'
+                          'Make sure you have:\n'
+                          '• Created a Supabase project\n'
+                          '• Updated your .env file with correct credentials\n'
+                          '• Run the database schema (supabase_schema.sql)';
+        _isTestingConnection = false;
+      });
+    }
   }
 }

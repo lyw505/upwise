@@ -29,46 +29,49 @@ Upwise is a Flutter mobile application that helps users generate detailed and pe
 - A Supabase account
 - A Google Gemini API key (optional, for AI features)
 
+### Quick Setup
+
+⚠️ **Important**: This app requires a Supabase backend. Follow these steps:
+
+1. **Set up Supabase Project**
+   - Create project at [Supabase Dashboard](https://app.supabase.com)
+   - Name it `upwise-first` or your preferred name
+   - Run the SQL schema from `supabase_schema.sql`
+   - Get your Project URL and anon key
+
+2. **Configure Environment**
+   - Update `.env` file with your Supabase credentials:
+   ```env
+   SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_ANON_KEY=your-anon-key-here
+   GEMINI_API_KEY=your-gemini-key-here
+   ```
+
 ### Installation
 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd upwise
-   ```
-
-2. **Install dependencies**
-   ```bash
    flutter pub get
    ```
 
-3. **Set up Supabase**
-   - Follow the detailed guide in `docs/supabase_setup.md`
-   - Create a new Supabase project
-   - Set up the database schema
-   - Get your API keys
+2. **Complete Backend Setup**
+   Follow the detailed guide in `SUPABASE_SETUP.md` for:
+   - Creating Supabase project
+   - Setting up database schema
+   - Configuring environment variables
+   - Testing the connection
 
-4. **Configure the app**
-   - Open `lib/main.dart`
-   - Replace the Supabase URL and anon key with your actual values:
-   ```dart
-   await Supabase.initialize(
-     url: 'YOUR_SUPABASE_URL',
-     anonKey: 'YOUR_SUPABASE_ANON_KEY',
-   );
-   ```
-
-5. **Configure Gemini AI (Optional)**
-   - Open `lib/services/gemini_service.dart`
-   - Replace the API key with your actual Gemini API key:
-   ```dart
-   static const String _apiKey = 'YOUR_GEMINI_API_KEY';
-   ```
-
-6. **Run the app**
+3. **Run the app**
    ```bash
    flutter run
    ```
+
+4. **Verify Setup**
+   - Open app → Dashboard → Menu → "Config Status"
+   - Test Supabase connection
+   - Ensure all configurations show ✅
 
 ## Project Structure
 
@@ -93,10 +96,13 @@ lib/
 - [x] Custom theme with blue primary color and Poppins font
 - [x] Data models for User, LearningPath, DailyTask, etc.
 - [x] State management with Provider
-- [x] Supabase integration setup
+- [x] Supabase integration and database schema
+- [x] Complete authentication system
 - [x] Authentication screens (Welcome, Login, Register)
 - [x] Basic Dashboard screen
 - [x] Gemini AI service setup
+- [x] Environment configuration and validation
+- [x] Connection testing and debugging tools
 
 ### 🚧 In Progress
 - [ ] Supabase database schema setup
@@ -113,9 +119,11 @@ lib/
 
 ## Documentation
 
-- [Supabase Setup Guide](docs/supabase_setup.md) - Detailed guide for setting up the backend
+- [**Supabase Setup Guide**](SUPABASE_SETUP.md) - Complete backend setup instructions
+- [**API Setup Guide**](README_API_SETUP.md) - Gemini AI configuration
 - [User Flow](docs/userflow.md) - Complete user flow documentation
 - [Product Requirements](docs/prd.md) - Detailed product requirements document
+- [Database Schema](supabase_schema.sql) - Complete SQL schema for Supabase
 
 ## Testing
 

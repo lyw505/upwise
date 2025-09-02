@@ -154,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () => context.goToCreatePath(),
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
-          'Create Path',
+          'Create',
           style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
         ),
         backgroundColor: AppColors.primary,

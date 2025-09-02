@@ -38,7 +38,7 @@ class LearningPathProvider extends ChangeNotifier {
           .from('learning_paths')
           .select('''
             *,
-            daily_tasks(*),
+            daily_learning_tasks(*),
             project_recommendations(*)
           ''')
           .eq('user_id', userId)
@@ -148,7 +148,7 @@ class LearningPathProvider extends ChangeNotifier {
             print('Inserting task ${i + 1}: ${task['main_topic']}');
           }
 
-          await _supabase.from('daily_tasks').insert(taskData);
+          await _supabase.from('daily_learning_tasks').insert(taskData);
           successfulInsertions++;
 
           if (EnvConfig.isDebugMode) {
@@ -273,7 +273,7 @@ class LearningPathProvider extends ChangeNotifier {
       }
 
       await _supabase
-          .from('daily_tasks')
+          .from('daily_learning_tasks')
           .update(updates)
           .eq('id', taskId);
 

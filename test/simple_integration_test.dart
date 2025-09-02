@@ -1,11 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:upwise/core/config/env_config.dart';
 import 'dart:convert';
 
 void main() {
   group('Supabase API Integration Tests', () {
-    const supabaseUrl = 'https://wecizrgxuibhxledozpq.supabase.co';
-    const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2l6cmd4dWliaHhsZWRvenBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NzExMjYsImV4cCI6MjA3MDU0NzEyNn0.6uIMc70gVSPsY_h9NZR284J3n3PQByYvfl0vzmp0bXc';
+    late String supabaseUrl;
+    late String anonKey;
+
+    setUpAll(() async {
+      // Load environment variables
+      await dotenv.load(fileName: ".env");
+      
+      supabaseUrl = EnvConfig.supabaseUrl;
+      anonKey = EnvConfig.supabaseAnonKey;
+      
+      if (supabaseUrl.isEmpty || anonKey.isEmpty) {
+        throw Exception('Supabase configuration missing in .env file');
+      }
+    });
 
     test('Supabase API is accessible', () async {
       final response = await http.get(
@@ -24,7 +38,7 @@ void main() {
     });
 
     test('All tables are accessible via REST API', () async {
-      final tables = ['profiles', 'learning_paths', 'daily_tasks', 'project_recommendations'];
+      final tables = ['profiles', 'learning_paths', 'daily_learning_tasks', 'project_recommendations'];
       
       for (final table in tables) {
         final response = await http.get(

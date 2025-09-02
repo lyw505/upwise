@@ -95,7 +95,7 @@ class LearningPathModel {
       completedAt: json['completed_at'] != null 
           ? DateTime.parse(json['completed_at'] as String) 
           : null,
-      dailyTasks: (json['daily_tasks'] as List<dynamic>?)
+      dailyTasks: (json['daily_learning_tasks'] as List<dynamic>?)
           ?.map((task) => DailyLearningTask.fromJson(task as Map<String, dynamic>))
           .toList() ?? [],
       projectRecommendations: (json['project_recommendations'] as List<dynamic>?)
