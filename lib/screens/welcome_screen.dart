@@ -34,211 +34,250 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Widget _buildWelcomeScreen(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height -
-                         MediaQuery.of(context).padding.top -
-                         MediaQuery.of(context).padding.bottom - 48,
-            ),
-            child: Column(
-              children: [
-                const SizedBox(height: 40),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
 
-                // Logo and App Name
-                Column(
+              // Welcome Title
+              Text(
+                'Welcome!',
+                style: AppTextStyles.displayMedium.copyWith(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Description
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.grey[600],
+                    height: 1.5,
+                  ),
                   children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
+                    const TextSpan(text: "We're here to help you learn new skills.\nThe choice is yours: "),
+                    TextSpan(
+                      text: "Log in",
+                      style: TextStyle(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        size: 50,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Upwise',
-                      style: AppTextStyles.displayMedium.copyWith(
+                    const TextSpan(text: " or "),
+                    TextSpan(
+                      text: "Create account",
+                      style: TextStyle(
                         color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Personalized AI-Powered Learning Path Generator',
+                    const TextSpan(text: "."),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 60),
+
+              // Welcome Illustration
+              Expanded(
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/welcome.png',
+                    width: 300,
+                    height: 300,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback illustration
+                      return Container(
+                        width: 300,
+                        height: 300,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_outline,
+                              size: 80,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(height: 16),
+                            Icon(
+                              Icons.laptop_mac,
+                              size: 60,
+                              color: Colors.grey[400],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Log in Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (mounted) {
+                      context.goToLogin();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0EA5E9), // Blue color
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Log in',
+                    style: AppTextStyles.buttonLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Create Account Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (mounted) {
+                      context.goToRegister();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'Create Account',
+                    style: AppTextStyles.buttonLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Sign in with divider
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.grey[300],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Sign in with',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: Colors.grey[600],
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
-                // Description
-                Column(
-                  children: [
-                    Text(
-                      'Transform Your Learning Journey',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Generate detailed and personalized learning paths using AI, track your progress daily, and stay motivated with gamification features.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 32),
-
-                // Features
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
                   ),
-                  child: Column(
-                    children: [
-                      _buildFeatureItem(
-                        icon: Icons.auto_awesome,
-                        title: 'AI-Generated Paths',
-                        description: 'Personalized learning plans tailored to your goals',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem(
-                        icon: Icons.local_fire_department,
-                        title: 'Streak System',
-                        description: 'Stay motivated with daily streaks and achievements',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFeatureItem(
-                        icon: Icons.analytics,
-                        title: 'Progress Tracking',
-                        description: 'Monitor your learning journey with detailed analytics',
-                      ),
-                    ],
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.grey[300],
+                    ),
                   ),
-                ),
+                ],
+              ),
 
-                const SizedBox(height: 40),
+              const SizedBox(height: 24),
 
-                // Action Buttons
-                Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (mounted) {
-                            context.goToRegister();
-                          }
-                        },
-                        child: Text(
-                          'Get Started',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () {
-                          if (mounted) {
-                            context.goToLogin();
-                          }
-                        },
-                        child: Text(
-                          'I Already Have an Account',
-                          style: AppTextStyles.buttonLarge.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              // Social Login Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildSocialButton(
+                    icon: Icons.g_mobiledata,
+                    onPressed: () {
+                      // TODO: Implement Google Sign In
+                    },
+                  ),
+                  const SizedBox(width: 20),
+                  _buildSocialButton(
+                    icon: Icons.facebook,
+                    onPressed: () {
+                      // TODO: Implement Facebook Sign In
+                    },
+                  ),
+                  const SizedBox(width: 20),
+                  _buildSocialButton(
+                    icon: Icons.close, // X for Twitter/X
+                    onPressed: () {
+                      // TODO: Implement X Sign In
+                    },
+                  ),
+                ],
+              ),
 
-                const SizedBox(height: 20),
-              ],
-            ),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFeatureItem({
+  Widget _buildSocialButton({
     required IconData icon,
-    required String title,
-    required String description,
+    required VoidCallback onPressed,
   }) {
-    return Row(
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.grey[300]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 24,
-          ),
+        ],
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          color: Colors.grey[700],
+          size: 24,
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

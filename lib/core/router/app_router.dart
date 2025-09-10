@@ -12,6 +12,8 @@ import '../../screens/daily_tracker_screen.dart';
 import '../../screens/analytics_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/config_status_screen.dart';
+import '../../screens/splash_screen.dart';
+import '../../screens/onboarding_screen.dart';
 import '../../test_integration.dart';
 
 class AppRouter {
@@ -20,7 +22,7 @@ class AppRouter {
   static GoRouter createRouter() {
     return GoRouter(
       navigatorKey: _rootNavigatorKey,
-      initialLocation: '/welcome',
+      initialLocation: '/splash',
       debugLogDiagnostics: true,
       
       // Redirect logic for authentication
@@ -35,8 +37,15 @@ class AppRouter {
         }
         
         final currentPath = state.uri.toString();
+        final isOnSplashPage = currentPath == '/splash';
+        final isOnOnboardingPage = currentPath == '/onboarding';
         final isOnAuthPages = ['/welcome', '/login', '/register'].contains(currentPath);
         final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings'].contains(currentPath);
+        
+        // Allow splash and onboarding screens to load
+        if (isOnSplashPage || isOnOnboardingPage) {
+          return null;
+        }
         
         // If not authenticated and trying to access protected pages
         if (!isAuthenticated && isOnProtectedPages) {
@@ -53,6 +62,20 @@ class AppRouter {
       },
       
       routes: [
+        // Splash Screen
+        GoRoute(
+          path: '/splash',
+          name: 'splash',
+          builder: (context, state) => const SplashScreen(),
+        ),
+        
+        // Onboarding Screen
+        GoRoute(
+          path: '/onboarding',
+          name: 'onboarding',
+          builder: (context, state) => const OnboardingScreen(),
+        ),
+        
         // Welcome/Auth Routes
         GoRoute(
           path: '/welcome',
@@ -164,6 +187,8 @@ class AppRouter {
 // Extension for easier navigation
 extension AppRouterExtension on BuildContext {
   // Navigation helpers
+  void goToSplash() => go('/splash');
+  void goToOnboarding() => go('/onboarding');
   void goToWelcome() => go('/welcome');
   void goToLogin() => go('/login');
   void goToRegister() => go('/register');
@@ -187,6 +212,8 @@ extension AppRouterExtension on BuildContext {
 
 // Route names constants for type safety
 class AppRoutes {
+  static const String splash = '/splash';
+  static const String onboarding = '/onboarding';
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String register = '/register';
