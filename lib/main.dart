@@ -16,10 +16,9 @@ void main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // If .env file doesn't exist, continue with default values
-    if (EnvConfig.isDevelopment) {
-      print('Warning: .env file not found, using default configuration');
-    }
+    // If .env file doesn't exist or can't be loaded (especially on web), continue with default values
+    print('Warning: .env file not found or could not be loaded, using default configuration');
+    print('Error: $e');
   }
 
   // Validate environment configuration

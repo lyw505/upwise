@@ -5,25 +5,34 @@ class EnvConfig {
   // Private constructor to prevent instantiation
   EnvConfig._();
 
+  // Helper method to safely get environment variables
+  static String _getEnvVar(String key, String defaultValue) {
+    try {
+      return dotenv.env[key] ?? defaultValue;
+    } catch (e) {
+      return defaultValue;
+    }
+  }
+
   /// Google Gemini API Configuration
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+  static String get geminiApiKey => _getEnvVar('GEMINI_API_KEY', 'AIzaSyAB7DAlcP6M9LH7lJWquEPIXHOnQ_ibxME');
   
   /// Supabase Configuration
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+  static String get supabaseUrl => _getEnvVar('SUPABASE_URL', 'https://emelocetqqlirzuqyygd.supabase.co');
+  static String get supabaseAnonKey => _getEnvVar('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtZWxvY2V0cXFsaXJ6dXF5eWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDA4MzMsImV4cCI6MjA3MjI3NjgzM30.nHjxz6t3YYiHfzF9NfC6vYHuOfvKMEf-hC-PkF287Hc');
   
   /// App Configuration
-  static String get appEnv => dotenv.env['APP_ENV'] ?? 'development';
-  static bool get isDebugMode => dotenv.env['DEBUG_MODE']?.toLowerCase() == 'true';
+  static String get appEnv => _getEnvVar('APP_ENV', 'development');
+  static bool get isDebugMode => _getEnvVar('DEBUG_MODE', 'false').toLowerCase() == 'true';
   
   /// API Configuration
-  static int get apiTimeout => int.tryParse(dotenv.env['API_TIMEOUT'] ?? '30000') ?? 30000;
-  static int get maxRetries => int.tryParse(dotenv.env['MAX_RETRIES'] ?? '3') ?? 3;
+  static int get apiTimeout => int.tryParse(_getEnvVar('API_TIMEOUT', '30000')) ?? 30000;
+  static int get maxRetries => int.tryParse(_getEnvVar('MAX_RETRIES', '3')) ?? 3;
   
   /// Feature Flags
-  static bool get enableAnalytics => dotenv.env['ENABLE_ANALYTICS']?.toLowerCase() != 'false';
-  static bool get enableNotifications => dotenv.env['ENABLE_NOTIFICATIONS']?.toLowerCase() != 'false';
-  static bool get enableOfflineMode => dotenv.env['ENABLE_OFFLINE_MODE']?.toLowerCase() == 'true';
+  static bool get enableAnalytics => _getEnvVar('ENABLE_ANALYTICS', 'true').toLowerCase() != 'false';
+  static bool get enableNotifications => _getEnvVar('ENABLE_NOTIFICATIONS', 'true').toLowerCase() != 'false';
+  static bool get enableOfflineMode => _getEnvVar('ENABLE_OFFLINE_MODE', 'false').toLowerCase() == 'true';
   
   /// Check if environment is properly configured
   static bool get isConfigured => geminiApiKey.isNotEmpty && geminiApiKey != 'your_gemini_api_key_here';
