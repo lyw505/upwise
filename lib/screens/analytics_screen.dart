@@ -126,33 +126,64 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
+    return Column(
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            children: [
+              Text(
+                'Analytics',
+                style: AppTextStyles.headlineLarge.copyWith(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Progress'),
-            Tab(text: 'Insights'),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOverviewTab(),
-                _buildProgressTab(),
-                _buildInsightsTab(),
-              ],
+        
+        // Tab Bar
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24.0),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              color: const Color(0xFF0EA5E9),
+              borderRadius: BorderRadius.circular(12),
             ),
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey[600],
+            dividerColor: Colors.transparent,
+            tabs: const [
+              Tab(text: 'Overview'),
+              Tab(text: 'Progress'),
+              Tab(text: 'Insights'),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        // Tab Content
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOverviewTab(),
+                    _buildProgressTab(),
+                    _buildInsightsTab(),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 

@@ -175,7 +175,10 @@ class LearningPathModel {
   // Helper methods
   int get completedTasksCount => dailyTasks.where((task) => task.status == TaskStatus.completed).length;
   
-  double get progressPercentage => dailyTasks.isEmpty ? 0.0 : (completedTasksCount / dailyTasks.length) * 100;
+  int get completedOrSkippedTasksCount => dailyTasks.where((task) => 
+    task.status == TaskStatus.completed || task.status == TaskStatus.skipped).length;
+  
+  double get progressPercentage => dailyTasks.isEmpty ? 0.0 : (completedOrSkippedTasksCount / dailyTasks.length) * 100;
   
   bool get isCompleted => status == LearningPathStatus.completed;
   

@@ -46,171 +46,182 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'analytics':
-                  context.goToAnalytics();
-                  break;
-                case 'settings':
-                  context.goToSettings();
-                  break;
-                case 'config-status':
-                  context.goToConfigStatus();
-                  break;
-                case 'test-integration':
-                  context.goToTestIntegration();
-                  break;
-                case 'logout':
-                  _handleLogout();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'analytics',
-                child: ListTile(
-                  leading: Icon(Icons.analytics),
-                  title: Text('Analytics'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'config-status',
-                child: ListTile(
-                  leading: Icon(Icons.settings_applications),
-                  title: Text('Config Status'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'test-integration',
-                child: ListTile(
-                  leading: Icon(Icons.bug_report),
-                  title: Text('Test Integration'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'settings',
-                child: ListTile(
-                  leading: Icon(Icons.settings),
-                  title: Text('Settings'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'logout',
-                child: ListTile(
-                  leading: Icon(Icons.logout, color: Colors.red),
-                  title: Text('Logout', style: TextStyle(color: Colors.red)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _loadData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with greeting and streak
-                _buildHeader(),
-                
-                const SizedBox(height: 32),
-                
-                // Quick Stats
-                _buildQuickStats(),
-                
-                const SizedBox(height: 32),
-                
-                // Create Learning Path Button
-                _buildCreatePathButton(),
-                
-                const SizedBox(height: 32),
-                
-                // Learning Paths Section
-                _buildLearningPathsSection(),
-                
-                const SizedBox(height: 32),
-                
-                // Today's Task (if any)
-                _buildTodayTaskSection(),
-              ],
-            ),
-          ),
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with app name and profile
+            _buildAppHeader(),
+            
+            const SizedBox(height: 24),
+            
+            // Welcome back card
+            _buildWelcomeCard(),
+            
+            const SizedBox(height: 20),
+            
+            // Streak card
+            _buildStreakCard(),
+            
+            const SizedBox(height: 20),
+            
+            // Create Learning Path Button
+            _buildCreatePathButton(),
+            
+            const SizedBox(height: 24),
+            
+            // Active Learning Path Section
+            _buildActiveLearningPathSection(),
+          ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.goToCreatePath(),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text(
-          'Create',
-          style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-        ),
-        backgroundColor: AppColors.primary,
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildAppHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Upwise',
+          style: AppTextStyles.headlineLarge.copyWith(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            // Show profile menu
+            _showProfileMenu();
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWelcomeCard() {
     return Consumer2<AuthProvider, UserProvider>(
       builder: (context, authProvider, userProvider, child) {
-        return Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    userProvider.getGreeting(),
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      color: AppColors.textPrimary,
+        final userName = userProvider.user?.name ?? 'User';
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3F2FD), // Light blue background
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF90CAF9), width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Welcome back, $userName!',
+                style: AppTextStyles.titleLarge.copyWith(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Ready to continue your learning journey?',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => context.goToAnalytics(),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey[400]!),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Ready to learn something new today?',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+                  child: Text(
+                    'View progress',
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStreakCard() {
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, child) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3F2FD),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF0EA5E9)),
+                ),
+                child: const Icon(
+                  Icons.local_fire_department,
+                  color: Color(0xFF0EA5E9),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "You're on ${userProvider.currentStreak} days streak!",
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'You completed 12 topics this week!',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // Streak Counter
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.streakBackground,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.streak.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('🔥', style: TextStyle(fontSize: 20)),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${userProvider.currentStreak}',
-                    style: AppTextStyles.streak,
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -306,10 +317,226 @@ class _DashboardScreenState extends State<DashboardScreen> {
           'Create Learning Path',
           style: AppTextStyles.buttonLarge.copyWith(
             color: Colors.white,
+            fontWeight: FontWeight.w600,
           ),
         ),
         style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0EA5E9),
           padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveLearningPathSection() {
+    return Consumer<LearningPathProvider>(
+      builder: (context, provider, child) {
+        final activePaths = provider.learningPaths
+            .where((path) => path.status == LearningPathStatus.inProgress)
+            .toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Active Learning Path :',
+              style: AppTextStyles.titleLarge.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (provider.isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (activePaths.isEmpty)
+              _buildNoActivePath()
+            else
+              _buildActivePathCard(activePaths.first),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildNoActivePath() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE3F2FD),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF90CAF9)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.school_outlined,
+            size: 48,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Active Learning Path',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create your first learning path to get started!',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivePathCard(LearningPathModel path) {
+    return GestureDetector(
+      onTap: () => context.goToViewPath(path.id),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE3F2FD),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF90CAF9)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              path.topic,
+              style: AppTextStyles.titleLarge.copyWith(
+                color: const Color(0xFF0EA5E9),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 20,
+                  color: Colors.grey[700],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Data Cleaning',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule,
+                  size: 20,
+                  color: Colors.grey[700],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${path.durationDays} days',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Progress',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '${path.progressPercentage.toStringAsFixed(0)}%',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF0EA5E9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: path.progressPercentage / 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${path.completedOrSkippedTasksCount}/${path.dailyTasks.length} tasks completed',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showProfileMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goToSettings();
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                _handleLogout();
+              },
+            ),
+          ],
         ),
       ),
     );

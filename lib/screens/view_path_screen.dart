@@ -85,12 +85,12 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     final success = await learningPathProvider.updateTaskStatus(
       taskId: taskId,
       status: status,
-      timeSpentMinutes: status == TaskStatus.completed ? 30 : null, // Default 30 minutes
+      timeSpentMinutes: (status == TaskStatus.completed || status == TaskStatus.skipped) ? 30 : null, // Default 30 minutes for both completed and skipped
     );
     
     if (success) {
-      // Update streak if task completed
-      if (status == TaskStatus.completed) {
+      // Update streak if task completed or skipped (treat skip same as completed)
+      if (status == TaskStatus.completed || status == TaskStatus.skipped) {
         await userProvider.updateStreak();
       }
       
@@ -103,9 +103,11 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             content: Text(
               status == TaskStatus.completed 
                   ? 'Task completed! Great job!' 
-                  : 'Task status updated',
+                  : status == TaskStatus.skipped
+                      ? 'Task skipped! Keep going!'
+                      : 'Task status updated',
             ),
-            backgroundColor: status == TaskStatus.completed 
+            backgroundColor: (status == TaskStatus.completed || status == TaskStatus.skipped)
                 ? AppColors.success 
                 : AppColors.info,
           ),
@@ -181,27 +183,12 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
-                case 'edit':
-                  // TODO: Implement edit functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Edit feature coming soon!')),
-                  );
-                  break;
                 case 'delete':
-                  // TODO: Implement delete functionality
                   _showDeleteConfirmation();
                   break;
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: ListTile(
-                  leading: Icon(Icons.edit),
-                  title: Text('Edit Path'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
               const PopupMenuItem(
                 value: 'delete',
                 child: ListTile(
@@ -304,41 +291,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
           
           const SizedBox(height: 16),
           
-          // Action button
-          if (_learningPath!.status == LearningPathStatus.notStarted)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _startLearningPath,
-                icon: const Icon(Icons.play_arrow, color: Colors.white),
-                label: Text(
-                  'Start Learning Path',
-                  style: AppTextStyles.buttonMedium.copyWith(color: Colors.white),
-                ),
-              ),
-            )
-          else if (_learningPath!.status == LearningPathStatus.inProgress)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  final todayTask = _learningPath!.todayTask;
-                  if (todayTask != null) {
-                    // TODO: Navigate to daily tracker with specific task
-                    context.goToDaily();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('No task available for today')),
-                    );
-                  }
-                },
-                icon: const Icon(Icons.today),
-                label: Text(
-                  'Continue Today\'s Task',
-                  style: AppTextStyles.buttonMedium.copyWith(color: AppColors.primary),
-                ),
-              ),
-            ),
+          // Status info only - no action buttons needed since path auto-starts
         ],
       ),
     );
@@ -539,7 +492,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                 if (_learningPath!.status == LearningPathStatus.inProgress)
                   Row(
                     children: [
-                      if (task.status != TaskStatus.completed) ...[
+                      if (task.status == TaskStatus.notStarted || task.status == TaskStatus.inProgress) ...[
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
@@ -562,7 +515,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             ),
                           ),
                         ),
-                      ] else ...[
+                      ] else if (task.status == TaskStatus.completed) ...[
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -583,6 +536,33 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                                   'Completed',
                                   style: AppTextStyles.labelMedium.copyWith(
                                     color: AppColors.success,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ] else if (task.status == TaskStatus.skipped) ...[
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.skip_next,
+                                  color: AppColors.warning,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Skipped',
+                                  style: AppTextStyles.labelMedium.copyWith(
+                                    color: AppColors.warning,
                                   ),
                                 ),
                               ],
@@ -770,6 +750,60 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     );
   }
 
+  Future<void> _deleteLearningPath() async {
+    final provider = context.read<LearningPathProvider>();
+    
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Deleting learning path...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final success = await provider.deleteLearningPath(widget.pathId);
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Learning path deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.goToDashboard();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to delete learning path. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
@@ -784,12 +818,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // TODO: Implement delete functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Delete feature coming soon!')),
-              );
+              await _deleteLearningPath();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),

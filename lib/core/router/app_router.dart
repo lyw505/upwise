@@ -14,6 +14,9 @@ import '../../screens/settings_screen.dart';
 import '../../screens/config_status_screen.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/onboarding_screen.dart';
+import '../../screens/main_navigation_screen.dart';
+import '../../screens/learning_paths_screen.dart';
+
 import '../../test_integration.dart';
 
 class AppRouter {
@@ -99,7 +102,13 @@ class AppRouter {
         GoRoute(
           path: '/dashboard',
           name: 'dashboard',
-          builder: (context, state) => const DashboardScreen(),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 0),
+        ),
+        
+        GoRoute(
+          path: '/learning-paths',
+          name: 'learning-paths',
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 1),
         ),
         
         // Future routes for learning path features
@@ -118,6 +127,8 @@ class AppRouter {
           },
         ),
         
+
+        
         GoRoute(
           path: '/daily',
           name: 'daily',
@@ -127,7 +138,7 @@ class AppRouter {
         GoRoute(
           path: '/analytics',
           name: 'analytics',
-          builder: (context, state) => const AnalyticsScreen(),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 2),
         ),
         
         GoRoute(
@@ -195,7 +206,9 @@ extension AppRouterExtension on BuildContext {
   void goToDashboard() => go('/dashboard');
   void goToCreatePath() => go('/create-path');
   void goToViewPath(String pathId) => go('/view-path/$pathId');
+
   void goToDaily() => go('/daily');
+  void goToLearningPaths() => go('/learning-paths');
   void goToAnalytics() => go('/analytics');
   void goToSettings() => go('/settings');
   void goToConfigStatus() => go('/config-status');
@@ -221,6 +234,7 @@ class AppRoutes {
   static const String createPath = '/create-path';
   static const String viewPath = '/view-path';
   static const String daily = '/daily';
+  static const String learningPaths = '/learning-paths';
   static const String analytics = '/analytics';
   static const String settings = '/settings';
 }

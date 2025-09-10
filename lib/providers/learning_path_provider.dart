@@ -201,11 +201,14 @@ class LearningPathProvider extends ChangeNotifier {
       // Reload learning paths to get the complete data
       await loadLearningPaths(userId);
 
-      // Find and return the newly created learning path
+      // Find the newly created learning path
       final newPath = _learningPaths.firstWhere((path) => path.id == learningPathId);
       _currentLearningPath = newPath;
 
-      return newPath;
+      // Auto-start the learning path
+      await startLearningPath(learningPathId);
+
+      return _currentLearningPath;
     } catch (e) {
       _setError('Failed to generate learning path: ${e.toString()}');
       return null;
@@ -264,7 +267,8 @@ class LearningPathProvider extends ChangeNotifier {
         'status': status.name,
       };
 
-      if (status == TaskStatus.completed) {
+      // Treat skip the same as completed - set completed_at timestamp
+      if (status == TaskStatus.completed || status == TaskStatus.skipped) {
         updates['completed_at'] = DateTime.now().toIso8601String();
       }
 
@@ -286,7 +290,7 @@ class LearningPathProvider extends ChangeNotifier {
           final updatedTasks = List<DailyLearningTask>.from(path.dailyTasks);
           updatedTasks[taskIndex] = updatedTasks[taskIndex].copyWith(
             status: status,
-            completedAt: status == TaskStatus.completed ? DateTime.now() : null,
+            completedAt: (status == TaskStatus.completed || status == TaskStatus.skipped) ? DateTime.now() : null,
             timeSpentMinutes: timeSpentMinutes ?? updatedTasks[taskIndex].timeSpentMinutes,
           );
           
@@ -295,6 +299,13 @@ class LearningPathProvider extends ChangeNotifier {
           if (_currentLearningPath?.id == path.id) {
             _currentLearningPath = _learningPaths[i];
           }
+          
+          // Check if all tasks are completed or skipped, then auto-complete the learning path
+          final updatedPath = _learningPaths[i];
+          if (updatedPath.status == LearningPathStatus.inProgress && updatedPath.progressPercentage >= 100.0) {
+            await _autoCompleteLearningPath(updatedPath.id);
+          }
+          
           break;
         }
       }
@@ -305,6 +316,38 @@ class LearningPathProvider extends ChangeNotifier {
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> _autoCompleteLearningPath(String learningPathId) async {
+    try {
+      // Update status to completed in database
+      await _supabase
+          .from('learning_paths')
+          .update({
+            'status': LearningPathStatus.completed.name,
+            'completed_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', learningPathId);
+
+      // Update local state
+      final pathIndex = _learningPaths.indexWhere((path) => path.id == learningPathId);
+      if (pathIndex != -1) {
+        _learningPaths[pathIndex] = _learningPaths[pathIndex].copyWith(
+          status: LearningPathStatus.completed,
+          completedAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        if (_currentLearningPath?.id == learningPathId) {
+          _currentLearningPath = _learningPaths[pathIndex];
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error auto-completing learning path: $e');
     }
   }
 
@@ -381,6 +424,81 @@ class LearningPathProvider extends ChangeNotifier {
 
   void clearError() {
     _clearError();
+  }
+
+  Future<bool> updateLearningPath(LearningPathModel updatedPath) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      // Update in Supabase
+      await _supabase
+          .from('learning_paths')
+          .update({
+            'topic': updatedPath.topic,
+            'description': updatedPath.description,
+            'duration_days': updatedPath.durationDays,
+            'daily_time_minutes': updatedPath.dailyTimeMinutes,
+            'experience_level': updatedPath.experienceLevel.name,
+            'learning_style': updatedPath.learningStyle.name,
+            'output_goal': updatedPath.outputGoal,
+            'include_projects': updatedPath.includeProjects,
+            'include_exercises': updatedPath.includeExercises,
+            'notes': updatedPath.notes,
+            'updated_at': updatedPath.updatedAt?.toIso8601String(),
+          })
+          .eq('id', updatedPath.id);
+
+      // Update in local list
+      final index = _learningPaths.indexWhere((path) => path.id == updatedPath.id);
+      if (index != -1) {
+        _learningPaths[index] = updatedPath;
+      }
+
+      // Update current learning path if it's the same
+      if (_currentLearningPath?.id == updatedPath.id) {
+        _currentLearningPath = updatedPath;
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error updating learning path: $e');
+      _setError('Failed to update learning path: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> deleteLearningPath(String pathId) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      // Delete from Supabase (cascade delete will handle related records)
+      await _supabase
+          .from('learning_paths')
+          .delete()
+          .eq('id', pathId);
+
+      // Remove from local list
+      _learningPaths.removeWhere((path) => path.id == pathId);
+
+      // Clear current learning path if it's the deleted one
+      if (_currentLearningPath?.id == pathId) {
+        _currentLearningPath = null;
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting learning path: $e');
+      _setError('Failed to delete learning path: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
   }
 
   void clearLearningPaths() {
