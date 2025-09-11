@@ -95,9 +95,13 @@ class LearningPathModel {
       completedAt: json['completed_at'] != null 
           ? DateTime.parse(json['completed_at'] as String) 
           : null,
-      dailyTasks: (json['daily_learning_tasks'] as List<dynamic>?)
-          ?.map((task) => DailyLearningTask.fromJson(task as Map<String, dynamic>))
-          .toList() ?? [],
+      dailyTasks: () {
+        final tasks = (json['daily_learning_tasks'] as List<dynamic>?)
+            ?.map((task) => DailyLearningTask.fromJson(task as Map<String, dynamic>))
+            .toList() ?? [];
+        tasks.sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+        return tasks;
+      }(),
       projectRecommendations: (json['project_recommendations'] as List<dynamic>?)
           ?.map((project) => ProjectRecommendation.fromJson(project as Map<String, dynamic>))
           .toList() ?? [],
@@ -173,6 +177,12 @@ class LearningPathModel {
   }
 
   // Helper methods
+  List<DailyLearningTask> get sortedDailyTasks {
+    final tasks = List<DailyLearningTask>.from(dailyTasks);
+    tasks.sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+    return tasks;
+  }
+  
   int get completedTasksCount => dailyTasks.where((task) => task.status == TaskStatus.completed).length;
   
   int get completedOrSkippedTasksCount => dailyTasks.where((task) => 
@@ -185,16 +195,18 @@ class LearningPathModel {
   bool get isActive => status == LearningPathStatus.inProgress;
   
   DailyLearningTask? get todayTask {
-    if (startedAt == null) return null;
+    if (startedAt == null || dailyTasks.isEmpty) return null;
     
     final today = DateTime.now();
-    final daysSinceStart = today.difference(startedAt!).inDays;
+    final daysSinceStart = today.difference(startedAt!).inDays + 1; // +1 because day 1 is the first day
     
-    if (daysSinceStart >= 0 && daysSinceStart < dailyTasks.length) {
-      return dailyTasks[daysSinceStart];
+    // Find task with matching day number
+    try {
+      return dailyTasks.firstWhere((task) => task.dayNumber == daysSinceStart);
+    } catch (e) {
+      // If no task found for today, return null
+      return null;
     }
-    
-    return null;
   }
 }
 

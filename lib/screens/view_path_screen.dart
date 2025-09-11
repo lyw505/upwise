@@ -29,7 +29,10 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadLearningPath();
+    // Use addPostFrameCallback to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadLearningPath();
+    });
   }
 
   @override
@@ -52,8 +55,13 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
         orElse: () => throw Exception('Learning path not found'),
       );
       
+      // Ensure tasks are sorted
+      final sortedTasks = List<DailyLearningTask>.from(path.dailyTasks)
+        ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+      final sortedPath = path.copyWith(dailyTasks: sortedTasks);
+      
       setState(() {
-        _learningPath = path;
+        _learningPath = sortedPath;
         _isLoading = false;
       });
     }
@@ -276,7 +284,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_learningPath!.progressPercentage.toStringAsFixed(0)}% Complete • ${_learningPath!.completedTasksCount}/${_learningPath!.dailyTasks.length} tasks',
+                      '${_learningPath!.progressPercentage.toStringAsFixed(0)}% Complete • ${_learningPath!.completedOrSkippedTasksCount}/${_learningPath!.dailyTasks.length} tasks',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -367,11 +375,13 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       );
     }
 
+    final sortedTasks = _learningPath!.sortedDailyTasks;
+    
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _learningPath!.dailyTasks.length,
+      itemCount: sortedTasks.length,
       itemBuilder: (context, index) {
-        final task = _learningPath!.dailyTasks[index];
+        final task = sortedTasks[index];
         return _buildTaskCard(task, index);
       },
     );

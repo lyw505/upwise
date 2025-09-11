@@ -35,7 +35,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadAnalyticsData();
+    // Use addPostFrameCallback to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAnalyticsData();
+    });
   }
 
   @override

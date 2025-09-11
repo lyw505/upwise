@@ -48,6 +48,16 @@ class LearningPathProvider extends ChangeNotifier {
           .map((json) => LearningPathModel.fromJson(json))
           .toList();
 
+      // Ensure daily tasks are sorted by day_number for each learning path
+      for (int i = 0; i < _learningPaths.length; i++) {
+        final path = _learningPaths[i];
+        if (path.dailyTasks.isNotEmpty) {
+          final sortedTasks = List<DailyLearningTask>.from(path.dailyTasks)
+            ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+          _learningPaths[i] = path.copyWith(dailyTasks: sortedTasks);
+        }
+      }
+
     } catch (e) {
       _setError('Failed to load learning paths: ${e.toString()}');
     } finally {
@@ -135,7 +145,7 @@ class LearningPathProvider extends ChangeNotifier {
         try {
           final taskData = {
             'learning_path_id': learningPathId,
-            'day_number': i + 1,
+            'day_number': i + 1, // Ensure sequential day numbering
             'main_topic': task['main_topic'] ?? 'No topic',
             'sub_topic': task['sub_topic'] ?? 'No subtopic',
             'material_url': task['material_url'],
@@ -293,6 +303,9 @@ class LearningPathProvider extends ChangeNotifier {
             completedAt: (status == TaskStatus.completed || status == TaskStatus.skipped) ? DateTime.now() : null,
             timeSpentMinutes: timeSpentMinutes ?? updatedTasks[taskIndex].timeSpentMinutes,
           );
+          
+          // Sort tasks to maintain order
+          updatedTasks.sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
           
           _learningPaths[i] = path.copyWith(dailyTasks: updatedTasks);
           
