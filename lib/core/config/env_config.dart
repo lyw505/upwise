@@ -37,6 +37,9 @@ class EnvConfig {
   /// Check if environment is properly configured
   static bool get isConfigured => geminiApiKey.isNotEmpty && geminiApiKey != 'your_gemini_api_key_here';
   
+  /// Check if Gemini API key is available
+  static bool get hasGeminiApiKey => geminiApiKey.isNotEmpty && geminiApiKey != 'your_gemini_api_key_here';
+  
   /// Check if running in production
   static bool get isProduction => appEnv.toLowerCase() == 'production';
   

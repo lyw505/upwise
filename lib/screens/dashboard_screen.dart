@@ -69,8 +69,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             
             const SizedBox(height: 20),
             
-            // Create Learning Path Button
-            _buildCreatePathButton(),
+            // Action Buttons Row
+            _buildActionButtons(),
             
             const SizedBox(height: 24),
             
@@ -305,24 +305,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCreatePathButton() {
+  Widget _buildActionButtons() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: () {
           context.goToCreatePath();
         },
-        icon: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white, size: 20),
         label: Text(
           'Create Learning Path',
-          style: AppTextStyles.buttonLarge.copyWith(
+          style: AppTextStyles.buttonMedium.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0EA5E9),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

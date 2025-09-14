@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'learning_paths_screen.dart';
 import 'analytics_screen.dart';
+import 'summarizer_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -22,6 +23,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const LearningPathsScreen(),
+    const SummarizerScreen(),
     const AnalyticsScreen(),
   ];
 
@@ -98,6 +100,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.school_outlined),
               activeIcon: Icon(Icons.school),
               label: 'Learning Paths',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.psychology_outlined),
+              activeIcon: Icon(Icons.psychology),
+              label: 'AI',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics_outlined),

@@ -16,6 +16,10 @@ import '../../screens/splash_screen.dart';
 import '../../screens/onboarding_screen.dart';
 import '../../screens/main_navigation_screen.dart';
 import '../../screens/learning_paths_screen.dart';
+import '../../screens/summarizer_screen.dart';
+import '../../screens/ai_chat_screen.dart';
+import '../../screens/conversation_viewer_screen.dart';
+import '../../models/content_summary_model.dart';
 
 import '../../test_integration.dart';
 
@@ -43,7 +47,7 @@ class AppRouter {
         final isOnSplashPage = currentPath == '/splash';
         final isOnOnboardingPage = currentPath == '/onboarding';
         final isOnAuthPages = ['/welcome', '/login', '/register'].contains(currentPath);
-        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings'].contains(currentPath);
+        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings', '/summarizer'].contains(currentPath);
         
         // Allow splash and onboarding screens to load
         if (isOnSplashPage || isOnOnboardingPage) {
@@ -147,6 +151,44 @@ class AppRouter {
           builder: (context, state) => const SettingsScreen(),
         ),
 
+        GoRoute(
+          path: '/summarizer',
+          name: 'summarizer',
+          builder: (context, state) => const SummarizerScreen(),
+        ),
+
+        GoRoute(
+          path: '/ai-chat',
+          name: 'ai-chat',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return AiChatScreen(
+              initialContent: extra?['content'],
+              initialUrl: extra?['url'],
+              contentType: extra?['contentType'] ?? ContentType.text,
+              title: extra?['title'],
+              targetDifficulty: extra?['targetDifficulty'],
+              tags: extra?['tags'] ?? [],
+              includeKeyPoints: extra?['includeKeyPoints'] ?? true,
+              learningPathId: extra?['learningPathId'],
+            );
+          },
+        ),
+        
+        GoRoute(
+          path: '/conversation-viewer',
+          name: 'conversation-viewer',
+          builder: (context, state) {
+            final extra = state.extra as ContentSummaryModel?;
+            if (extra == null) {
+              return const Scaffold(
+                body: Center(child: Text('Conversation not found')),
+              );
+            }
+            return ConversationViewerScreen(conversation: extra);
+          },
+        ),
+
         // Integration Test Route (for development)
         GoRoute(
           path: '/test-integration',
@@ -211,6 +253,7 @@ extension AppRouterExtension on BuildContext {
   void goToLearningPaths() => go('/learning-paths');
   void goToAnalytics() => go('/analytics');
   void goToSettings() => go('/settings');
+  void goToSummarizer() => go('/summarizer');
   void goToConfigStatus() => go('/config-status');
   void goToTestIntegration() => go('/test-integration');
   

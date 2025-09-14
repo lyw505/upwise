@@ -8,6 +8,7 @@ import 'core/config/env_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/learning_path_provider.dart';
+import 'providers/summarizer_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,7 @@ class UpwiseApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => LearningPathProvider()),
+        ChangeNotifierProvider(create: (_) => SummarizerProvider()),
       ],
       child: MaterialApp.router(
         title: 'Upwise',

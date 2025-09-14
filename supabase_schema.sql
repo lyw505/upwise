@@ -187,6 +187,108 @@ CREATE INDEX IF NOT EXISTS idx_project_recommendations_learning_path_id ON proje
 CREATE INDEX IF NOT EXISTS idx_profiles_last_active_date ON profiles(last_active_date DESC);
 
 -- =====================================================
+-- 5. AI SUMMARIZER TABLES
+-- =====================================================
+
+-- Content summaries table
+CREATE TABLE IF NOT EXISTS content_summaries (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    learning_path_id UUID REFERENCES learning_paths(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    original_content TEXT NOT NULL,
+    content_type TEXT NOT NULL CHECK (content_type IN ('text', 'url', 'file')),
+    content_source TEXT, -- URL or file name if applicable
+    summary TEXT NOT NULL,
+    key_points JSONB, -- Array of key points
+    tags JSONB, -- Array of tags for categorization
+    word_count INTEGER,
+    estimated_read_time INTEGER, -- in minutes
+    difficulty_level TEXT CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+    is_favorite BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Enable RLS
+ALTER TABLE content_summaries ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for content_summaries
+CREATE POLICY "Users can view own summaries" ON content_summaries
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own summaries" ON content_summaries
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own summaries" ON content_summaries
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own summaries" ON content_summaries
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Summary categories table (for organization)
+CREATE TABLE IF NOT EXISTS summary_categories (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    color TEXT DEFAULT '#2563EB', -- Hex color code
+    icon TEXT, -- Icon name or emoji
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::TEXT, NOW()) NOT NULL,
+    UNIQUE(user_id, name)
+);
+
+-- Enable RLS
+ALTER TABLE summary_categories ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for summary_categories
+CREATE POLICY "Users can view own categories" ON summary_categories
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own categories" ON summary_categories
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own categories" ON summary_categories
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own categories" ON summary_categories
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Junction table for summary-category relationships
+CREATE TABLE IF NOT EXISTS summary_category_relations (
+    summary_id UUID REFERENCES content_summaries(id) ON DELETE CASCADE NOT NULL,
+    category_id UUID REFERENCES summary_categories(id) ON DELETE CASCADE NOT NULL,
+    PRIMARY KEY (summary_id, category_id)
+);
+
+-- Enable RLS
+ALTER TABLE summary_category_relations ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for summary_category_relations
+CREATE POLICY "Users can manage own summary categories" ON summary_category_relations
+    FOR ALL USING (
+        auth.uid() IN (
+            SELECT user_id FROM content_summaries WHERE id = summary_id
+        )
+    );
+
+-- =====================================================
+-- 6. INDEXES FOR AI SUMMARIZER PERFORMANCE
+-- =====================================================
+CREATE INDEX IF NOT EXISTS idx_content_summaries_user_id ON content_summaries(user_id);
+CREATE INDEX IF NOT EXISTS idx_content_summaries_learning_path_id ON content_summaries(learning_path_id);
+CREATE INDEX IF NOT EXISTS idx_content_summaries_content_type ON content_summaries(content_type);
+CREATE INDEX IF NOT EXISTS idx_content_summaries_created_at ON content_summaries(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_content_summaries_is_favorite ON content_summaries(is_favorite);
+CREATE INDEX IF NOT EXISTS idx_content_summaries_title_search ON content_summaries USING gin(to_tsvector('english', title));
+CREATE INDEX IF NOT EXISTS idx_content_summaries_summary_search ON content_summaries USING gin(to_tsvector('english', summary));
+CREATE INDEX IF NOT EXISTS idx_content_summaries_tags ON content_summaries USING gin(tags);
+
+CREATE INDEX IF NOT EXISTS idx_summary_categories_user_id ON summary_categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_summary_category_relations_summary_id ON summary_category_relations(summary_id);
+CREATE INDEX IF NOT EXISTS idx_summary_category_relations_category_id ON summary_category_relations(category_id);
+
+-- =====================================================
 -- 6. FUNCTIONS AND TRIGGERS
 -- =====================================================
 
