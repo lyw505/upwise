@@ -15,9 +15,7 @@ class SummarizerScreen extends StatefulWidget {
   State<SummarizerScreen> createState() => _SummarizerScreenState();
 }
 
-class _SummarizerScreenState extends State<SummarizerScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+class _SummarizerScreenState extends State<SummarizerScreen> {
   final _contentController = TextEditingController();
   final _urlController = TextEditingController();
   final _titleController = TextEditingController();
@@ -30,17 +28,16 @@ class _SummarizerScreenState extends State<SummarizerScreen>
   List<String> _selectedTags = [];
   String? _selectedLearningPathId;
   bool _isLoading = false;
+  bool _showCreateForm = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     _loadData();
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _contentController.dispose();
     _urlController.dispose();
     _titleController.dispose();
@@ -69,63 +66,38 @@ class _SummarizerScreenState extends State<SummarizerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Summarizer'),
+        title: const Text(
+          'AI Summarizer',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Create', icon: Icon(Icons.create)),
-            Tab(text: 'Library', icon: Icon(Icons.library_books)),
-            Tab(text: 'Stats', icon: Icon(Icons.analytics)),
-          ],
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildCreateTab(),
-          _buildLibraryTab(),
-          _buildStatsTab(),
-        ],
-      ),
+      body: _showCreateForm ? _buildCreateTab() : _buildLibraryTab(),
+      floatingActionButton: _showCreateForm ? null : _buildFloatingActionButton(),
     );
   }
 
   Widget _buildCreateTab() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.grey[50]!,
-            Colors.white,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildModernContentTypeSelector(),
+            const SizedBox(height: 28),
+            _buildModernContentInput(),
+            const SizedBox(height: 28),
+            _buildModernSummaryOptions(),
+            const SizedBox(height: 40),
+            _buildGenerateButton(),
+            const SizedBox(height: 20),
           ],
-        ),
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWelcomeHeader(),
-              const SizedBox(height: 32),
-              _buildModernContentTypeSelector(),
-              const SizedBox(height: 28),
-              _buildContentInput(),
-              const SizedBox(height: 28),
-              _buildModernSummaryOptions(),
-              const SizedBox(height: 40),
-              _buildGenerateButton(),
-              const SizedBox(height: 20),
-            ],
-          ),
         ),
       ),
     );
@@ -857,59 +829,154 @@ class _SummarizerScreenState extends State<SummarizerScreen>
     );
   }
 
-  Widget _buildLibraryTab() {
-    return Consumer<SummarizerProvider>(
-      builder: (context, summarizerProvider, child) {
-        if (summarizerProvider.isLoading) {
-          return Center(
-            child: LoadingAnimationWidget.twistingDots(
-              leftDotColor: AppColors.primary,
-              rightDotColor: AppColors.secondary,
-              size: 50,
-            ),
-          );
-        }
-
-        final summaries = summarizerProvider.summaries;
-
-        if (summaries.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.library_books_outlined,
-                  size: 80,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No summaries yet',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Create your first AI summary',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: summaries.length,
-          itemBuilder: (context, index) {
-            final summary = summaries[index];
-            return _buildSummaryCard(summary);
+  Widget _buildFloatingActionButton() {
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0EA5E9),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0EA5E9).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            setState(() {
+              _showCreateForm = true;
+            });
           },
-        );
-      },
+          borderRadius: BorderRadius.circular(20),
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLibraryTab() {
+    return Stack(
+      children: [
+        Consumer<SummarizerProvider>(
+          builder: (context, summarizerProvider, child) {
+            if (summarizerProvider.isLoading) {
+              return Center(
+                child: LoadingAnimationWidget.twistingDots(
+                  leftDotColor: AppColors.primary,
+                  rightDotColor: AppColors.secondary,
+                  size: 50,
+                ),
+              );
+            }
+
+            final summaries = summarizerProvider.summaries;
+
+            if (summaries.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.library_books_outlined,
+                      size: 80,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No summaries yet',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create your first AI summary',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: summaries.length,
+              itemBuilder: (context, index) {
+                final summary = summaries[index];
+                return _buildSummaryCard(summary);
+              },
+            );
+          },
+        ),
+        if (_showCreateForm)
+          Container(
+            color: Colors.black54,
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Create AI Summary',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _showCreateForm = false;
+                              });
+                            },
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildCreateTab(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

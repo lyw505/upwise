@@ -37,22 +37,69 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                    onPressed: () => context.goToCreatePath(),
-                    icon: const Icon(Icons.add, color: Color(0xFF0EA5E9)),
+                  PopupMenuButton<String>(
+                    onSelected: (String value) {
+                      setState(() {
+                        _selectedFilter = value;
+                      });
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return _filters.map((String filter) {
+                        return PopupMenuItem<String>(
+                          value: filter,
+                          child: Row(
+                            children: [
+                              if (_selectedFilter == filter)
+                                const Icon(
+                                  Icons.check,
+                                  color: Color(0xFF0EA5E9),
+                                  size: 20,
+                                ),
+                              if (_selectedFilter == filter)
+                                const SizedBox(width: 8),
+                              Text(
+                                filter,
+                                style: TextStyle(
+                                  color: _selectedFilter == filter
+                                      ? const Color(0xFF0EA5E9)
+                                      : Colors.black,
+                                  fontWeight: _selectedFilter == filter
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.filter_list,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _selectedFilter,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-              ),
-            ),
-
-            // Filter Chips
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _filters.map((filter) => _buildFilterChip(filter)).toList(),
-                ),
               ),
             ),
 
@@ -88,30 +135,6 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
     );
   }
 
-  Widget _buildFilterChip(String filter) {
-    final isSelected = _selectedFilter == filter;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: FilterChip(
-        label: Text(filter),
-        selected: isSelected,
-        onSelected: (selected) {
-          setState(() {
-            _selectedFilter = filter;
-          });
-        },
-        backgroundColor: Colors.grey[100],
-        selectedColor: const Color(0xFF0EA5E9),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.grey[700],
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    );
-  }
 
   List<LearningPathModel> _getFilteredPaths(List<LearningPathModel> paths) {
     if (_selectedFilter == 'All') return paths;
