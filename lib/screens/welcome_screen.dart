@@ -67,7 +67,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     TextSpan(
                       text: "Log in",
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: Colors.black,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -75,7 +75,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     TextSpan(
                       text: "Create account",
                       style: TextStyle(
-                        color: AppColors.primary,
+                        color: Colors.black,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -148,7 +148,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Text(
                     'Log in',
                     style: AppTextStyles.buttonLarge.copyWith(
-                      color: Colors.white,
+                      color: Colors.black,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -167,7 +167,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
+                    backgroundColor: const Color(0xFFBAE6FD),
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -185,65 +185,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ),
               ),
 
-              const SizedBox(height: 32),
-
-              // Sign in with divider
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: Colors.grey[300],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Sign in with',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: Colors.grey[300],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Social Login Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(
-                    icon: Icons.g_mobiledata,
-                    onPressed: () {
-                      // TODO: Implement Google Sign In
-                    },
-                  ),
-                  const SizedBox(width: 20),
-                  _buildSocialButton(
-                    icon: Icons.facebook,
-                    onPressed: () {
-                      // TODO: Implement Facebook Sign In
-                    },
-                  ),
-                  const SizedBox(width: 20),
-                  _buildSocialButton(
-                    icon: Icons.close, // X for Twitter/X
-                    onPressed: () {
-                      // TODO: Implement X Sign In
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -251,33 +193,4 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey[300]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: Colors.grey[700],
-          size: 24,
-        ),
-      ),
-    );
-  }
 }

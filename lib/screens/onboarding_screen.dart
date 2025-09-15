@@ -23,13 +23,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Personalized',
       description: 'Upwise adapts the content and learning approach to your needs and skill level.',
       imagePath: 'assets/images/on2.png',
-      color: const Color(0xFF5CB3F7),
+      color: const Color(0xFF4A90E2),
     ),
     OnboardingData(
       title: 'Consistency',
       description: 'Stay motivated with daily streaks and see how small daily efforts lead to big results over time.',
       imagePath: 'assets/images/on3.png',
-      color: const Color(0xFF7BC8F5),
+      color: const Color(0xFF4A90E2),
     ),
   ];
 
