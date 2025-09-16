@@ -8,6 +8,40 @@ import '../providers/summarizer_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 
+// Custom clipper for wave effect
+class WaveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.lineTo(0, size.height - 30);
+    
+    var firstControlPoint = Offset(size.width * 0.25, size.height);
+    var firstEndPoint = Offset(size.width * 0.5, size.height - 15);
+    path.quadraticBezierTo(
+      firstControlPoint.dx,
+      firstControlPoint.dy,
+      firstEndPoint.dx,
+      firstEndPoint.dy,
+    );
+    
+    var secondControlPoint = Offset(size.width * 0.75, size.height - 30);
+    var secondEndPoint = Offset(size.width, size.height - 5);
+    path.quadraticBezierTo(
+      secondControlPoint.dx,
+      secondControlPoint.dy,
+      secondEndPoint.dx,
+      secondEndPoint.dy,
+    );
+    
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+  
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
 class SummarizerScreen extends StatefulWidget {
   const SummarizerScreen({super.key});
 
@@ -65,18 +99,14 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'AI Summarizer',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          _buildModernAppBar(),
+          Expanded(
+            child: _showCreateForm ? _buildCreateTab() : _buildLibraryTab(),
           ),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        ],
       ),
-      body: _showCreateForm ? _buildCreateTab() : _buildLibraryTab(),
       floatingActionButton: _showCreateForm ? null : _buildFloatingActionButton(),
     );
   }
@@ -829,13 +859,86 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
+  Widget _buildModernAppBar() {
+    return ClipPath(
+      clipper: WaveClipper(),
+      child: Container(
+        height: 160,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary,
+              AppColors.primary.withOpacity(0.8),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.psychology_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'AI Summarizer',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Transform content into insights',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
   Widget _buildFloatingActionButton() {
     return Container(
       width: 64,
       height: 64,
       decoration: BoxDecoration(
         color: const Color(0xFF0EA5E9),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0EA5E9).withOpacity(0.3),
@@ -852,7 +955,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
               _showCreateForm = true;
             });
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           child: const Center(
             child: Icon(
               Icons.add,

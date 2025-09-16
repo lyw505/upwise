@@ -354,7 +354,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             else if (activePaths.isEmpty)
               _buildNoActivePath()
             else
-              _buildActivePathCard(activePaths.first),
+              _buildActivePathsList(activePaths),
           ],
         );
       },
@@ -501,6 +501,201 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   '${path.completedOrSkippedTasksCount}/${path.dailyTasks.length} tasks completed',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivePathsList(List<LearningPathModel> activePaths) {
+    // Display up to 5 active learning paths
+    final displayPaths = activePaths.take(5).toList();
+    final hasMorePaths = activePaths.length > 5;
+
+    return Column(
+      children: [
+        // Display the active learning paths
+        ...displayPaths.map((path) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildCompactActivePathCard(path),
+        )).toList(),
+        
+        // Show "Lihat Semua" button if there are more than 5 paths or if we want to navigate to all paths
+        if (activePaths.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  context.goToLearningPaths();
+                },
+                icon: const Icon(
+                  Icons.arrow_forward,
+                  size: 18,
+                  color: Color(0xFF0EA5E9),
+                ),
+                label: Text(
+                  'View All',
+                  style: AppTextStyles.buttonMedium.copyWith(
+                    color: const Color(0xFF0EA5E9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF0EA5E9)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCompactActivePathCard(LearningPathModel path) {
+    return GestureDetector(
+      onTap: () => context.goToViewPath(path.id),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[300]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    path.topic,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'In Progress',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: const Color(0xFF0EA5E9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (path.description.isNotEmpty)
+              Text(
+                path.description,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.grey[600],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${path.durationDays} days',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${path.dailyTimeMinutes} min/day',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Progress Bar
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Progress',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '${path.progressPercentage.toStringAsFixed(0)}%',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF0EA5E9),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: path.progressPercentage / 100,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${path.completedOrSkippedTasksCount}/${path.dailyTasks.length} tasks completed',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[500],
                   ),
                 ),
               ],

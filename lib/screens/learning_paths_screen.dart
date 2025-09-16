@@ -27,7 +27,8 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
             // Header
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Learning Paths',
@@ -36,66 +37,62 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Spacer(),
-                  PopupMenuButton<String>(
-                    onSelected: (String value) {
-                      setState(() {
-                        _selectedFilter = value;
-                      });
-                    },
-                    itemBuilder: (BuildContext context) {
-                      return _filters.map((String filter) {
-                        return PopupMenuItem<String>(
-                          value: filter,
-                          child: Row(
-                            children: [
-                              if (_selectedFilter == filter)
-                                const Icon(
-                                  Icons.check,
-                                  color: Color(0xFF0EA5E9),
-                                  size: 20,
-                                ),
-                              if (_selectedFilter == filter)
-                                const SizedBox(width: 8),
-                              Text(
-                                filter,
-                                style: TextStyle(
-                                  color: _selectedFilter == filter
-                                      ? const Color(0xFF0EA5E9)
-                                      : Colors.black,
-                                  fontWeight: _selectedFilter == filter
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedFilter,
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedFilter = newValue;
+                            });
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Color(0xFF0EA5E9),
+                        ),
+                        isDense: true,
+                        items: _filters.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.filter_list,
+                                    color: _selectedFilter == value 
+                                        ? const Color(0xFF0EA5E9) 
+                                        : Colors.grey[600],
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    value,
+                                    style: TextStyle(
+                                      color: _selectedFilter == value 
+                                          ? const Color(0xFF0EA5E9) 
+                                          : Colors.black,
+                                      fontWeight: _selectedFilter == value 
+                                          ? FontWeight.w600 
+                                          : FontWeight.normal,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      }).toList();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.filter_list,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _selectedFilter,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
                             ),
-                          ),
-                        ],
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
