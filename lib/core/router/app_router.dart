@@ -19,6 +19,7 @@ import '../../screens/learning_paths_screen.dart';
 import '../../screens/summarizer_screen.dart';
 import '../../screens/ai_chat_screen.dart';
 import '../../screens/conversation_viewer_screen.dart';
+import '../../screens/project_builder_screen.dart';
 import '../../models/content_summary_model.dart';
 
 import '../../test_integration.dart';
@@ -47,7 +48,7 @@ class AppRouter {
         final isOnSplashPage = currentPath == '/splash';
         final isOnOnboardingPage = currentPath == '/onboarding';
         final isOnAuthPages = ['/welcome', '/login', '/register'].contains(currentPath);
-        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings', '/summarizer'].contains(currentPath);
+        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings', '/summarizer', '/project-builder'].contains(currentPath);
         
         // Allow splash and onboarding screens to load
         if (isOnSplashPage || isOnOnboardingPage) {
@@ -158,6 +159,12 @@ class AppRouter {
         ),
 
         GoRoute(
+          path: '/project-builder',
+          name: 'project-builder',
+          builder: (context, state) => const ProjectBuilderScreen(),
+        ),
+
+        GoRoute(
           path: '/ai-chat',
           name: 'ai-chat',
           builder: (context, state) {
@@ -254,6 +261,7 @@ extension AppRouterExtension on BuildContext {
   void goToAnalytics() => go('/analytics');
   void goToSettings() => go('/settings');
   void goToSummarizer() => go('/summarizer');
+  void goToProjectBuilder() => go('/project-builder');
   void goToConfigStatus() => go('/config-status');
   void goToTestIntegration() => go('/test-integration');
   

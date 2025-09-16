@@ -306,28 +306,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildActionButtons() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          context.goToCreatePath();
-        },
-        icon: const Icon(Icons.add, color: Colors.white, size: 20),
-        label: Text(
-          'Create Learning Path',
-          style: AppTextStyles.buttonMedium.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              context.goToCreatePath();
+            },
+            icon: const Icon(Icons.add, color: Colors.white, size: 20),
+            label: Text(
+              'Create Learning Path',
+              style: AppTextStyles.buttonMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0EA5E9),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF0EA5E9),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              context.goToProjectBuilder();
+            },
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFF0EA5E9), size: 20),
+            label: Text(
+              'AI Project Builder',
+              style: AppTextStyles.buttonMedium.copyWith(
+                color: const Color(0xFF0EA5E9),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF0EA5E9)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
