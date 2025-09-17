@@ -95,7 +95,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Logout'),
           ),
         ],
@@ -127,7 +126,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],
@@ -150,8 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: const Text('Confirm Delete'),
+                child: const Text('Confirm Delete'),
             ),
           ],
         ),

@@ -35,9 +35,9 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
         elevation: 0,
         title: Text(
           'AI Project Builder',
@@ -52,9 +52,9 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: const Color(0xFF0EA5E9),
+          labelColor: AppColors.primary,
           unselectedLabelColor: Colors.grey[600],
-          indicatorColor: const Color(0xFF0EA5E9),
+          indicatorColor: AppColors.primary,
           labelStyle: AppTextStyles.labelLarge.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -76,7 +76,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateProjectDialog(),
-        backgroundColor: const Color(0xFF0EA5E9),
+        backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: Text(
           'New Project',
@@ -118,14 +118,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF0EA5E9),
-            const Color(0xFF0EA5E9).withOpacity(0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -198,12 +191,12 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.diamond,
-                  color: Color(0xFF0EA5E9),
+                  color: AppColors.primary,
                   size: 18,
                 ),
               ),
@@ -212,7 +205,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                 child: Text(
                   '3. AI Project Builder (capstone guidance)',
                   style: AppTextStyles.titleSmall.copyWith(
-                    color: const Color(0xFF0EA5E9),
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
@@ -397,14 +390,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _previewProject(project),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0EA5E9),
-                      side: const BorderSide(color: Color(0xFF0EA5E9)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
                     child: Text(
                       'Preview',
                       style: AppTextStyles.labelSmall.copyWith(
@@ -417,14 +402,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _startProject(project),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0EA5E9),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
                     child: Text(
                       'Start',
                       style: AppTextStyles.labelSmall.copyWith(
@@ -566,7 +543,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   Text(
                     '${project.progressPercentage.toStringAsFixed(0)}%',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: const Color(0xFF0EA5E9),
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -585,7 +562,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   widthFactor: project.progressPercentage / 100,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0EA5E9),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.circular(3),
                     ),
                   ),
@@ -608,13 +585,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   onPressed: () => _viewProject(project),
                   icon: const Icon(Icons.visibility, size: 18),
                   label: const Text('View Details'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0EA5E9),
-                    side: const BorderSide(color: Color(0xFF0EA5E9)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -623,13 +593,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   onPressed: () => _continueProject(project),
                   icon: const Icon(Icons.play_arrow, size: 18),
                   label: const Text('Continue'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -749,13 +712,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   onPressed: () => _viewPortfolio(project),
                   icon: const Icon(Icons.folder_open, size: 18),
                   label: const Text('View Portfolio'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF0EA5E9),
-                    side: const BorderSide(color: Color(0xFF0EA5E9)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -764,13 +720,6 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                   onPressed: () => _shareProject(project),
                   icon: const Icon(Icons.share, size: 18),
                   label: const Text('Share'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -907,7 +856,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'in progress':
-        return const Color(0xFF0EA5E9);
+        return AppColors.primary;
       case 'paused':
         return Colors.orange;
       case 'completed':

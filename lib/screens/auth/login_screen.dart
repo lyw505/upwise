@@ -198,49 +198,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 
-                const SizedBox(height: 24),
-                
-                // Error Message
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    if (authProvider.errorMessage != null) {
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: AppColors.error,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                authProvider.errorMessage!,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.error,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 16),
-                              color: AppColors.error,
-                              onPressed: () => authProvider.clearError(),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                
                 const SizedBox(height: 32),
                 
                 // Sign Up Link
@@ -258,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         context.goToRegister();
                       },
                       child: Text(
-                        'Sign Up',
+                        'Create Account',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,

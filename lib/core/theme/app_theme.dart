@@ -65,31 +65,36 @@ class AppTheme {
         ),
       ),
       
-      // Elevated button theme
+      // Elevated button theme (Primary Button)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          elevation: 2,
-          shadowColor: AppColors.cardShadow,
+          elevation: 0,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          textStyle: AppTextStyles.buttonMedium,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          textStyle: AppTextStyles.buttonLarge.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       
-      // Outlined button theme
+      // Outlined button theme (Secondary Button)
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
           foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          side: const BorderSide(color: AppColors.primary, width: 1.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          textStyle: AppTextStyles.buttonMedium,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          textStyle: AppTextStyles.buttonLarge.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       
@@ -119,7 +124,7 @@ class AppTheme {
       // Input decoration theme
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceVariant,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),

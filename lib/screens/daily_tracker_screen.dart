@@ -143,7 +143,6 @@ class _DailyTrackerScreenState extends State<DailyTrackerScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             child: const Text('Skip'),
           ),
         ],
@@ -522,19 +521,12 @@ class _DailyTrackerScreenState extends State<DailyTrackerScreen> {
                         _isTimerRunning ? 'Pause' : 'Start',
                         style: AppTextStyles.buttonMedium.copyWith(color: Colors.white),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isTimerRunning ? AppColors.warning : AppColors.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
                     ),
                     
                     OutlinedButton.icon(
                       onPressed: _resetTimer,
                       icon: const Icon(Icons.refresh),
                       label: const Text('Reset'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
                     ),
                   ],
                 ),
@@ -555,10 +547,6 @@ class _DailyTrackerScreenState extends State<DailyTrackerScreen> {
                     'Complete Task',
                     style: AppTextStyles.buttonLarge.copyWith(color: Colors.white),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.success,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -569,10 +557,6 @@ class _DailyTrackerScreenState extends State<DailyTrackerScreen> {
                   label: Text(
                     'Skip Task',
                     style: AppTextStyles.buttonLarge.copyWith(color: AppColors.textSecondary),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: AppColors.textTertiary),
                   ),
                 ),
               ),

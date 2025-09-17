@@ -124,9 +124,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFE3F2FD), // Light blue background
+            color: AppColors.primary.withOpacity(0.1), // Light blue background
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF90CAF9), width: 1),
+            border: Border.all(color: AppColors.primaryLight, width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -152,16 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () => context.goToAnalytics(),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey[400]!),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'View progress',
-                    style: TextStyle(color: Colors.grey[700]),
-                  ),
+                  child: const Text('View Progress'),
                 ),
               ),
             ],
@@ -188,13 +179,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
+                  color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF0EA5E9)),
+                  border: Border.all(color: AppColors.primary),
                 ),
                 child: const Icon(
                   Icons.local_fire_department,
-                  color: Color(0xFF0EA5E9),
+                  color: AppColors.primary,
                   size: 24,
                 ),
               ),
@@ -322,13 +313,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0EA5E9),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -338,19 +322,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {
               context.goToProjectBuilder();
             },
-            icon: const Icon(Icons.auto_awesome, color: Color(0xFF0EA5E9), size: 20),
+            icon: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
             label: Text(
               'AI Project Builder',
               style: AppTextStyles.buttonMedium.copyWith(
-                color: const Color(0xFF0EA5E9),
+                color: AppColors.primary,
                 fontWeight: FontWeight.w600,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Color(0xFF0EA5E9)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -394,9 +371,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFE3F2FD),
+        color: AppColors.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF90CAF9)),
+        border: Border.all(color: AppColors.primaryLight),
       ),
       child: Column(
         children: [
@@ -433,9 +410,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFFE3F2FD),
+          color: AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF90CAF9)),
+          border: Border.all(color: AppColors.primaryLight),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -443,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               path.topic,
               style: AppTextStyles.titleLarge.copyWith(
-                color: const Color(0xFF0EA5E9),
+                color: AppColors.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -499,7 +476,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       '${path.progressPercentage.toStringAsFixed(0)}%',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -518,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     widthFactor: path.progressPercentage / 100,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -565,20 +542,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: const Icon(
                   Icons.arrow_forward,
                   size: 18,
-                  color: Color(0xFF0EA5E9),
+                  color: AppColors.primary,
                 ),
                 label: Text(
                   'View All',
                   style: AppTextStyles.buttonMedium.copyWith(
-                    color: const Color(0xFF0EA5E9),
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFF0EA5E9)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -623,13 +593,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9).withOpacity(0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     'In Progress',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFF0EA5E9),
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -694,7 +664,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       '${path.progressPercentage.toStringAsFixed(0)}%',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -713,7 +683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     widthFactor: path.progressPercentage / 100,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),

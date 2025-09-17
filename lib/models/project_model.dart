@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 
 class ProjectModel {
   final String id;
@@ -138,19 +139,19 @@ class ProjectModel {
   static Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'web development':
-        return const Color(0xFF0EA5E9);
+        return AppColors.primary;
       case 'mobile development':
-        return const Color(0xFF10B981);
+        return AppColors.success;
       case 'data science':
         return const Color(0xFF8B5CF6);
       case 'machine learning':
-        return const Color(0xFFF59E0B);
+        return AppColors.warning;
       case 'design':
-        return const Color(0xFFEF4444);
+        return AppColors.error;
       case 'business':
-        return const Color(0xFF6366F1);
+        return AppColors.primaryDark;
       default:
-        return const Color(0xFF6B7280);
+        return AppColors.secondary;
     }
   }
 

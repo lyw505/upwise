@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/content_summary_model.dart';
 import '../providers/summarizer_provider.dart';
+import '../core/constants/app_colors.dart';
 
 class ConversationViewerScreen extends StatelessWidget {
   final ContentSummaryModel conversation;
@@ -17,10 +18,10 @@ class ConversationViewerScreen extends StatelessWidget {
     final messages = _parseConversationText(conversation.summary);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(conversation.title),
-        backgroundColor: const Color(0xFF6366F1),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -58,7 +59,7 @@ class ConversationViewerScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              color: Color(0xFF6366F1),
+              color: AppColors.primary,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
                 bottomRight: Radius.circular(24),
@@ -182,7 +183,7 @@ class ConversationViewerScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: const BoxDecoration(
-                color: Color(0xFF6366F1),
+                color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -197,7 +198,7 @@ class ConversationViewerScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: message.isUser ? const Color(0xFF6366F1) : Colors.white,
+                color: message.isUser ? AppColors.primary : Colors.white,
                 borderRadius: BorderRadius.circular(16).copyWith(
                   bottomLeft: Radius.circular(message.isUser ? 16 : 4),
                   bottomRight: Radius.circular(message.isUser ? 4 : 16),
@@ -282,7 +283,6 @@ class ConversationViewerScreen extends StatelessWidget {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Go back to library
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],

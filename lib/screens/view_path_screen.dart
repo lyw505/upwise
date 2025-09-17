@@ -508,10 +508,6 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
                             icon: const Icon(Icons.check, size: 16),
                             label: const Text('Mark Complete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.success,
-                              side: BorderSide(color: AppColors.success),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -520,9 +516,6 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.skipped),
                             icon: const Icon(Icons.skip_next, size: 16),
                             label: const Text('Skip'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.textTertiary,
-                            ),
                           ),
                         ),
                       ] else if (task.status == TaskStatus.completed) ...[
@@ -832,7 +825,6 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               Navigator.pop(context);
               await _deleteLearningPath();
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],

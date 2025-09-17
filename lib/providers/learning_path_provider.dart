@@ -319,6 +319,11 @@ class LearningPathProvider extends ChangeNotifier {
             await _autoCompleteLearningPath(updatedPath.id);
           }
           
+          // Show success message for task completion
+          if (status == TaskStatus.completed) {
+            // Task completed successfully
+          }
+          
           break;
         }
       }

@@ -244,56 +244,11 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
                       ),
                     );
                   },
                 ),
                 
-                const SizedBox(height: 16),
-                
-                // Error Message
-                Consumer<LearningPathProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.errorMessage != null) {
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: AppColors.error,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                provider.errorMessage!,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.error,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 16),
-                              color: AppColors.error,
-                              onPressed: () => provider.clearError(),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
               ],
             ),
           ),

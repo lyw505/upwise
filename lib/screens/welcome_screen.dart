@@ -34,7 +34,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   Widget _buildWelcomeScreen(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -46,7 +46,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               Text(
                 'Welcome!',
                 style: AppTextStyles.displayMedium.copyWith(
-                  color: Colors.black,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -67,7 +67,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     TextSpan(
                       text: "Log in",
                       style: TextStyle(
-                        color: Colors.black,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -75,7 +75,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     TextSpan(
                       text: "Create account",
                       style: TextStyle(
-                        color: Colors.black,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -136,22 +136,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       context.goToLogin();
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9), // Blue color
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Log in',
-                    style: AppTextStyles.buttonLarge.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: const Text('Log in'),
                 ),
               ),
 
@@ -160,28 +145,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               // Create Account Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: OutlinedButton(
                   onPressed: () {
                     if (mounted) {
                       context.goToRegister();
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBAE6FD),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Create Account',
-                    style: AppTextStyles.buttonLarge.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: const Text('Create Account'),
                 ),
               ),
 

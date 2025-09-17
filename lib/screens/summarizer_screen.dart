@@ -937,11 +937,11 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       width: 64,
       height: 64,
       decoration: BoxDecoration(
-        color: const Color(0xFF0EA5E9),
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0EA5E9).withOpacity(0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),

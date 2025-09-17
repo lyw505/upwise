@@ -3,6 +3,7 @@ import 'dashboard_screen.dart';
 import 'learning_paths_screen.dart';
 import 'analytics_screen.dart';
 import 'summarizer_screen.dart';
+import '../core/constants/app_colors.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -79,7 +80,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           onTap: _onTabTapped,
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF0EA5E9),
+          selectedItemColor: AppColors.primary,
           unselectedItemColor: Colors.grey[500],
           selectedLabelStyle: const TextStyle(
             fontWeight: FontWeight.w600,

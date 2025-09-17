@@ -58,7 +58,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                         },
                         icon: const Icon(
                           Icons.keyboard_arrow_down,
-                          color: Color(0xFF0EA5E9),
+                          color: AppColors.primary,
                         ),
                         isDense: true,
                         items: _filters.map<DropdownMenuItem<String>>((String value) {
@@ -71,7 +71,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                                   Icon(
                                     Icons.filter_list,
                                     color: _selectedFilter == value 
-                                        ? const Color(0xFF0EA5E9) 
+                                        ? AppColors.primary 
                                         : Colors.grey[600],
                                     size: 18,
                                   ),
@@ -80,7 +80,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                                     value,
                                     style: TextStyle(
                                       color: _selectedFilter == value 
-                                          ? const Color(0xFF0EA5E9) 
+                                          ? AppColors.primary 
                                           : Colors.black,
                                       fontWeight: _selectedFilter == value 
                                           ? FontWeight.w600 
@@ -180,17 +180,8 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.goToCreatePath(),
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              'Create Learning Path',
-              style: TextStyle(color: Colors.white),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF0EA5E9),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            icon: const Icon(Icons.add),
+            label: const Text('Create Learning Path'),
           ),
         ],
       ),
@@ -207,7 +198,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
         statusText = 'Not Started';
         break;
       case LearningPathStatus.inProgress:
-        statusColor = const Color(0xFF0EA5E9);
+        statusColor = AppColors.primary;
         statusText = 'In Progress';
         break;
       case LearningPathStatus.completed:
@@ -325,7 +316,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                     Text(
                       '${path.progressPercentage.toStringAsFixed(0)}%',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -344,7 +335,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                     widthFactor: path.progressPercentage / 100,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),

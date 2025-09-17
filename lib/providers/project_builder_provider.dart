@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/project_model.dart';
+import '../core/constants/app_colors.dart';
 
 class ProjectBuilderProvider with ChangeNotifier {
   List<ProjectModel> _recommendedProjects = [];
@@ -30,7 +31,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Build a Personal Finance Dashboard in Excel',
           description: 'Create a comprehensive personal finance dashboard with automated calculations, charts, and expense tracking features.',
           category: 'Business',
-          categoryColor: const Color(0xFF6366F1),
+          categoryColor: AppColors.primaryDark,
           categoryIcon: Icons.business,
           difficulty: 'Beginner',
           estimatedDays: 7,
@@ -69,7 +70,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Create a Task Management Web App',
           description: 'Build a full-stack task management application with user authentication, real-time updates, and team collaboration features.',
           category: 'Web Development',
-          categoryColor: const Color(0xFF0EA5E9),
+          categoryColor: AppColors.primary,
           categoryIcon: Icons.web,
           difficulty: 'Intermediate',
           estimatedDays: 21,
@@ -90,7 +91,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Mobile Expense Tracker App',
           description: 'Develop a cross-platform mobile app for tracking daily expenses with categories, budgets, and spending analytics.',
           category: 'Mobile Development',
-          categoryColor: const Color(0xFF10B981),
+          categoryColor: AppColors.success,
           categoryIcon: Icons.phone_android,
           difficulty: 'Intermediate',
           estimatedDays: 14,
@@ -132,7 +133,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'E-commerce Website Design',
           description: 'Design a modern, responsive e-commerce website with user-friendly interface and optimized checkout flow.',
           category: 'Design',
-          categoryColor: const Color(0xFFEF4444),
+          categoryColor: AppColors.error,
           categoryIcon: Icons.design_services,
           difficulty: 'Beginner',
           estimatedDays: 12,
@@ -157,7 +158,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Personal Portfolio Website',
           description: 'Building a responsive portfolio website to showcase my projects and skills.',
           category: 'Web Development',
-          categoryColor: const Color(0xFF0EA5E9),
+          categoryColor: AppColors.primary,
           categoryIcon: Icons.web,
           difficulty: 'Beginner',
           estimatedDays: 5,
@@ -174,7 +175,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Budget Tracker Mobile App',
           description: 'Developing a mobile app for personal budget tracking with expense categorization.',
           category: 'Mobile Development',
-          categoryColor: const Color(0xFF10B981),
+          categoryColor: AppColors.success,
           categoryIcon: Icons.phone_android,
           difficulty: 'Intermediate',
           estimatedDays: 14,
@@ -195,7 +196,7 @@ class ProjectBuilderProvider with ChangeNotifier {
           title: 'Weather App with API Integration',
           description: 'A weather application that fetches real-time weather data from external APIs.',
           category: 'Web Development',
-          categoryColor: const Color(0xFF0EA5E9),
+          categoryColor: AppColors.primary,
           categoryIcon: Icons.web,
           difficulty: 'Beginner',
           estimatedDays: 3,

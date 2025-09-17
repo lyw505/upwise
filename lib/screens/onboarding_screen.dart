@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/router/app_router.dart';
+import '../core/constants/app_colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,19 +18,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Structured',
       description: 'Upwise designs focused and easy-to-follow daily plans tailored to your goals.',
       imagePath: 'assets/images/on1.png',
-      color: const Color(0xFF4A90E2),
+      color: AppColors.primary,
     ),
     OnboardingData(
       title: 'Personalized',
       description: 'Upwise adapts the content and learning approach to your needs and skill level.',
       imagePath: 'assets/images/on2.png',
-      color: const Color(0xFF4A90E2),
+      color: AppColors.primary,
     ),
     OnboardingData(
       title: 'Consistency',
       description: 'Stay motivated with daily streaks and see how small daily efforts lead to big results over time.',
       imagePath: 'assets/images/on3.png',
-      color: const Color(0xFF4A90E2),
+      color: AppColors.primary,
     ),
   ];
 
@@ -61,7 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -127,50 +128,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Navigation buttons
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Previous button (only show after first page)
-                  if (_currentPage > 0)
-                    TextButton(
-                      onPressed: _previousPage,
-                      child: Text(
-                        'Previous',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 80), // Placeholder for alignment
-
-                  // Next button
-                  ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                    ),
-                    child: Text(
-                      _currentPage == _onboardingData.length - 1
-                          ? 'Get Started'
-                          : 'Next',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _nextPage,
+                  child: Text(
+                    _currentPage == _onboardingData.length - 1
+                        ? 'Get Started'
+                        : 'Next',
                   ),
-                ],
+                ),
               ),
             ),
           ],
