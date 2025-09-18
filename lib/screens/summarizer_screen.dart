@@ -59,9 +59,9 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   ContentType _selectedContentType = ContentType.text;
   DifficultyLevel? _targetDifficulty;
   bool _includeKeyPoints = true;
-  List<String> _selectedTags = [];
+  final List<String> _selectedTags = [];
   String? _selectedLearningPathId;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   bool _showCreateForm = false;
 
   @override
@@ -768,7 +768,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
               );
-            }).toList(),
+            }),
           ],
           onChanged: (value) {
             setState(() {
@@ -1468,7 +1468,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
               
               if (summary.tags.isNotEmpty) ...[
@@ -1750,7 +1750,7 @@ class SummaryDetailsScreen extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

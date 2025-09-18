@@ -527,7 +527,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ...displayPaths.map((path) => Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: _buildCompactActivePathCard(path),
-        )).toList(),
+        )),
         
         // Show "Lihat Semua" button if there are more than 5 paths or if we want to navigate to all paths
         if (activePaths.isNotEmpty)

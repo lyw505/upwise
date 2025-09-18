@@ -515,7 +515,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
     if (_totalTasksCompleted > 0) {
       activities.add(_buildActivityItem(
         'Completed daily task',
-        _learningPaths.isNotEmpty ? '${_learningPaths.first.topic} - Day ${_totalTasksCompleted}' : 'Learning task',
+        _learningPaths.isNotEmpty ? '${_learningPaths.first.topic} - Day $_totalTasksCompleted' : 'Learning task',
         Icons.check_circle_outline,
         AppColors.success,
         '2 hours ago',
@@ -538,11 +538,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
     // Add streak activity
     if (_currentStreak >= 3) {
       activities.add(_buildActivityItem(
-        'Achieved ${_currentStreak}-day streak',
+        'Achieved $_currentStreak-day streak',
         'Keep up the great work!',
         Icons.local_fire_department_outlined,
         AppColors.warning,
-        '${_currentStreak} days ago',
+        '$_currentStreak days ago',
       ));
     }
     

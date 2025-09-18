@@ -100,7 +100,7 @@ class SummarizerService {
       
       // Limit content length
       if (html.length > 5000) {
-        html = html.substring(0, 5000) + '...';
+        html = '${html.substring(0, 5000)}...';
       }
       
       return html;
