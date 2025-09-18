@@ -246,7 +246,7 @@ class _AiChatScreenState extends State<AiChatScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.psychology, size: 20),
@@ -262,7 +262,7 @@ class _AiChatScreenState extends State<AiChatScreen>
                   ),
                   Text(
                     'Chat with AI about your content',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.8)),
+                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
                   ),
                 ],
               ),
@@ -322,7 +322,7 @@ class _AiChatScreenState extends State<AiChatScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
@@ -340,18 +340,18 @@ class _AiChatScreenState extends State<AiChatScreen>
                 color: message.isUser 
                     ? AppColors.primary 
                     : message.isError 
-                        ? Colors.red.withOpacity(0.1)
+                        ? Colors.red.withValues(alpha: 0.1)
                         : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
                   ),
                 ],
                 border: message.isError 
-                    ? Border.all(color: Colors.red.withOpacity(0.3))
+                    ? Border.all(color: Colors.red.withValues(alpha: 0.3))
                     : null,
               ),
               child: message.isGenerating 
@@ -417,7 +417,7 @@ class _AiChatScreenState extends State<AiChatScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -454,7 +454,7 @@ class _AiChatScreenState extends State<AiChatScreen>
               gradient: LinearGradient(
                 colors: _isGenerating 
                     ? [Colors.grey[400]!, Colors.grey[500]!]
-                    : [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                    : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
               ),
               borderRadius: BorderRadius.circular(24),
             ),

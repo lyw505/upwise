@@ -467,7 +467,7 @@ class _ConfigStatusScreenState extends State<ConfigStatusScreen> {
       final supabase = Supabase.instance.client;
       
       // Test basic connection by querying profiles table
-      final response = await supabase
+      await supabase
           .from('profiles')
           .select('count')
           .count(CountOption.exact);

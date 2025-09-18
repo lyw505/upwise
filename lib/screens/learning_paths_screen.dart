@@ -47,6 +47,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                   ),
                   const SizedBox(height: 16),
                   
+<<<<<<< HEAD
                   // Search and Filter Row
                   Row(
                     children: [
@@ -178,18 +179,26 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                   
                   const SizedBox(height: 16),
                   
+=======
+>>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
                   // Create Learning Path Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () => context.goToCreatePath(),
                       icon: const Icon(Icons.add, color: Colors.white),
+<<<<<<< HEAD
                       label: const Text(
                         'Create New Learning Path',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
+=======
+                      label: Text(
+                        'Create Learning Path',
+                        style: AppTextStyles.buttonMedium.copyWith(color: Colors.white),
+>>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
@@ -199,6 +208,82 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                         ),
                       ),
                     ),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Search and Filter Row
+                  Row(
+                    children: [
+                      // Search Box
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Search learning paths...',
+                            prefixIcon: Icon(Icons.search, color: AppColors.primary),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: AppColors.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: AppColors.borderLight),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Filter Button
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.borderLight),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedFilter,
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _selectedFilter = newValue;
+                                });
+                              }
+                            },
+                            icon: Icon(Icons.filter_list, color: AppColors.primary, size: 20),
+                            isDense: true,
+                            items: _filters.map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(
+                                  value,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -277,20 +362,20 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
           Icon(
             Icons.school_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: AppColors.textSecondary,
           ),
           const SizedBox(height: 16),
           Text(
             'No Learning Paths Found',
             style: AppTextStyles.titleLarge.copyWith(
-              color: Colors.grey[600],
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Create your first learning path to get started!',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey[500],
+              color: AppColors.textTertiary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -311,7 +396,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
 
     switch (path.status) {
       case LearningPathStatus.notStarted:
-        statusColor = Colors.grey[600]!;
+        statusColor = AppColors.textSecondary;
         statusText = 'Not Started';
         break;
       case LearningPathStatus.inProgress:
@@ -334,12 +419,12 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: AppColors.borderLight),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -354,7 +439,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                   child: Text(
                     path.topic,
                     style: AppTextStyles.titleLarge.copyWith(
-                      color: Colors.black,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -362,7 +447,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -380,7 +465,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
               Text(
                 path.description,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -391,26 +476,26 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 Icon(
                   Icons.schedule,
                   size: 16,
-                  color: Colors.grey[500],
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${path.durationDays} days',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 16),
                 Icon(
                   Icons.access_time,
                   size: 16,
-                  color: Colors.grey[500],
+                  color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${path.dailyTimeMinutes} min/day',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.grey[600],
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -426,7 +511,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                     Text(
                       'Progress',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.grey[700],
+                        color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -462,7 +547,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 Text(
                   '${path.completedOrSkippedTasksCount}/${path.dailyTasks.length} tasks completed',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.grey[500],
+                    color: AppColors.textTertiary,
                   ),
                 ),
               ],

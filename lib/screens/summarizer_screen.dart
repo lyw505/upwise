@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
+import '../core/constants/app_text_styles.dart';
 import '../models/content_summary_model.dart';
 import '../providers/summarizer_provider.dart';
 import '../providers/auth_provider.dart';
@@ -59,9 +60,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   ContentType _selectedContentType = ContentType.text;
   DifficultyLevel? _targetDifficulty;
   bool _includeKeyPoints = true;
-  final List<String> _selectedTags = [];
   String? _selectedLearningPathId;
-  final bool _isLoading = false;
   bool _showCreateForm = false;
 
   @override
@@ -134,68 +133,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
 
-  Widget _buildWelcomeHeader() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.psychology,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AI Summarizer',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Transform any content into clear, actionable insights',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildModernContentTypeSelector() {
     return Container(
@@ -204,7 +141,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -272,7 +209,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.grey[50],
+            color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey[50],
             border: Border.all(
               color: isSelected ? AppColors.primary : Colors.grey[300]!,
               width: isSelected ? 2 : 1,
@@ -313,46 +250,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  Widget _buildContentTypeSelector() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Content Type',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: ContentType.values.map((type) {
-                return Expanded(
-                  child: RadioListTile<ContentType>(
-                    value: type,
-                    groupValue: _selectedContentType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedContentType = value!;
-                      });
-                    },
-                    title: Text(
-                      type.value.toUpperCase(),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildModernTextField({
     required TextEditingController controller,
@@ -431,7 +328,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -507,65 +404,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  Widget _buildContentInput() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Content Input',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (_selectedContentType == ContentType.url) ...[
-              TextFormField(
-                controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'URL',
-                  hintText: 'https://example.com/article or https://youtube.com/watch?v=...',
-                  prefixIcon: Icon(Icons.link),
-                  helperText: 'Supports web articles, YouTube videos, and other URLs',
-                ),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Please enter a URL';
-                  }
-                  final uri = Uri.tryParse(value!);
-                  if (uri == null || !uri.hasAbsolutePath) {
-                    return 'Please enter a valid URL';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
-            TextFormField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                labelText: _selectedContentType == ContentType.url 
-                    ? 'Additional Notes (Optional)'
-                    : 'Content to Summarize',
-                hintText: _getContentHint(),
-                prefixIcon: Icon(_getContentIcon()),
-                alignLabelWithHint: true,
-              ),
-              maxLines: _selectedContentType == ContentType.url ? 3 : 8,
-              validator: (value) {
-                if (_selectedContentType != ContentType.url && (value?.isEmpty ?? true)) {
-                  return 'Please enter content to summarize';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildModernSummaryOptions() {
     return Container(
@@ -574,7 +412,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -699,7 +537,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _includeKeyPoints ? AppColors.primary.withOpacity(0.1) : Colors.grey[100],
+              color: _includeKeyPoints ? AppColors.primary.withValues(alpha: 0.1) : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -790,7 +628,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
             gradient: LinearGradient(
               colors: summarizerProvider.isGenerating 
                   ? [Colors.grey[400]!, Colors.grey[500]!]
-                  : [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                  : [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -799,7 +637,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                 ? []
                 : [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -860,6 +698,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
   Widget _buildModernAppBar() {
+<<<<<<< HEAD
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
@@ -869,6 +708,44 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           color: AppColors.textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
+=======
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Icon(
+                Icons.psychology_rounded,
+                color: AppColors.primary,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'AI Summarizer',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Transform content into insights',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+>>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
         ),
       ),
       leading: IconButton(
@@ -888,7 +765,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -1030,98 +907,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  Widget _buildStatsTab() {
-    return Consumer<SummarizerProvider>(
-      builder: (context, summarizerProvider, child) {
-        final stats = summarizerProvider.getStatistics();
-        
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Summary Statistics',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildStatCard(
-                            'Total',
-                            stats['total'].toString(),
-                            Icons.summarize,
-                            AppColors.primary,
-                          ),
-                          _buildStatCard(
-                            'Favorites',
-                            stats['favorites'].toString(),
-                            Icons.favorite,
-                            Colors.red,
-                          ),
-                          _buildStatCard(
-                            'This Week',
-                            stats['thisWeek'].toString(),
-                            Icons.schedule,
-                            Colors.green,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSummaryCard(ContentSummaryModel summary) {
     return Card(
@@ -1196,7 +982,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                         tag,
                         style: const TextStyle(fontSize: 12),
                       ),
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       side: BorderSide.none,
                     );
                   }).toList(),
@@ -1255,47 +1041,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  Widget _buildContentTypeDistribution(Map<ContentType, int> distribution) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Content Types',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...distribution.entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Icon(
-                      _getContentTypeIcon(entry.key),
-                      size: 20,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(entry.key.value.toUpperCase()),
-                    ),
-                    Text(
-                      entry.value.toString(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
 
   Future<void> _generateSummary() async {
     if (!_formKey.currentState!.validate()) return;
@@ -1433,7 +1178,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                   children: summary.tags.map((tag) {
                     return Chip(
                       label: Text(tag, style: const TextStyle(fontSize: 12)),
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     );
                   }).toList(),
                 ),
@@ -1451,14 +1196,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : AppColors.primary,
-      ),
-    );
-  }
 
   String _getContentHint() {
     switch (_selectedContentType) {
@@ -1471,16 +1208,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     }
   }
 
-  IconData _getContentIcon() {
-    switch (_selectedContentType) {
-      case ContentType.text:
-        return Icons.text_fields;
-      case ContentType.url:
-        return Icons.notes;
-      case ContentType.file:
-        return Icons.description;
-    }
-  }
 
   IconData _getContentTypeIcon(ContentType type) {
     switch (type) {
@@ -1730,7 +1457,7 @@ class SummaryDetailsScreen extends StatelessWidget {
               children: summary.tags.map((tag) {
                 return Chip(
                   label: Text(tag),
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   side: BorderSide.none,
                 );
               }).toList(),

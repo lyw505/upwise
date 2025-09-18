@@ -15,11 +15,11 @@ class EnvConfig {
   }
 
   /// Google Gemini API Configuration
-  static String get geminiApiKey => _getEnvVar('GEMINI_API_KEY', 'AIzaSyAB7DAlcP6M9LH7lJWquEPIXHOnQ_ibxME');
+  static String get geminiApiKey => _getEnvVar('GEMINI_API_KEY', '');
   
   /// Supabase Configuration
-  static String get supabaseUrl => _getEnvVar('SUPABASE_URL', 'https://emelocetqqlirzuqyygd.supabase.co');
-  static String get supabaseAnonKey => _getEnvVar('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtZWxvY2V0cXFsaXJ6dXF5eWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDA4MzMsImV4cCI6MjA3MjI3NjgzM30.nHjxz6t3YYiHfzF9NfC6vYHuOfvKMEf-hC-PkF287Hc');
+  static String get supabaseUrl => _getEnvVar('SUPABASE_URL', '');
+  static String get supabaseAnonKey => _getEnvVar('SUPABASE_ANON_KEY', '');
   
   /// App Configuration
   static String get appEnv => _getEnvVar('APP_ENV', 'development');
@@ -35,10 +35,12 @@ class EnvConfig {
   static bool get enableOfflineMode => _getEnvVar('ENABLE_OFFLINE_MODE', 'false').toLowerCase() == 'true';
   
   /// Check if environment is properly configured
-  static bool get isConfigured => geminiApiKey.isNotEmpty && geminiApiKey != 'your_gemini_api_key_here';
+  static bool get isConfigured => geminiApiKey.isNotEmpty && 
+      supabaseUrl.isNotEmpty && 
+      supabaseAnonKey.isNotEmpty;
   
   /// Check if Gemini API key is available
-  static bool get hasGeminiApiKey => geminiApiKey.isNotEmpty && geminiApiKey != 'your_gemini_api_key_here';
+  static bool get hasGeminiApiKey => geminiApiKey.isNotEmpty;
   
   /// Check if running in production
   static bool get isProduction => appEnv.toLowerCase() == 'production';
@@ -64,15 +66,15 @@ class EnvConfig {
   static List<String> validateConfig() {
     final errors = <String>[];
     
-    if (geminiApiKey.isEmpty || geminiApiKey == 'your_gemini_api_key_here') {
+    if (geminiApiKey.isEmpty) {
       errors.add('GEMINI_API_KEY is not configured');
     }
     
-    if (supabaseUrl.isEmpty || supabaseUrl == 'your_supabase_project_url_here') {
+    if (supabaseUrl.isEmpty) {
       errors.add('SUPABASE_URL is not configured');
     }
     
-    if (supabaseAnonKey.isEmpty || supabaseAnonKey == 'your_supabase_anon_key_here') {
+    if (supabaseAnonKey.isEmpty) {
       errors.add('SUPABASE_ANON_KEY is not configured');
     }
     

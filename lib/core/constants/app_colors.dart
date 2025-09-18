@@ -16,10 +16,17 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF); // White
   static const Color surfaceVariant = Color(0xFFFFFFFF); // White
   
+<<<<<<< HEAD
   // Text colors - User friendly black tones
   static const Color textPrimary = Color(0xFF1F2937); // Gray-800 - More readable
   static const Color textSecondary = Color(0xFF374151); // Gray-700 - Darker than before
   static const Color textTertiary = Color(0xFF6B7280); // Gray-500 - Still readable
+=======
+  // Text colors - Better readability with user-friendly black
+  static const Color textPrimary = Color(0xFF1F2937); // Gray-800 - readable black
+  static const Color textSecondary = Color(0xFF374151); // Gray-700 - softer black
+  static const Color textTertiary = Color(0xFF6B7280); // Gray-500 - still readable
+>>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
   
   // Status colors
   static const Color success = Color(0xFF10B981); // Emerald-500
@@ -31,9 +38,15 @@ class AppColors {
   static const Color streak = Color(0xFFFF6B35); // Orange for fire emoji
   static const Color streakBackground = Color(0xFFFFF7ED); // Orange-50
   
+<<<<<<< HEAD
   // Card and border colors - Blue borders
   static const Color border = Color(0xFF007AFF); // Primary blue for all borders
   static const Color borderLight = Color(0xFF3395FF); // Light blue variant
+=======
+  // Card and border colors - Blue theme
+  static const Color border = Color(0xFF007AFF); // Primary blue for borders
+  static const Color borderLight = Color(0xFF3395FF); // Light blue for subtle borders
+>>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
   static const Color cardShadow = Color(0x0F000000); // Black with 6% opacity
   
   // Disabled colors

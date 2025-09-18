@@ -124,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1), // Light blue background
+            color: AppColors.primary.withValues(alpha: 0.1), // Light blue background
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.primaryLight, width: 1),
           ),
@@ -179,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.primary),
                 ),
@@ -218,83 +218,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildQuickStats() {
-    return Consumer<LearningPathProvider>(
-      builder: (context, provider, child) {
-        return Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                title: 'Learning Paths',
-                value: '${provider.totalLearningPaths}',
-                icon: Icons.school,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
-                title: 'Completed',
-                value: '${provider.completedLearningPaths}',
-                icon: Icons.check_circle,
-                color: AppColors.success,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
-                title: 'Active',
-                value: '${provider.activeLearningPaths}',
-                icon: Icons.play_circle,
-                color: AppColors.warning,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 24,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTextStyles.headlineSmall.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildActionButtons() {
     return Column(
@@ -371,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primaryLight),
       ),
@@ -403,123 +327,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildActivePathCard(LearningPathModel path) {
-    return GestureDetector(
-      onTap: () => context.goToViewPath(path.id),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primaryLight),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              path.topic,
-              style: AppTextStyles.titleLarge.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  Icons.check_circle_outline,
-                  size: 20,
-                  color: Colors.grey[700],
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Data Cleaning',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  size: 20,
-                  color: Colors.grey[700],
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${path.durationDays} days',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Progress Bar
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Progress',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '${path.progressPercentage.toStringAsFixed(0)}%',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: path.progressPercentage / 100,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${path.completedOrSkippedTasksCount}/${path.dailyTasks.length} tasks completed',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildActivePathsList(List<LearningPathModel> activePaths) {
     // Display up to 5 active learning paths
     final displayPaths = activePaths.take(5).toList();
-    final hasMorePaths = activePaths.length > 5;
 
     return Column(
       children: [
@@ -570,7 +381,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: Colors.grey[300]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -593,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -735,357 +546,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildLearningPathsSection() {
-    return Consumer<LearningPathProvider>(
-      builder: (context, provider, child) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Your Learning Paths',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                if (provider.learningPaths.isNotEmpty)
-                  TextButton(
-                    onPressed: () {
-                      // Navigate to analytics to see all learning paths
-                      context.goToAnalytics();
-                    },
-                    child: Text(
-                      'View All',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (provider.isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (provider.learningPaths.isEmpty)
-              _buildEmptyState()
-            else
-              _buildLearningPathsList(provider.learningPaths.take(3).toList()),
-          ],
-        );
-      },
-    );
-  }
 
-  Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.school_outlined,
-            size: 64,
-            color: AppColors.textTertiary,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No Learning Paths Yet',
-            style: AppTextStyles.titleLarge.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Create your first AI-powered learning path to get started!',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLearningPathsList(List learningPaths) {
-    return Column(
-      children: learningPaths.map((path) => _buildLearningPathCard(path)).toList(),
-    );
-  }
-
-  Widget _buildLearningPathCard(LearningPathModel path) {
-    // Calculate status color and text
-    Color statusColor;
-    String statusText;
-
-    switch (path.status) {
-      case LearningPathStatus.notStarted:
-        statusColor = AppColors.textTertiary;
-        statusText = 'Not Started';
-        break;
-      case LearningPathStatus.inProgress:
-        statusColor = AppColors.primary;
-        statusText = 'In Progress';
-        break;
-      case LearningPathStatus.completed:
-        statusColor = AppColors.success;
-        statusText = 'Completed';
-        break;
-      case LearningPathStatus.paused:
-        statusColor = AppColors.warning;
-        statusText = 'Paused';
-        break;
-    }
-
-    return GestureDetector(
-      onTap: () => context.goToViewPath(path.id),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    path.topic,
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: statusColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (path.description.isNotEmpty)
-              Text(
-                path.description,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: path.progressPercentage / 100,
-              backgroundColor: AppColors.border,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(
-                  '${path.progressPercentage.toStringAsFixed(0)}% Complete',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                Text(
-                  ' • ',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                Text(
-                  '${path.completedTasksCount}/${path.dailyTasks.length} tasks',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTodayTaskSection() {
-    return Consumer<LearningPathProvider>(
-      builder: (context, provider, child) {
-        // Find active learning path with today's task
-        final activePaths = provider.learningPaths
-            .where((path) => path.status == LearningPathStatus.inProgress)
-            .toList();
-
-        final todayTask = activePaths.isNotEmpty ? activePaths.first.todayTask : null;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  "Today's Task",
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                if (todayTask != null)
-                  TextButton.icon(
-                    onPressed: () => context.goToDaily(),
-                    icon: const Icon(Icons.play_arrow, size: 16),
-                    label: const Text('Start'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: todayTask != null ? AppColors.primary : AppColors.border,
-                  width: todayTask != null ? 2 : 1,
-                ),
-                boxShadow: todayTask != null ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ] : null,
-              ),
-              child: todayTask != null
-                  ? _buildTodayTaskContent(todayTask, activePaths.first)
-                  : _buildNoTaskContent(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildTodayTaskContent(dynamic todayTask, dynamic learningPath) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'TODAY',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Day ${todayTask.dayNumber}',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Text(
-          todayTask.mainTopic,
-          style: AppTextStyles.titleMedium.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          todayTask.subTopic,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'From: ${learningPath.topic}',
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => context.goToDaily(),
-            icon: const Icon(Icons.play_arrow, color: Colors.white),
-            label: Text(
-              'Start Learning',
-              style: AppTextStyles.buttonMedium.copyWith(color: Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNoTaskContent() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'No active learning path',
-          style: AppTextStyles.titleMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Create a learning path to see your daily tasks here.',
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => context.goToCreatePath(),
-            icon: const Icon(Icons.add),
-            label: const Text('Create Learning Path'),
-          ),
-        ),
-      ],
-    );
-  }
 }
 
 // Add floating action button to Scaffold

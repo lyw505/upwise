@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/router/app_router.dart';
 import '../core/constants/app_colors.dart';
+import '../core/router/app_router.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -43,15 +43,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } else {
       // Navigate to welcome screen after last page
       context.goToWelcome();
-    }
-  }
-
-  void _previousPage() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
     }
   }
 

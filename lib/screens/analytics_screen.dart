@@ -146,7 +146,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -174,7 +174,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -186,7 +186,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                   gradient: LinearGradient(
                     colors: [
                       AppColors.primary,
-                      AppColors.primary.withOpacity(0.8),
+                      AppColors.primary.withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -194,7 +194,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -214,7 +214,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 ),
                 overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
                   if (states.contains(WidgetState.hovered)) {
-                    return AppColors.primary.withOpacity(0.1);
+                    return AppColors.primary.withValues(alpha: 0.1);
                   }
                   return null;
                 }),
@@ -461,7 +461,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -476,7 +476,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -565,7 +565,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -658,7 +658,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -689,7 +689,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -739,7 +739,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -817,7 +817,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1129,7 +1129,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
