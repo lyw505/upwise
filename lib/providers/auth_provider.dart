@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
+import '../core/widgets/simple_toast.dart';
 
 class AuthProvider extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -99,6 +101,7 @@ class AuthProvider extends ChangeNotifier {
     required String email,
     required String password,
     required String name,
+    BuildContext? context,
   }) async {
     try {
       _setLoading(true);
@@ -112,12 +115,16 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.user != null) {
         _currentUser = response.user;
+        if (context != null && context.mounted) {
+          SimpleToast.showSuccess(context, 'Account created successfully!');
+        }
         return true;
       }
       
       return false;
     } catch (e) {
-      _setError('Failed to create account: ${e.toString()}');
+      final errorMsg = 'Failed to create account: ${e.toString()}';
+      _setError(errorMsg);
       return false;
     } finally {
       _setLoading(false);
@@ -127,6 +134,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signIn({
     required String email,
     required String password,
+    BuildContext? context,
   }) async {
     try {
       _setLoading(true);
@@ -139,12 +147,19 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.user != null) {
         _currentUser = response.user;
+        if (context != null && context.mounted) {
+          SimpleToast.showSuccess(context, 'Welcome back!');
+        }
         return true;
       }
       
       return false;
     } catch (e) {
-      _setError('Failed to sign in: ${e.toString()}');
+      final errorMsg = _getReadableErrorMessage(e.toString());
+      _setError(errorMsg);
+      if (context != null && context.mounted) {
+        SimpleToast.showError(context, errorMsg);
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -260,5 +275,21 @@ class AuthProvider extends ChangeNotifier {
 
   void clearError() {
     _clearError();
+  }
+
+  String _getReadableErrorMessage(String error) {
+    if (error.contains('Invalid login credentials')) {
+      return 'Invalid email or password. Please check your credentials.';
+    } else if (error.contains('Email not confirmed')) {
+      return 'Please check your email and confirm your account.';
+    } else if (error.contains('User not found')) {
+      return 'No account found with this email address.';
+    } else if (error.contains('Too many requests')) {
+      return 'Too many login attempts. Please try again later.';
+    } else if (error.contains('Network')) {
+      return 'Network error. Please check your internet connection.';
+    } else {
+      return 'Login failed. Please try again.';
+    }
   }
 }

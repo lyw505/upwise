@@ -11,15 +11,15 @@ class AppColors {
   static const Color secondaryLight = Color(0xFF94A3B8); // Slate-400
   static const Color secondaryDark = Color(0xFF475569); // Slate-600
   
-  // Background colors
-  static const Color background = Color(0xFFF8FAFC); // Slate-50
+  // Background colors - All white for consistency
+  static const Color background = Color(0xFFFFFFFF); // White
   static const Color surface = Color(0xFFFFFFFF); // White
-  static const Color surfaceVariant = Color(0xFFF1F5F9); // Slate-100
+  static const Color surfaceVariant = Color(0xFFFFFFFF); // White
   
-  // Text colors
-  static const Color textPrimary = Color(0xFF0F172A); // Slate-900
-  static const Color textSecondary = Color(0xFF64748B); // Slate-500
-  static const Color textTertiary = Color(0xFF94A3B8); // Slate-400
+  // Text colors - User friendly black tones
+  static const Color textPrimary = Color(0xFF1F2937); // Gray-800 - More readable
+  static const Color textSecondary = Color(0xFF374151); // Gray-700 - Darker than before
+  static const Color textTertiary = Color(0xFF6B7280); // Gray-500 - Still readable
   
   // Status colors
   static const Color success = Color(0xFF10B981); // Emerald-500
@@ -31,9 +31,9 @@ class AppColors {
   static const Color streak = Color(0xFFFF6B35); // Orange for fire emoji
   static const Color streakBackground = Color(0xFFFFF7ED); // Orange-50
   
-  // Card and border colors
-  static const Color border = Color(0xFFE2E8F0); // Slate-200
-  static const Color borderLight = Color(0xFFF1F5F9); // Slate-100
+  // Card and border colors - Blue borders
+  static const Color border = Color(0xFF007AFF); // Primary blue for all borders
+  static const Color borderLight = Color(0xFF3395FF); // Light blue variant
   static const Color cardShadow = Color(0x0F000000); // Black with 6% opacity
   
   // Disabled colors

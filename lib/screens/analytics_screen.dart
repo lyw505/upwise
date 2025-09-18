@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../providers/user_provider.dart';
@@ -652,7 +653,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -664,7 +664,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
               ),
             ],
           ),
-          child: Column(
+          child: InkWell(
+            onTap: () {
+              // Navigate to learning path detail
+              context.goToViewPath(path.id);
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -692,6 +700,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.textTertiary,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -709,6 +723,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> with TickerProviderSt
                 minHeight: 6,
               ),
             ],
+              ),
+            ),
           ),
         );
       }).toList(),

@@ -16,6 +16,14 @@ class LearningPathsScreen extends StatefulWidget {
 class _LearningPathsScreenState extends State<LearningPathsScreen> {
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Active', 'Completed', 'Paused', 'Not Started'];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,66 +41,162 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                   Text(
                     'Learning Paths',
                     style: AppTextStyles.headlineLarge.copyWith(
-                      color: Colors.black,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedFilter,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedFilter = newValue;
-                            });
-                          }
-                        },
-                        icon: const Icon(
-                          Icons.keyboard_arrow_down,
-                          color: AppColors.primary,
-                        ),
-                        isDense: true,
-                        items: _filters.map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.filter_list,
-                                    color: _selectedFilter == value 
-                                        ? AppColors.primary 
-                                        : Colors.grey[600],
-                                    size: 18,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    value,
-                                    style: TextStyle(
-                                      color: _selectedFilter == value 
-                                          ? AppColors.primary 
-                                          : Colors.black,
-                                      fontWeight: _selectedFilter == value 
-                                          ? FontWeight.w600 
-                                          : FontWeight.normal,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                  
+                  // Search and Filter Row
+                  Row(
+                    children: [
+                      // Search Box
+                      Expanded(
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey[300]!, width: 1),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
                             ),
-                          );
-                        }).toList(),
+                            decoration: InputDecoration(
+                              hintText: 'Search learning paths...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 14,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.grey[500],
+                                size: 20,
+                              ),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: Colors.grey[500],
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(width: 12),
+                      
+                      // Filter Button
+                      Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey[300]!, width: 1),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _selectedFilter,
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _selectedFilter = newValue;
+                                });
+                              }
+                            },
+                            icon: Icon(
+                              Icons.keyboard_arrow_down,
+                              color: Colors.grey[600],
+                              size: 20,
+                            ),
+                            isDense: true,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                            ),
+                            items: _filters.map<DropdownMenuItem<String>>((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.filter_list,
+                                        color: _selectedFilter == value 
+                                            ? AppColors.primary 
+                                            : Colors.grey[600],
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        value,
+                                        style: TextStyle(
+                                          color: _selectedFilter == value 
+                                              ? AppColors.primary 
+                                              : AppColors.textPrimary,
+                                          fontWeight: _selectedFilter == value 
+                                              ? FontWeight.w600 
+                                              : FontWeight.normal,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Create Learning Path Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.goToCreatePath(),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Create New Learning Path',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -134,22 +238,35 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
 
 
   List<LearningPathModel> _getFilteredPaths(List<LearningPathModel> paths) {
-    if (_selectedFilter == 'All') return paths;
+    var filteredPaths = paths;
     
-    return paths.where((path) {
-      switch (_selectedFilter) {
-        case 'Active':
-          return path.status == LearningPathStatus.inProgress;
-        case 'Completed':
-          return path.status == LearningPathStatus.completed;
-        case 'Paused':
-          return path.status == LearningPathStatus.paused;
-        case 'Not Started':
-          return path.status == LearningPathStatus.notStarted;
-        default:
-          return true;
-      }
-    }).toList();
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filteredPaths = filteredPaths.where((path) {
+        return path.topic.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               path.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+    
+    // Apply status filter
+    if (_selectedFilter != 'All') {
+      filteredPaths = filteredPaths.where((path) {
+        switch (_selectedFilter) {
+          case 'Active':
+            return path.status == LearningPathStatus.inProgress;
+          case 'Completed':
+            return path.status == LearningPathStatus.completed;
+          case 'Paused':
+            return path.status == LearningPathStatus.paused;
+          case 'Not Started':
+            return path.status == LearningPathStatus.notStarted;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+    
+    return filteredPaths;
   }
 
   Widget _buildEmptyState() {
