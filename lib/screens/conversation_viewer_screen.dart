@@ -8,9 +8,9 @@ class ConversationViewerScreen extends StatelessWidget {
   final ContentSummaryModel conversation;
 
   const ConversationViewerScreen({
-    Key? key,
+    super.key,
     required this.conversation,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

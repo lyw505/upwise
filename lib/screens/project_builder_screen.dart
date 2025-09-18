@@ -278,7 +278,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
           ...projects.map((project) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: _buildProjectCard(project),
-          )).toList(),
+          )),
       ],
     );
   }
@@ -471,7 +471,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                 ...myProjects.map((project) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: _buildMyProjectCard(project),
-                )).toList(),
+                )),
             ],
           ),
         );
@@ -630,7 +630,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
                 ...completedProjects.map((project) => Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: _buildCompletedProjectCard(project),
-                )).toList(),
+                )),
             ],
           ),
         );
