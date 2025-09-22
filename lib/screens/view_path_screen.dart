@@ -105,6 +105,11 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       // Reload to show updated progress
       await _loadLearningPath();
       
+      // Force UI refresh
+      if (mounted) {
+        setState(() {});
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -113,7 +118,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                   ? 'Task completed! Great job!' 
                   : status == TaskStatus.skipped
                       ? 'Task skipped! Keep going!'
-                      : 'Task status updated',
+                      : status == TaskStatus.notStarted
+                          ? 'Task status reset to not started'
+                          : 'Task status updated',
             ),
             backgroundColor: (status == TaskStatus.completed || status == TaskStatus.skipped)
                 ? AppColors.success 
@@ -277,10 +284,14 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                       ),
                     ),
                     const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: _learningPath!.progressPercentage / 100,
-                      backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: _learningPath!.progressPercentage / 100,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        minHeight: 6,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -445,15 +456,18 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             Text(
               task.mainTopic,
               style: AppTextStyles.titleSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: isCompleted ? AppColors.textTertiary : AppColors.textPrimary,
                 decoration: isCompleted ? TextDecoration.lineThrough : null,
+                decorationThickness: 2.0,
               ),
             ),
             Text(
               task.subTopic,
+              maxLines: null,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondary,
+                color: isCompleted ? AppColors.textTertiary : AppColors.textSecondary,
                 decoration: isCompleted ? TextDecoration.lineThrough : null,
+                decorationThickness: 2.0,
               ),
             ),
           ],
@@ -503,74 +517,50 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                   Row(
                     children: [
                       if (task.status == TaskStatus.notStarted || task.status == TaskStatus.inProgress) ...[
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
-                            icon: const Icon(Icons.check, size: 16),
-                            label: const Text('Mark Complete'),
+                        OutlinedButton.icon(
+                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: const Size(0, 36),
                           ),
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('Mark Complete', style: TextStyle(fontSize: 12)),
                         ),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: TextButton.icon(
-                            onPressed: () => _updateTaskStatus(task.id, TaskStatus.skipped),
-                            icon: const Icon(Icons.skip_next, size: 16),
-                            label: const Text('Skip'),
+                        TextButton.icon(
+                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.skipped),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: const Size(0, 36),
                           ),
+                          icon: const Icon(Icons.skip_next, size: 16),
+                          label: const Text('Skip', style: TextStyle(fontSize: 12)),
                         ),
                       ] else if (task.status == TaskStatus.completed) ...[
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: AppColors.success,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Completed',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        OutlinedButton.icon(
+                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: AppColors.success.withValues(alpha: 0.1),
+                            side: BorderSide(color: AppColors.success),
+                            foregroundColor: AppColors.success,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: const Size(0, 36),
                           ),
+                          icon: const Icon(Icons.check_circle, size: 16),
+                          label: const Text('Completed', style: TextStyle(fontSize: 12)),
                         ),
                       ] else if (task.status == TaskStatus.skipped) ...[
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.skip_next,
-                                  color: AppColors.warning,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Skipped',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    color: AppColors.warning,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        OutlinedButton.icon(
+                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: AppColors.warning.withValues(alpha: 0.1),
+                            side: BorderSide(color: AppColors.warning),
+                            foregroundColor: AppColors.warning,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            minimumSize: const Size(0, 36),
                           ),
+                          icon: const Icon(Icons.skip_next, size: 16),
+                          label: const Text('Skipped', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ],

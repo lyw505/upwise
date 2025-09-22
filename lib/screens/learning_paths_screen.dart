@@ -29,26 +29,50 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: _buildFloatingActionButton(),
       body: SafeArea(
         child: Column(
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Learning Paths',
-                    style: AppTextStyles.headlineLarge.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-<<<<<<< HEAD
-                  // Search and Filter Row
+            Container(
+              color: AppColors.background,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.school_rounded,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Learning Paths',
+                                  style: AppTextStyles.headlineSmall.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Structured learning journeys for skill mastery',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Search and Filter Row
                   Row(
                     children: [
                       // Search Box
@@ -106,180 +130,56 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(width: 12),
-                      
                       // Filter Button
-                      Container(
-                        height: 48,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[300]!, width: 1),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedFilter,
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() {
-                                  _selectedFilter = newValue;
-                                });
-                              }
-                            },
-                            icon: Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.grey[600],
-                              size: 20,
-                            ),
-                            isDense: true,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                            ),
-                            items: _filters.map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.filter_list,
-                                        color: _selectedFilter == value 
-                                            ? AppColors.primary 
-                                            : Colors.grey[600],
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        value,
-                                        style: TextStyle(
-                                          color: _selectedFilter == value 
-                                              ? AppColors.primary 
-                                              : AppColors.textPrimary,
-                                          fontWeight: _selectedFilter == value 
-                                              ? FontWeight.w600 
-                                              : FontWeight.normal,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
+                      PopupMenuButton<String>(
+                        initialValue: _selectedFilter,
+                        onSelected: (String value) {
+                          setState(() {
+                            _selectedFilter = value;
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return _filters.map((String value) {
+                            return PopupMenuItem<String>(
+                              value: value,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.filter_list,
+                                    color: _selectedFilter == value 
+                                        ? AppColors.primary 
+                                        : Colors.grey[600],
+                                    size: 16,
                                   ),
-                                ),
-                              );
-                            }).toList(),
+                                  const SizedBox(width: 8),
+                                  Text(value),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
+                        child: Container(
+                          height: 48,
+                          width: 48,
+                          decoration: BoxDecoration(
+                            color: _selectedFilter != 'All' 
+                                ? AppColors.primary 
+                                : Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _selectedFilter != 'All' 
+                                  ? AppColors.primary 
+                                  : Colors.grey[300]!, 
+                              width: 1
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-=======
->>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
-                  // Create Learning Path Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => context.goToCreatePath(),
-                      icon: const Icon(Icons.add, color: Colors.white),
-<<<<<<< HEAD
-                      label: const Text(
-                        'Create New Learning Path',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-=======
-                      label: Text(
-                        'Create Learning Path',
-                        style: AppTextStyles.buttonMedium.copyWith(color: Colors.white),
->>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Search and Filter Row
-                  Row(
-                    children: [
-                      // Search Box
-                      Expanded(
-                        flex: 2,
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            hintText: 'Search learning paths...',
-                            prefixIcon: Icon(Icons.search, color: AppColors.primary),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.borderLight),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.surface,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ),
-                      
-                      const SizedBox(width: 12),
-                      
-                      // Filter Button
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.borderLight),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedFilter,
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() {
-                                  _selectedFilter = newValue;
-                                });
-                              }
-                            },
-                            icon: Icon(Icons.filter_list, color: AppColors.primary, size: 20),
-                            isDense: true,
-                            items: _filters.map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                          child: Icon(
+                            Icons.filter_list,
+                            color: _selectedFilter != 'All' 
+                                ? Colors.white 
+                                : Colors.grey[600],
+                            size: 20,
                           ),
                         ),
                       ),
@@ -288,6 +188,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 ],
               ),
             ),
+          ),
 
             const SizedBox(height: 20),
 
@@ -321,6 +222,37 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
     );
   }
 
+  Widget _buildFloatingActionButton() {
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.goToCreatePath(),
+          borderRadius: BorderRadius.circular(12),
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   List<LearningPathModel> _getFilteredPaths(List<LearningPathModel> paths) {
     var filteredPaths = paths;
@@ -361,29 +293,22 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
         children: [
           Icon(
             Icons.school_outlined,
-            size: 64,
-            color: AppColors.textSecondary,
+            size: 80,
+            color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
-            'No Learning Paths Found',
-            style: AppTextStyles.titleLarge.copyWith(
-              color: AppColors.textSecondary,
+            'No learning paths yet',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Colors.grey[600],
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Create your first learning path to get started!',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
+            'Create your first learning path to get started',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[500],
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.goToCreatePath(),
-            icon: const Icon(Icons.add),
-            label: const Text('Create Learning Path'),
           ),
         ],
       ),

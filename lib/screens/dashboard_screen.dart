@@ -203,7 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'You completed 12 topics this week!',
+                      'Data Wrangling, EDA, Model Training completed this week!',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.grey[600],
                       ),

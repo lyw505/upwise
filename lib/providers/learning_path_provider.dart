@@ -277,9 +277,11 @@ class LearningPathProvider extends ChangeNotifier {
         'status': status.name,
       };
 
-      // Treat skip the same as completed - set completed_at timestamp
+      // Handle completion timestamps
       if (status == TaskStatus.completed || status == TaskStatus.skipped) {
         updates['completed_at'] = DateTime.now().toIso8601String();
+      } else if (status == TaskStatus.notStarted || status == TaskStatus.inProgress) {
+        updates['completed_at'] = null; // Clear completion timestamp when resetting
       }
 
       if (timeSpentMinutes != null) {
@@ -300,7 +302,11 @@ class LearningPathProvider extends ChangeNotifier {
           final updatedTasks = List<DailyLearningTask>.from(path.dailyTasks);
           updatedTasks[taskIndex] = updatedTasks[taskIndex].copyWith(
             status: status,
-            completedAt: (status == TaskStatus.completed || status == TaskStatus.skipped) ? DateTime.now() : null,
+            completedAt: (status == TaskStatus.completed || status == TaskStatus.skipped) 
+                ? DateTime.now() 
+                : (status == TaskStatus.notStarted || status == TaskStatus.inProgress) 
+                    ? null 
+                    : updatedTasks[taskIndex].completedAt,
             timeSpentMinutes: timeSpentMinutes ?? updatedTasks[taskIndex].timeSpentMinutes,
           );
           

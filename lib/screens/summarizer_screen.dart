@@ -55,6 +55,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   final _urlController = TextEditingController();
   final _titleController = TextEditingController();
   final _tagsController = TextEditingController();
+  final _searchController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   
   ContentType _selectedContentType = ContentType.text;
@@ -62,6 +63,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   bool _includeKeyPoints = true;
   String? _selectedLearningPathId;
   bool _showCreateForm = false;
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -75,6 +77,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     _urlController.dispose();
     _titleController.dispose();
     _tagsController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -698,63 +701,118 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
   Widget _buildModernAppBar() {
-<<<<<<< HEAD
-    return AppBar(
-      backgroundColor: AppColors.background,
-      elevation: 0,
-      title: const Text(
-        'AI Summarizer',
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-=======
     return Container(
       color: AppColors.background,
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Row(
+          child: Column(
             children: [
-              Icon(
-                Icons.psychology_rounded,
-                color: AppColors.primary,
-                size: 28,
+              Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'AI Summarizer',
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Transform content into insights',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'AI Summarizer',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+              if (!_showCreateForm) ...[
+                const SizedBox(height: 16),
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
                     ),
-                    Text(
-                      'Transform content into insights',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                    decoration: InputDecoration(
+                      hintText: 'Search summaries...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 14,
                       ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey[500],
+                        size: 20,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: Colors.grey[500],
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
->>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
         ),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-        onPressed: () => Navigator.of(context).pop(),
       ),
     );
   }
 
+
+  List<ContentSummaryModel> _getFilteredSummaries(List<ContentSummaryModel> summaries) {
+    if (_searchQuery.isEmpty) {
+      return summaries;
+    }
+    
+    return summaries.where((summary) {
+      return summary.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             summary.summary.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+             summary.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
+    }).toList();
+  }
 
   Widget _buildFloatingActionButton() {
     return Container(
@@ -807,9 +865,10 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
               );
             }
 
-            final summaries = summarizerProvider.summaries;
+            final allSummaries = summarizerProvider.summaries;
+            final summaries = _getFilteredSummaries(allSummaries);
 
-            if (summaries.isEmpty) {
+            if (allSummaries.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

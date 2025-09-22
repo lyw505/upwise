@@ -3,6 +3,7 @@ import 'dashboard_screen.dart';
 import 'learning_paths_screen.dart';
 import 'analytics_screen.dart';
 import 'summarizer_screen.dart';
+import 'project_builder_screen.dart';
 import '../core/constants/app_colors.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const DashboardScreen(),
     const LearningPathsScreen(),
     const SummarizerScreen(),
+    const ProjectBuilderScreen(),
     const AnalyticsScreen(),
   ];
 
@@ -103,9 +105,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Learning Paths',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.psychology_outlined),
-              activeIcon: Icon(Icons.psychology),
+              icon: Icon(Icons.auto_awesome_outlined),
+              activeIcon: Icon(Icons.auto_awesome),
               label: 'AI',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.build_outlined),
+              activeIcon: Icon(Icons.build),
+              label: 'Projects',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics_outlined),

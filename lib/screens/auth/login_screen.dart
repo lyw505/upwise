@@ -30,19 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = context.read<AuthProvider>();
     
-<<<<<<< HEAD
-    final success = await authProvider.signIn(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      context: context,
-    );
-=======
     try {
       final success = await authProvider.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
->>>>>>> 3c476aa (ui improve : bg color, text color, error handling, ai smr header, search & create path, blue border)
 
       if (success && mounted) {
         context.goToDashboard();
