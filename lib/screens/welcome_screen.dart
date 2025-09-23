@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/constants/app_dimensions.dart';
+import '../core/widgets/app_button.dart';
 import '../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 
@@ -108,13 +110,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           children: [
                             Icon(
                               Icons.person_outline,
-                              size: 80,
+                              size: AppDimensions.iconXXLarge + 16, // 80px
                               color: AppColors.primary,
                             ),
-                            const SizedBox(height: 16),
+                            AppDimensions.spaceMedium.height,
                             Icon(
                               Icons.laptop_mac,
-                              size: 60,
+                              size: AppDimensions.iconXXLarge - 4, // 60px
                               color: Colors.grey[400],
                             ),
                           ],
@@ -128,31 +130,31 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               const SizedBox(height: 40),
 
               // Log in Button
-              SizedBox(
+              AppButton(
+                text: 'Log in',
+                onPressed: () {
+                  if (mounted) {
+                    context.goToLogin();
+                  }
+                },
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (mounted) {
-                      context.goToLogin();
-                    }
-                  },
-                  child: const Text('Log in'),
-                ),
+                size: AppButtonSize.large,
+                type: AppButtonType.primary,
               ),
 
-              const SizedBox(height: 16),
+              AppDimensions.spaceMedium.height,
 
               // Create Account Button
-              SizedBox(
+              AppButton(
+                text: 'Create Account',
+                onPressed: () {
+                  if (mounted) {
+                    context.goToRegister();
+                  }
+                },
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    if (mounted) {
-                      context.goToRegister();
-                    }
-                  },
-                  child: const Text('Create Account'),
-                ),
+                size: AppButtonSize.large,
+                type: AppButtonType.secondary,
               ),
 
               const SizedBox(height: 40),

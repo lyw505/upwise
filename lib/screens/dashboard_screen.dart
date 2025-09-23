@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/router/app_router.dart';
+import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/learning_path_provider.dart';
@@ -44,77 +45,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with app name and profile
-            _buildAppHeader(),
-            
-            const SizedBox(height: 24),
-            
-            // Welcome back card
-            _buildWelcomeCard(),
-            
-            const SizedBox(height: 20),
-            
-            // Streak card
-            _buildStreakCard(),
-            
-            const SizedBox(height: 20),
-            
-            // Action Buttons Row
-            _buildActionButtons(),
-            
-            const SizedBox(height: 24),
-            
-            // Active Learning Path Section
-            _buildActiveLearningPathSection(),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          ConsistentHeader(
+            title: 'Upwise',
+            onProfileTap: _showProfileMenu,
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildWelcomeCard(),
+                    const SizedBox(height: 24),
+                    _buildStreakCard(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAppHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          'Upwise',
-          style: AppTextStyles.headlineLarge.copyWith(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        GestureDetector(
-          onTap: () {
-            // Show profile menu
-            _showProfileMenu();
-          },
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildWelcomeCard() {
     return Consumer2<AuthProvider, UserProvider>(
@@ -129,31 +91,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border.all(color: AppColors.primaryLight, width: 1),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Welcome back, $userName!',
-                style: AppTextStyles.titleLarge.copyWith(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.psychology,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome back, $userName!',
+                          style: AppTextStyles.titleLarge.copyWith(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                'Ready to continue your learning journey?',
-                style: AppTextStyles.bodyMedium.copyWith(
+                'Ready to train your mind today?',
+                style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[700],
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => context.goToAnalytics(),
-                  child: const Text('View Progress'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => context.goToCreatePath(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Create Path',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pushNamed('/projects'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: BorderSide(color: AppColors.primary, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Find Project',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -515,39 +538,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _showProfileMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                context.goToSettings();
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {
-                Navigator.pop(context);
-                _handleLogout();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
 }
 
 // Add floating action button to Scaffold
 // Note: This should be added to the Scaffold in the build method
+

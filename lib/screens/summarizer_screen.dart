@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../widgets/consistent_header.dart';
 import '../models/content_summary_model.dart';
 import '../providers/summarizer_provider.dart';
 import '../providers/auth_provider.dart';
@@ -98,12 +99,125 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     });
   }
 
+  Widget _buildModernAppBar() {
+    return Container(
+      color: AppColors.background,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  if (_showCreateForm)
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios),
+                      onPressed: () {
+                        setState(() {
+                          _showCreateForm = false;
+                        });
+                      },
+                    ),
+                  Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'AI Summarizer',
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Transform content into insights',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (!_showCreateForm) ...[
+                const SizedBox(height: 16),
+                Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Search summaries...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: Colors.grey[500],
+                        size: 20,
+                      ),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: Colors.grey[500],
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          _buildModernAppBar(),
+          ConsistentHeader(
+            title: 'AI Summarizer',
+            showProfile: false,
+          ),
           Expanded(
             child: _showCreateForm ? _buildCreateTab() : _buildLibraryTab(),
           ),
@@ -321,6 +435,94 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           height: 1.5,
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: AppTextStyles.titleMedium.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _buildContentInput() {
+    if (_selectedContentType == ContentType.url) {
+      return TextFormField(
+        controller: _urlController,
+        decoration: const InputDecoration(
+          hintText: 'https://example.com/article',
+          prefixIcon: Icon(Icons.link),
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please enter a URL';
+          }
+          final uri = Uri.tryParse(value);
+          if (uri == null || !uri.hasAbsolutePath) {
+            return 'Please enter a valid URL';
+          }
+          return null;
+        },
+      );
+    } else {
+      return TextFormField(
+        controller: _contentController,
+        maxLines: 6,
+        decoration: const InputDecoration(
+          hintText: 'Paste or type your content here...',
+          prefixIcon: Icon(Icons.text_fields),
+        ),
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please enter content to summarize';
+          }
+          return null;
+        },
+      );
+    }
+  }
+
+  Widget _buildLearningPathIntegration() {
+    return Consumer<LearningPathProvider>(
+      builder: (context, provider, child) {
+        final learningPaths = provider.learningPaths;
+        if (learningPaths.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Link to Learning Path (Optional)'),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedLearningPathId,
+              decoration: const InputDecoration(
+                hintText: 'Select a learning path',
+                prefixIcon: Icon(Icons.school),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('None'),
+                ),
+                ...learningPaths.map((path) => DropdownMenuItem<String>(
+                  value: path.id,
+                  child: Text(path.topic),
+                )),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedLearningPathId = value;
+                });
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -700,106 +902,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
-  Widget _buildModernAppBar() {
-    return Container(
-      color: AppColors.background,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'AI Summarizer',
-                          style: AppTextStyles.headlineSmall.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Transform content into insights',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (!_showCreateForm) ...[
-                const SizedBox(height: 16),
-                Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!, width: 1),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search summaries...',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey[500],
-                        size: 20,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: Colors.grey[500],
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
 
   List<ContentSummaryModel> _getFilteredSummaries(List<ContentSummaryModel> summaries) {
@@ -816,16 +918,16 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
 
   Widget _buildFloatingActionButton() {
     return Container(
-      width: 64,
-      height: 64,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -842,7 +944,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
             child: Icon(
               Icons.add,
               color: Colors.white,
-              size: 28,
+              size: 24,
             ),
           ),
         ),

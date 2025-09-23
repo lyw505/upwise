@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
+import '../widgets/consistent_header.dart';
 import '../providers/learning_path_provider.dart';
 import '../models/learning_path_model.dart';
 
@@ -15,7 +17,7 @@ class LearningPathsScreen extends StatefulWidget {
 
 class _LearningPathsScreenState extends State<LearningPathsScreen> {
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Active', 'Completed', 'Paused', 'Not Started'];
+  final List<String> _filters = ['All', 'Active', 'Completed', 'Not Started'];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -30,192 +32,150 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       floatingActionButton: _buildFloatingActionButton(),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              color: AppColors.background,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.school_rounded,
-                            color: AppColors.primary,
-                            size: 28,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Learning Paths',
-                                  style: AppTextStyles.headlineSmall.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Structured learning journeys for skill mastery',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+      body: Column(
+        children: [
+          ConsistentHeader(
+            title: 'Learning Paths',
+            showProfile: false,
+          ),
+          // Search and Filter Row
+          Container(
+            color: AppColors.background,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                // Search Box
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
                       ),
-                      const SizedBox(height: 16),
-                      // Search and Filter Row
-                  Row(
-                    children: [
-                      // Search Box
-                      Expanded(
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[300]!, width: 1),
-                          ),
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value;
-                              });
-                            },
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Search learning paths...',
-                              hintStyle: TextStyle(
-                                color: Colors.grey[500],
-                                fontSize: 14,
-                              ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.search,
-                                color: Colors.grey[500],
-                                size: 20,
-                              ),
-                              suffixIcon: _searchQuery.isNotEmpty
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Icons.clear,
-                                        color: Colors.grey[500],
-                                        size: 20,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        setState(() {
-                                          _searchQuery = '';
-                                        });
-                                      },
-                                    )
-                                  : null,
-                            ),
-                          ),
+                      decoration: InputDecoration(
+                        hintText: 'Search learning paths...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Filter Button
-                      PopupMenuButton<String>(
-                        initialValue: _selectedFilter,
-                        onSelected: (String value) {
-                          setState(() {
-                            _selectedFilter = value;
-                          });
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return _filters.map((String value) {
-                            return PopupMenuItem<String>(
-                              value: value,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.filter_list,
-                                    color: _selectedFilter == value 
-                                        ? AppColors.primary 
-                                        : Colors.grey[600],
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(value),
-                                ],
-                              ),
-                            );
-                          }).toList();
-                        },
-                        child: Container(
-                          height: 48,
-                          width: 48,
-                          decoration: BoxDecoration(
-                            color: _selectedFilter != 'All' 
-                                ? AppColors.primary 
-                                : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _selectedFilter != 'All' 
-                                  ? AppColors.primary 
-                                  : Colors.grey[300]!, 
-                              width: 1
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.filter_list,
-                            color: _selectedFilter != 'All' 
-                                ? Colors.white 
-                                : Colors.grey[600],
-                            size: 20,
-                          ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey[500],
+                          size: 20,
+                        ),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey[500],
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
                       ),
-                    ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                // Filter Button
+                PopupMenuButton<String>(
+                  initialValue: _selectedFilter,
+                  onSelected: (String value) {
+                    setState(() {
+                      _selectedFilter = value;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return _filters.map((String value) {
+                      return PopupMenuItem<String>(
+                        value: value,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              color: _selectedFilter == value 
+                                  ? AppColors.primary 
+                                  : Colors.grey[600],
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(value),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                  child: Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 1.5
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.filter_list,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          
+          const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+          // Learning Paths List
+          Expanded(
+            child: Consumer<LearningPathProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            // Learning Paths List
-            Expanded(
-              child: Consumer<LearningPathProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                final filteredPaths = _getFilteredPaths(provider.learningPaths);
 
-                  final filteredPaths = _getFilteredPaths(provider.learningPaths);
+                if (filteredPaths.isEmpty) {
+                  return _buildEmptyState();
+                }
 
-                  if (filteredPaths.isEmpty) {
-                    return _buildEmptyState();
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    itemCount: filteredPaths.length,
-                    itemBuilder: (context, index) {
-                      return _buildLearningPathCard(filteredPaths[index]);
-                    },
-                  );
-                },
-              ),
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  itemCount: filteredPaths.length,
+                  itemBuilder: (context, index) {
+                    return _buildLearningPathCard(filteredPaths[index]);
+                  },
+                );
+              },
             ),
+          ),
           ],
         ),
       ),
@@ -224,16 +184,16 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
 
   Widget _buildFloatingActionButton() {
     return Container(
-      width: 64,
-      height: 64,
+      width: 56,
+      height: 56,
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -246,7 +206,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
             child: Icon(
               Icons.add,
               color: Colors.white,
-              size: 28,
+              size: 24,
             ),
           ),
         ),
@@ -273,8 +233,6 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
             return path.status == LearningPathStatus.inProgress;
           case 'Completed':
             return path.status == LearningPathStatus.completed;
-          case 'Paused':
-            return path.status == LearningPathStatus.paused;
           case 'Not Started':
             return path.status == LearningPathStatus.notStarted;
           default:
@@ -293,7 +251,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
         children: [
           Icon(
             Icons.school_outlined,
-            size: 80,
+            size: AppDimensions.iconXXLarge + 16, // 80px
             color: Colors.grey[400],
           ),
           const SizedBox(height: 16),
@@ -341,17 +299,17 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
     return GestureDetector(
       onTap: () => context.goToViewPath(path.id),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(20),
+        margin: EdgeInsets.only(bottom: AppDimensions.spaceMedium),
+        padding: EdgeInsets.all(AppDimensions.cardPaddingLarge),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderLight),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              blurRadius: AppDimensions.shadowBlurRadius,
+              offset: Offset(0, AppDimensions.shadowOffset),
             ),
           ],
         ),
@@ -400,7 +358,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
               children: [
                 Icon(
                   Icons.schedule,
-                  size: 16,
+                  size: AppDimensions.iconXSmall,
                   color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 4),
@@ -413,7 +371,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 const SizedBox(width: 16),
                 Icon(
                   Icons.access_time,
-                  size: 16,
+                  size: AppDimensions.iconXSmall,
                   color: AppColors.textTertiary,
                 ),
                 const SizedBox(width: 4),
@@ -452,10 +410,10 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 const SizedBox(height: 8),
                 Container(
                   width: double.infinity,
-                  height: 6,
+                  height: AppDimensions.progressBarHeightThick,
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(AppDimensions.progressBarHeightThick / 2),
                   ),
                   child: FractionallySizedBox(
                     alignment: Alignment.centerLeft,
@@ -463,7 +421,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(AppDimensions.progressBarHeightThick / 2),
                       ),
                     ),
                   ),

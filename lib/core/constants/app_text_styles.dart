@@ -6,67 +6,69 @@ class AppTextStyles {
   // Base Poppins text style
   static TextStyle get _baseStyle => GoogleFonts.poppins();
   
-  // Display styles
+  // Display styles - Large screen titles
   static TextStyle get displayLarge => _baseStyle.copyWith(
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     height: 1.2,
+    letterSpacing: -0.5,
   );
   
   static TextStyle get displayMedium => _baseStyle.copyWith(
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.2,
+    letterSpacing: -0.25,
   );
   
   static TextStyle get displaySmall => _baseStyle.copyWith(
+    fontSize: 28,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: 1.25,
+  );
+  
+  // Headline styles - Section titles
+  static TextStyle get headlineLarge => _baseStyle.copyWith(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.3,
   );
   
-  // Headline styles
-  static TextStyle get headlineLarge => _baseStyle.copyWith(
+  static TextStyle get headlineMedium => _baseStyle.copyWith(
     fontSize: 22,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.3,
   );
   
-  static TextStyle get headlineMedium => _baseStyle.copyWith(
+  static TextStyle get headlineSmall => _baseStyle.copyWith(
     fontSize: 20,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
-    height: 1.3,
+    height: 1.4,
   );
   
-  static TextStyle get headlineSmall => _baseStyle.copyWith(
+  // Title styles - Card titles, labels
+  static TextStyle get titleLarge => _baseStyle.copyWith(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.4,
   );
   
-  // Title styles
-  static TextStyle get titleLarge => _baseStyle.copyWith(
+  static TextStyle get titleMedium => _baseStyle.copyWith(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.4,
   );
   
-  static TextStyle get titleMedium => _baseStyle.copyWith(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-    height: 1.4,
-  );
-  
   static TextStyle get titleSmall => _baseStyle.copyWith(
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     height: 1.4,

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
+import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../models/learning_path_model.dart';
@@ -42,9 +44,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
     final learningPathProvider = context.read<LearningPathProvider>();
 
     if (authProvider.currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please log in to create a learning path')),
-      );
+      SnackbarUtils.showError(context, 'Please log in to create a learning path');
       return;
     }
 
@@ -62,20 +62,10 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
     );
 
     if (learningPath != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Learning path generated successfully!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      SnackbarUtils.showSuccess(context, 'Learning path generated successfully!');
       context.goToViewPath(learningPath.id);
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to generate learning path. Please try again.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarUtils.showError(context, 'Failed to generate learning path. Please try again.');
     }
   }
 
@@ -87,7 +77,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
         title: const Text('Create Learning Path'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: SafeArea(
@@ -98,22 +88,6 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Text(
-                  'Generate Your Personalized Learning Path',
-                  style: AppTextStyles.headlineMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tell us what you want to learn and we\'ll create a detailed learning plan using AI.',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                
-                const SizedBox(height: 32),
                 
                 // Topic Field
                 _buildSectionTitle('What do you want to learn?'),
@@ -168,15 +142,8 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
                 
                 // Experience Level
                 _buildSectionTitle('Your Experience Level'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 _buildExperienceLevelSelector(),
-                
-                const SizedBox(height: 24),
-                
-                // Learning Style
-                _buildSectionTitle('Preferred Learning Style'),
-                const SizedBox(height: 8),
-                _buildLearningStyleSelector(),
                 
                 const SizedBox(height: 24),
                 
@@ -200,12 +167,6 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Options
-                _buildSectionTitle('Additional Options'),
-                const SizedBox(height: 8),
-                _buildOptionsSection(),
-                
-                const SizedBox(height: 24),
                 
                 // Notes (Optional)
                 _buildSectionTitle('Additional Notes (Optional)'),
@@ -260,7 +221,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: AppTextStyles.titleMedium.copyWith(
+      style: AppTextStyles.titleSmall.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w600,
       ),

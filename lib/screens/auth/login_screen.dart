@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/constants/app_dimensions.dart';
 import '../../core/router/app_router.dart';
+import '../../core/utils/snackbar_utils.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,41 +41,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success && mounted) {
         context.goToDashboard();
       } else if (mounted) {
-        // Show error toast from top
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.errorMessage ?? 'Login failed. Please check your credentials.',
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 4),
-          ),
+        SnackbarUtils.showError(
+          context, 
+          authProvider.errorMessage ?? 'Login failed. Please check your credentials.'
         );
       }
     } catch (e) {
       if (mounted) {
-        // Show error toast for any exceptions
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'An error occurred: ${e.toString()}',
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(top: 50, left: 16, right: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        SnackbarUtils.showError(context, 'An error occurred: ${e.toString()}');
       }
     }
   }
@@ -125,23 +100,50 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                SizedBox(
+                  height: 56,
+                  child: TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your email',
+                      hintStyle: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        size: 20,
+                        color: AppColors.textTertiary,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
                 ),
                 
                 const SizedBox(height: 20),
@@ -154,34 +156,63 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    hintText: 'Enter your password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                SizedBox(
+                  height: 56,
+                  child: TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your password',
+                      hintStyle: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.textTertiary,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      prefixIcon: Icon(
+                        Icons.lock_outline,
+                        size: 20,
+                        color: AppColors.textTertiary,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          size: 20,
+                          color: AppColors.textTertiary,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                    onFieldSubmitted: (_) => _handleLogin(),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                  onFieldSubmitted: (_) => _handleLogin(),
                 ),
                 
                 const SizedBox(height: 12),
@@ -192,11 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: TextButton(
                     onPressed: () {
                       // TODO: Implement forgot password
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Forgot password feature coming soon!'),
-                        ),
-                      );
+                      SnackbarUtils.showInfo(context, 'Forgot password feature coming soon!');
                     },
                     child: Text(
                       'Forgot Password?',
@@ -214,23 +241,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   builder: (context, authProvider, child) {
                     return SizedBox(
                       width: double.infinity,
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: authProvider.isLoading ? null : _handleLogin,
                         child: authProvider.isLoading
                             ? const SizedBox(
-                                height: 20,
                                 width: 20,
+                                height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                 ),
                               )
-                            : Text(
-                                'Sign In',
-                                style: AppTextStyles.buttonLarge.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
+                            : const Text('Sign In'),
                       ),
                     );
                   },

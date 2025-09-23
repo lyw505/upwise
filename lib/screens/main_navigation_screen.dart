@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dashboard_screen.dart';
-import 'learning_paths_screen.dart';
-import 'analytics_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_dimensions.dart';
+import '../screens/dashboard_screen.dart';
+import '../screens/learning_paths_screen.dart';
+import '../screens/analytics_screen.dart';
 import 'summarizer_screen.dart';
 import 'project_builder_screen.dart';
-import '../core/constants/app_colors.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -93,30 +94,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             fontSize: 12,
           ),
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.home, size: AppDimensions.bottomNavIconSize),
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school_outlined),
-              activeIcon: Icon(Icons.school),
-              label: 'Learning Paths',
+              icon: Icon(Icons.school_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.school, size: AppDimensions.bottomNavIconSize),
+              label: 'Paths',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.auto_awesome_outlined),
-              activeIcon: Icon(Icons.auto_awesome),
-              label: 'AI',
+              icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.article, size: AppDimensions.bottomNavIconSize),
+              label: 'Summary',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.build_outlined),
-              activeIcon: Icon(Icons.build),
+              icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
               label: 'Projects',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.analytics_outlined),
-              activeIcon: Icon(Icons.analytics),
+              icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.analytics, size: AppDimensions.bottomNavIconSize),
               label: 'Analytics',
             ),
           ],

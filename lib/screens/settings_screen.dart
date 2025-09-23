@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/router/app_router.dart';
+import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 
@@ -42,12 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _saveProfile() async {
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Name cannot be empty'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarUtils.showError(context, 'Name cannot be empty');
       return;
     }
 
@@ -66,19 +62,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      SnackbarUtils.showSuccess(context, 'Profile updated successfully!');
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to update profile. Please try again.'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      SnackbarUtils.showError(context, 'Failed to update profile. Please try again.');
     }
   }
 
@@ -155,12 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
       if (doubleConfirmed == true && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account deletion feature coming soon!'),
-            backgroundColor: AppColors.info,
-          ),
-        );
+        SnackbarUtils.showInfo(context, 'Account deletion feature coming soon!');
       }
     }
   }
@@ -414,9 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Manage your notification preferences',
             Icons.notifications,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notification settings coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Notification settings coming soon!');
             },
           ),
           
@@ -427,9 +406,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Choose your preferred theme',
             Icons.palette,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Theme settings coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Theme settings coming soon!');
             },
           ),
           
@@ -440,9 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Select your language',
             Icons.language,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Language settings coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Language settings coming soon!');
             },
           ),
           
@@ -453,9 +428,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Manage your data and privacy settings',
             Icons.privacy_tip,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Privacy settings coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Privacy settings coming soon!');
             },
           ),
         ],
@@ -489,9 +462,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Get help and contact support',
             Icons.help,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Help & Support coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Help & Support coming soon!');
             },
           ),
           
@@ -502,9 +473,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Read our terms of service',
             Icons.description,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Terms of Service coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Terms of Service coming soon!');
             },
           ),
           
@@ -515,9 +484,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Read our privacy policy',
             Icons.policy,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Privacy Policy coming soon!')),
-              );
+              SnackbarUtils.showInfo(context, 'Privacy Policy coming soon!');
             },
           ),
           

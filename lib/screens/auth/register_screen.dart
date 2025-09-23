@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
+import '../../core/constants/app_dimensions.dart';
+import '../../core/widgets/app_button.dart';
 import '../../core/router/app_router.dart';
 import '../../providers/auth_provider.dart';
 
@@ -226,26 +228,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Register Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
-                    return SizedBox(
+                    return AppButton(
+                      text: 'Create Account',
+                      onPressed: _handleRegister,
+                      isLoading: authProvider.isLoading,
                       width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: authProvider.isLoading ? null : _handleRegister,
-                        child: authProvider.isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'Create Account',
-                                style: AppTextStyles.buttonLarge.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
+                      size: AppButtonSize.large,
+                      type: AppButtonType.primary,
                     );
                   },
                 ),

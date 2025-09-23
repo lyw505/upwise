@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
+import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../providers/user_provider.dart';
@@ -74,12 +76,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     final success = await learningPathProvider.startLearningPath(_learningPath!.id);
     
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Learning path started! Good luck on your journey!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      SnackbarUtils.showSuccess(context, 'Learning path started! Good luck on your journey!');
       
       // Reload to get updated status
       await _loadLearningPath();
@@ -111,22 +108,11 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              status == TaskStatus.completed 
-                  ? 'Task completed! Great job!' 
-                  : status == TaskStatus.skipped
-                      ? 'Task skipped! Keep going!'
-                      : status == TaskStatus.notStarted
-                          ? 'Task status reset to not started'
-                          : 'Task status updated',
-            ),
-            backgroundColor: (status == TaskStatus.completed || status == TaskStatus.skipped)
-                ? AppColors.success 
-                : AppColors.info,
-          ),
-        );
+        if (status == TaskStatus.completed) {
+          SnackbarUtils.showSuccess(context, 'Task completed! Great job!');
+        } else {
+          SnackbarUtils.showWarning(context, 'Task skipped. No worries, try again tomorrow!');
+        }
       }
     }
   }
@@ -514,53 +500,129 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                 
                 // Task actions
                 if (_learningPath!.status == LearningPathStatus.inProgress)
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       if (task.status == TaskStatus.notStarted || task.status == TaskStatus.inProgress) ...[
-                        OutlinedButton.icon(
-                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: const Size(0, 36),
-                          ),
-                          icon: const Icon(Icons.check, size: 16),
-                          label: const Text('Mark Complete', style: TextStyle(fontSize: 12)),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton.icon(
-                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.skipped),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: const Size(0, 36),
-                          ),
-                          icon: const Icon(Icons.skip_next, size: 16),
-                          label: const Text('Skip', style: TextStyle(fontSize: 12)),
+                        // Buttons Row - Side by Side
+                        Row(
+                          children: [
+                            // Mark Complete Button - Left Half (Primary)
+                            Expanded(
+                              child: SizedBox(
+                                height: AppDimensions.buttonHeightMedium,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _updateTaskStatus(task.id, TaskStatus.completed),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: BorderSide(color: AppColors.primary, width: 1.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: AppDimensions.spaceMedium,
+                                      vertical: AppDimensions.spaceSmall,
+                                    ),
+                                  ),
+                                  icon: Icon(Icons.check, size: AppDimensions.iconSmall),
+                                  label: Text(
+                                    'Mark Complete',
+                                    style: AppTextStyles.buttonMedium.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: AppDimensions.spaceSmall),
+                            // Skip Button - Right Half (Secondary)
+                            Expanded(
+                              child: SizedBox(
+                                height: AppDimensions.buttonHeightMedium,
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _updateTaskStatus(task.id, TaskStatus.skipped),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.textSecondary,
+                                    side: BorderSide(color: AppColors.textSecondary, width: 1.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: AppDimensions.spaceMedium,
+                                      vertical: AppDimensions.spaceSmall,
+                                    ),
+                                  ),
+                                  icon: Icon(Icons.skip_next, size: AppDimensions.iconSmall),
+                                  label: Text(
+                                    'Skip',
+                                    style: AppTextStyles.buttonMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ] else if (task.status == TaskStatus.completed) ...[
-                        OutlinedButton.icon(
-                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: AppColors.success.withValues(alpha: 0.1),
-                            side: BorderSide(color: AppColors.success),
-                            foregroundColor: AppColors.success,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: const Size(0, 36),
+                        // Completed Button - Full Width
+                        SizedBox(
+                          width: double.infinity,
+                          height: AppDimensions.buttonHeightMedium,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              side: BorderSide(color: Colors.grey.shade300, width: 1),
+                              foregroundColor: Colors.grey.shade600,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppDimensions.spaceLarge,
+                                vertical: AppDimensions.spaceSmall,
+                              ),
+                            ),
+                            icon: Icon(Icons.check, size: AppDimensions.iconSmall, color: Colors.green),
+                            label: Text(
+                              'Completed',
+                              style: AppTextStyles.buttonMedium.copyWith(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                          icon: const Icon(Icons.check_circle, size: 16),
-                          label: const Text('Completed', style: TextStyle(fontSize: 12)),
                         ),
                       ] else if (task.status == TaskStatus.skipped) ...[
-                        OutlinedButton.icon(
-                          onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: AppColors.warning.withValues(alpha: 0.1),
-                            side: BorderSide(color: AppColors.warning),
-                            foregroundColor: AppColors.warning,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: const Size(0, 36),
+                        // Skipped Button - Full Width
+                        SizedBox(
+                          width: double.infinity,
+                          height: AppDimensions.buttonHeightMedium,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              side: BorderSide(color: Colors.grey.shade300, width: 1),
+                              foregroundColor: Colors.grey.shade600,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppDimensions.spaceLarge,
+                                vertical: AppDimensions.spaceSmall,
+                              ),
+                            ),
+                            icon: Icon(Icons.skip_next, size: AppDimensions.iconSmall, color: Colors.orange),
+                            label: Text(
+                              'Skipped',
+                              style: AppTextStyles.buttonMedium.copyWith(
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                          icon: const Icon(Icons.skip_next, size: 16),
-                          label: const Text('Skipped', style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ],
@@ -728,9 +790,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                 child: OutlinedButton.icon(
                   onPressed: () {
                     // TODO: Open URL
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Opening: ${project.url}')),
-                    );
+                    SnackbarUtils.showInfo(context, 'Opening: ${project.url}');
                   },
                   icon: const Icon(Icons.open_in_new, size: 16),
                   label: const Text('View Project'),
@@ -768,31 +828,16 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
         Navigator.pop(context); // Close loading dialog
         
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Learning path deleted successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          SnackbarUtils.showSuccess(context, 'Learning path deleted successfully!');
           context.goToDashboard();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to delete learning path. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          SnackbarUtils.showError(context, 'Failed to delete learning path. Please try again.');
         }
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SnackbarUtils.showError(context, 'Error: $e');
       }
     }
   }

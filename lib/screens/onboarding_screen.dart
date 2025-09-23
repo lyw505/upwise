@@ -17,19 +17,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingData(
       title: 'Structured',
       description: 'Upwise designs focused and easy-to-follow daily plans tailored to your goals.',
-      imagePath: 'assets/images/on1.png',
+      imagePath: 'assets/images/on1-1.png',
       color: AppColors.primary,
     ),
     OnboardingData(
       title: 'Personalized',
       description: 'Upwise adapts the content and learning approach to your needs and skill level.',
-      imagePath: 'assets/images/on2.png',
+      imagePath: 'assets/images/on2-2.png',
       color: AppColors.primary,
     ),
     OnboardingData(
       title: 'Consistency',
       description: 'Stay motivated with daily streaks and see how small daily efforts lead to big results over time.',
-      imagePath: 'assets/images/on3.png',
+      imagePath: 'assets/images/on3-3.png',
       color: AppColors.primary,
     ),
   ];
@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     'Skip',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -199,7 +199,7 @@ class OnboardingPage extends StatelessWidget {
           Text(
             data.description,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Colors.grey[600],
+              color: Colors.black,
               height: 1.5,
             ),
             textAlign: TextAlign.center,
