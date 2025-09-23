@@ -5,6 +5,7 @@ import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
+import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../models/learning_path_model.dart';
@@ -69,19 +70,22 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
     }
   }
 
+  void _showProfileMenu() {
+    context.goToProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Create Learning Path'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: Column(
+        children: [
+          ConsistentHeader(
+            title: 'Create Learning Path',
+            onProfileTap: _showProfileMenu,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
@@ -213,7 +217,9 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
               ],
             ),
           ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

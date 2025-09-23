@@ -17,6 +17,8 @@ import '../../screens/summarizer_screen.dart';
 import '../../screens/ai_chat_screen.dart';
 import '../../screens/conversation_viewer_screen.dart';
 import '../../screens/project_builder_screen.dart';
+import '../../screens/profile_screen.dart';
+import '../../screens/analytics_screen.dart';
 import '../../models/content_summary_model.dart';
 
 import '../../test_integration.dart';
@@ -140,7 +142,7 @@ class AppRouter {
         GoRoute(
           path: '/analytics',
           name: 'analytics',
-          builder: (context, state) => const MainNavigationScreen(initialIndex: 2),
+          builder: (context, state) => const AnalyticsScreen(),
         ),
         
         GoRoute(
@@ -205,6 +207,12 @@ class AppRouter {
           name: 'config-status',
           builder: (context, state) => const ConfigStatusScreen(),
         ),
+
+        GoRoute(
+          path: '/profile',
+          name: 'profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
       ],
       
       // Error handling
@@ -261,6 +269,7 @@ extension AppRouterExtension on BuildContext {
   void goToProjectBuilder() => go('/project-builder');
   void goToConfigStatus() => go('/config-status');
   void goToTestIntegration() => go('/test-integration');
+  void goToProfile() => go('/profile');
   
   // Push navigation (for modals, etc.)
   void pushLogin() => push('/login');

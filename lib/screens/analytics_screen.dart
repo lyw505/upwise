@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
+import '../core/router/app_router.dart';
 import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
@@ -129,6 +130,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           ConsistentHeader(
             title: 'Analytics',
             showProfile: false,
+            showBackButton: true,
+            onBackTap: () => context.goToDashboard(),
           ),
           Expanded(
             child: _isLoading

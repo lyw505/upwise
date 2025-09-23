@@ -5,6 +5,7 @@ import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
+import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../providers/user_provider.dart';
@@ -80,6 +81,8 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       
       // Reload to get updated status
       await _loadLearningPath();
+    } else if (mounted) {
+      SnackbarUtils.showError(context, 'Failed to start learning path. Please try again.');
     }
   }
 
@@ -108,13 +111,74 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       }
       
       if (mounted) {
+        // Clear any existing snackbars first
+        ScaffoldMessenger.of(context).clearSnackBars();
+        
         if (status == TaskStatus.completed) {
-          SnackbarUtils.showSuccess(context, 'Task completed! Great job!');
-        } else {
-          SnackbarUtils.showWarning(context, 'Task skipped. No worries, try again tomorrow!');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '🎉 Task completed! Great job!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 8,
+            ),
+          );
+        } else if (status == TaskStatus.skipped) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.skip_next, color: Colors.white, size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '⏭️ Task skipped. No worries, try again tomorrow!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 8,
+            ),
+          );
         }
       }
     }
+  }
+
+  void _showProfileMenu() {
+    context.goToProfile();
   }
 
   @override
@@ -122,15 +186,20 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Learning Path'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            onPressed: () => context.goToDashboard(),
-          ),
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Column(
+          children: [
+            ConsistentHeader(
+              title: 'Learning Path',
+              onProfileTap: _showProfileMenu,
+              showBackButton: true,
+              onBackTap: () => context.goToDashboard(),
+            ),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -138,79 +207,55 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     if (_learningPath == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Learning Path'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            onPressed: () => context.goToDashboard(),
-          ),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppColors.textTertiary,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Learning Path Not Found',
-                style: AppTextStyles.headlineSmall.copyWith(
-                  color: AppColors.textSecondary,
+        body: Column(
+          children: [
+            ConsistentHeader(
+              title: 'Learning Path',
+              onProfileTap: _showProfileMenu,
+              showBackButton: true,
+              onBackTap: () => context.goToDashboard(),
+            ),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: AppColors.textTertiary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Learning Path Not Found',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => context.goToDashboard(),
+                      child: const Text('Back to Dashboard'),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.goToDashboard(),
-                child: const Text('Back to Dashboard'),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(_learningPath!.topic),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
-        ),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'delete':
-                  _showDeleteConfirmation();
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'delete',
-                child: ListTile(
-                  leading: Icon(Icons.delete, color: Colors.red),
-                  title: Text('Delete Path', style: TextStyle(color: Colors.red)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Learning Plan'),
-            Tab(text: 'Projects'),
-          ],
-        ),
-      ),
       body: Column(
         children: [
+          ConsistentHeader(
+            title: _learningPath!.topic,
+            onProfileTap: _showProfileMenu,
+            showBackButton: true,
+            onBackTap: () => context.goToDashboard(),
+          ),
           // Header with progress and actions
           _buildHeader(),
           
@@ -334,7 +379,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       ),
       child: Text(
         statusText,
-        style: AppTextStyles.labelSmall.copyWith(
+        style: AppTextStyles.labelMedium.copyWith(
           color: chipColor,
           fontWeight: FontWeight.w600,
         ),
@@ -574,9 +619,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                           child: OutlinedButton.icon(
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              side: BorderSide(color: Colors.grey.shade300, width: 1),
-                              foregroundColor: Colors.grey.shade600,
+                              backgroundColor: Colors.green.withValues(alpha: 0.1),
+                              side: BorderSide(color: Colors.green, width: 1.5),
+                              foregroundColor: Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
                               ),
@@ -589,7 +634,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             label: Text(
                               'Completed',
                               style: AppTextStyles.buttonMedium.copyWith(
-                                color: Colors.grey.shade600,
+                                color: Colors.green,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -603,9 +648,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                           child: OutlinedButton.icon(
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              side: BorderSide(color: Colors.grey.shade300, width: 1),
-                              foregroundColor: Colors.grey.shade600,
+                              backgroundColor: Colors.orange.withValues(alpha: 0.1),
+                              side: BorderSide(color: Colors.orange, width: 1.5),
+                              foregroundColor: Colors.orange,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
                               ),
@@ -618,7 +663,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             label: Text(
                               'Skipped',
                               style: AppTextStyles.buttonMedium.copyWith(
-                                color: Colors.grey.shade600,
+                                color: Colors.orange,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

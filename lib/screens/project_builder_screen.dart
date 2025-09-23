@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/router/app_router.dart';
 import '../widgets/consistent_header.dart';
 import '../providers/project_builder_provider.dart';
 import '../models/project_model.dart';
@@ -32,6 +33,10 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
     super.dispose();
   }
 
+  void _showProfileMenu() {
+    context.goToProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -42,7 +47,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
           children: [
             ConsistentHeader(
               title: 'Projects',
-              showProfile: false,
+              onProfileTap: _showProfileMenu,
             ),
             const TabBar(
               labelColor: AppColors.primary,

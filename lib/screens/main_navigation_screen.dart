@@ -3,9 +3,9 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_dimensions.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/learning_paths_screen.dart';
-import '../screens/analytics_screen.dart';
 import 'summarizer_screen.dart';
 import 'project_builder_screen.dart';
+import 'profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -28,7 +28,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const LearningPathsScreen(),
     const SummarizerScreen(),
     const ProjectBuilderScreen(),
-    const AnalyticsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -116,9 +116,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Projects',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),
-              activeIcon: Icon(Icons.analytics, size: AppDimensions.bottomNavIconSize),
-              label: 'Analytics',
+              icon: Icon(Icons.person_outlined, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.person, size: AppDimensions.bottomNavIconSize),
+              label: 'Profile',
             ),
           ],
         ),

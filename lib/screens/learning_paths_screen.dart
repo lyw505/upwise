@@ -21,10 +21,13 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _showProfileMenu() {
+    context.goToProfile();
   }
 
   @override
@@ -36,7 +39,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
         children: [
           ConsistentHeader(
             title: 'Learning Paths',
-            showProfile: false,
+            onProfileTap: _showProfileMenu,
           ),
           // Search and Filter Row
           Container(

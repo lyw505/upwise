@@ -4,6 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
+import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
 import '../providers/user_provider.dart';
 
@@ -146,36 +147,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _showProfileMenu() {
+    context.goToProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
-        ),
-        actions: [
-          if (_isEditing)
-            TextButton(
-              onPressed: _isLoading ? null : _saveProfile,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      'Save',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
+      body: Column(
+        children: [
+          ConsistentHeader(
+            title: 'Settings',
+            onProfileTap: _showProfileMenu,
+          ),
+          Expanded(
+            child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,6 +186,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildAccountActionsSection(),
           ],
         ),
+            ),
+          ),
+        ],
       ),
     );
   }

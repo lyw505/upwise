@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/router/app_router.dart';
 import '../widgets/consistent_header.dart';
 import '../models/content_summary_model.dart';
 import '../providers/summarizer_provider.dart';
@@ -209,6 +210,10 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     );
   }
 
+  void _showProfileMenu() {
+    context.goToProfile();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,7 +221,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         children: [
           ConsistentHeader(
             title: 'AI Summarizer',
-            showProfile: false,
+            onProfileTap: _showProfileMenu,
           ),
           Expanded(
             child: _showCreateForm ? _buildCreateTab() : _buildLibraryTab(),
