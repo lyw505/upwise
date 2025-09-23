@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
-import '../core/router/app_router.dart';
 import '../widgets/consistent_header.dart';
 import '../providers/project_builder_provider.dart';
-import '../models/project_model.dart';
+import '../models/project_blueprint_model.dart';
+import 'project_detail_screen.dart';
 
 class ProjectBuilderScreen extends StatefulWidget {
   const ProjectBuilderScreen({super.key});
@@ -14,510 +14,501 @@ class ProjectBuilderScreen extends StatefulWidget {
   State<ProjectBuilderScreen> createState() => _ProjectBuilderScreenState();
 }
 
-class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProjectBuilderProvider>().loadProjects();
-    });
-  }
+class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _selectedFilter = 'All';
+  final List<String> _filters = ['All', 'Beginner', 'Intermediate', 'Advanced'];
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
-  }
-
-  void _showProfileMenu() {
-    context.goToProfile();
   }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: Column(
-          children: [
-            ConsistentHeader(
-              title: 'Projects',
-              onProfileTap: _showProfileMenu,
-            ),
-            const TabBar(
-              labelColor: AppColors.primary,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: AppColors.primary,
-              tabs: [
-                Tab(text: 'Recommended'),
-                Tab(text: 'My Projects'),
-                Tab(text: 'Completed'),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          ConsistentHeader(
+            title: 'Project Scoper',
+            onProfileTap: () {
+              // TODO: Implement profile tap
+            },
+          ),
+          // Search and Filter Row
+          Container(
+            color: AppColors.background,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                // Search Box
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!, width: 1),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search projects...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey[500],
+                          size: 20,
+                        ),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey[500],
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Filter Button
+                PopupMenuButton<String>(
+                  initialValue: _selectedFilter,
+                  onSelected: (String value) {
+                    setState(() {
+                      _selectedFilter = value;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) {
+                    return _filters.map((String value) {
+                      return PopupMenuItem<String>(
+                        value: value,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              color: _selectedFilter == value 
+                                  ? AppColors.primary 
+                                  : Colors.grey[600],
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(value),
+                          ],
+                        ),
+                      );
+                    }).toList();
+                  },
+                  child: Container(
+                    height: 48,
+                    width: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.primary,
+                        width: 1.5
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.filter_list,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
+                  ),
+                ),
               ],
             ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildRecommendedTab(),
-                  _buildMyProjectsTab(),
-                  _buildCompletedTab(),
-                ],
-              ),
+          ),
+          Expanded(
+            child: _buildProjectBlueprints(),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showCreateProjectDialog,
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildProjectBlueprints() {
+    final allBlueprints = _getDummyProjectBlueprints();
+    final filteredBlueprints = _getFilteredBlueprints(allBlueprints);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Project Scoper - Your Learning Projects',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'AI-generated project blueprints tailored to your learning goals',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          if (filteredBlueprints.isEmpty && (_searchQuery.isNotEmpty || _selectedFilter != 'All'))
+            _buildEmptySearchState()
+          else
+            ...filteredBlueprints.map((blueprint) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildProjectBlueprintCard(blueprint),
+            )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySearchState() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(
+            Icons.search_off,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No projects found',
+            style: AppTextStyles.titleMedium.copyWith(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your search or filter',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<ProjectBlueprint> _getFilteredBlueprints(List<ProjectBlueprint> blueprints) {
+    var filtered = blueprints;
+
+    // Apply search filter
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((blueprint) {
+        return blueprint.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               blueprint.goalStatement.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               blueprint.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+               blueprint.requiredSkills.any((skill) => skill.toLowerCase().contains(_searchQuery.toLowerCase()));
+      }).toList();
+    }
+
+    // Apply difficulty filter
+    if (_selectedFilter != 'All') {
+      filtered = filtered.where((blueprint) {
+        return blueprint.difficulty.toLowerCase() == _selectedFilter.toLowerCase();
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  Widget _buildProjectBlueprintCard(ProjectBlueprint blueprint) {
+    return GestureDetector(
+      onTap: () => _navigateToProjectDetail(blueprint),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        floatingActionButton: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _showCreateProjectDialog(),
-              borderRadius: BorderRadius.circular(12),
-              child: const Center(
-                child: Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecommendedTab() {
-    return Consumer<ProjectBuilderProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderSection(),
-              const SizedBox(height: 24),
-              _buildCapstoneSection(),
-              const SizedBox(height: 24),
-              _buildRecommendedProjects(provider.recommendedProjects),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMyProjectsTab() {
-    return Consumer<ProjectBuilderProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (provider.myProjects.isEmpty) {
-          return _buildEmptyMyProjects();
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: provider.myProjects.length,
-          itemBuilder: (context, index) {
-            return _buildProjectCard(provider.myProjects[index]);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildCompletedTab() {
-    return Consumer<ProjectBuilderProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final completedProjects = provider.myProjects
-            .where((project) => project.status == 'Completed')
-            .toList();
-
-        if (completedProjects.isEmpty) {
-          return _buildEmptyCompleted();
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(20),
-          itemCount: completedProjects.length,
-          itemBuilder: (context, index) {
-            return _buildProjectCard(completedProjects[index]);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildHeaderSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.auto_awesome,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with title and category
+            Row(
               children: [
-                Text(
-                  'AI-Powered Project Builder',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    blueprint.title,
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'Build portfolio projects with step-by-step guidance',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.9),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  child: Text(
+                    blueprint.category,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCapstoneSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[300]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.diamond,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
+            const SizedBox(height: 8),
+            
+            // Short description
+            Text(
+              blueprint.goalStatement,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Project Builder Features',
-                  style: AppTextStyles.titleSmall.copyWith(
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 12),
+            
+            // Tags and info
+            Row(
+              children: [
+                // Difficulty tag
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getDifficultyColor(blueprint.difficulty).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    blueprint.difficulty.toUpperCase(),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: _getDifficultyColor(blueprint.difficulty),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Duration
+                Icon(
+                  Icons.schedule,
+                  size: 14,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${blueprint.estimatedDuration} days',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const Spacer(),
+                // Progress indicator if started
+                if (blueprint.isStarted) ...[
+                  Icon(
+                    Icons.play_circle_filled,
+                    size: 16,
                     color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildCapstonePoint(
-            'Get personalized project recommendations based on your learning path.',
-          ),
-          const SizedBox(height: 8),
-          _buildCapstonePoint(
-            'Step-by-step project roadmap with detailed instructions and resources.',
-          ),
-          const SizedBox(height: 8),
-          _buildCapstonePoint(
-            'Build portfolio-ready projects to showcase your skills.',
-          ),
-        ],
+                  const SizedBox(width: 4),
+                  Text(
+                    'In Progress',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ] else ...[
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.grey[400],
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCapstonePoint(String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(top: 4),
-          width: 4,
-          height: 4,
-          decoration: const BoxDecoration(
-            color: Colors.black,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: Colors.grey[700],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecommendedProjects(List<ProjectModel> projects) {
-    if (projects.isEmpty) {
-      return _buildEmptyRecommended();
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
+        return Colors.green;
+      case 'intermediate':
+        return Colors.orange;
+      case 'advanced':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recommended Projects',
-          style: AppTextStyles.titleMedium.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...projects.map((project) => Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _buildProjectCard(project),
-        )),
-      ],
-    );
   }
 
-  Widget _buildProjectCard(ProjectModel project) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  List<ProjectBlueprint> _getDummyProjectBlueprints() {
+    final now = DateTime.now();
+    return [
+      ProjectBlueprint(
+        id: 'blueprint_1',
+        userId: 'dummy_user',
+        title: 'Flutter E-Commerce Mobile App',
+        goalStatement: 'Build a complete e-commerce mobile application with user authentication, product catalog, shopping cart, and payment integration to master Flutter development and state management.',
+        requiredSkills: ['Flutter', 'Dart', 'State Management', 'REST APIs', 'Firebase'],
+        requiredTools: ['Flutter SDK', 'VS Code', 'Firebase', 'Stripe API', 'Git'],
+        milestones: [
+          ProjectMilestone(
+            id: 'milestone_1',
+            title: 'Setup & Authentication',
+            description: 'Project setup, user registration, login, and profile management',
+            tasks: ['Create Flutter project', 'Setup Firebase', 'Implement authentication', 'Design login/signup UI'],
+            estimatedDays: 5,
+          ),
+          ProjectMilestone(
+            id: 'milestone_2',
+            title: 'Product Catalog & UI',
+            description: 'Build product listing, search, and detail screens',
+            tasks: ['Design product cards', 'Implement search', 'Create product details', 'Add favorites'],
+            estimatedDays: 7,
+          ),
+          ProjectMilestone(
+            id: 'milestone_3',
+            title: 'Shopping Cart & Checkout',
+            description: 'Implement cart functionality and payment flow',
+            tasks: ['Build cart screen', 'Implement quantity controls', 'Add checkout flow', 'Integrate payment'],
+            estimatedDays: 6,
+          ),
+          ProjectMilestone(
+            id: 'milestone_4',
+            title: 'Testing & Deployment',
+            description: 'Test the app thoroughly and deploy to app stores',
+            tasks: ['Write unit tests', 'UI testing', 'Performance optimization', 'Deploy to stores'],
+            estimatedDays: 4,
           ),
         ],
+        estimatedDuration: 22,
+        dailyStudyHours: 2,
+        difficulty: 'intermediate',
+        category: 'Mobile Development',
+        createdAt: now.subtract(const Duration(hours: 1)),
+        isStarted: true,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.folder_outlined,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.title,
-                      style: AppTextStyles.titleSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (project.description.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        project.description,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+      ProjectBlueprint(
+        id: 'blueprint_2',
+        userId: 'dummy_user',
+        title: 'React Task Management Dashboard',
+        goalStatement: 'Create a comprehensive task management web application with real-time updates, team collaboration features, and advanced filtering to master React and modern web development.',
+        requiredSkills: ['React', 'JavaScript', 'Node.js', 'MongoDB', 'Socket.io'],
+        requiredTools: ['VS Code', 'Node.js', 'MongoDB', 'React DevTools', 'Postman'],
+        milestones: [
+          ProjectMilestone(
+            id: 'milestone_1',
+            title: 'Frontend Foundation',
+            description: 'Setup React app with routing and basic components',
+            tasks: ['Create React app', 'Setup routing', 'Design layout', 'Create reusable components'],
+            estimatedDays: 4,
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => _startProject(project),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Start Project'),
-                ),
-              ),
-            ],
+          ProjectMilestone(
+            id: 'milestone_2',
+            title: 'Backend API',
+            description: 'Build REST API with authentication and task management',
+            tasks: ['Setup Express server', 'Create database models', 'Implement auth', 'Build task APIs'],
+            estimatedDays: 6,
+          ),
+          ProjectMilestone(
+            id: 'milestone_3',
+            title: 'Real-time Features',
+            description: 'Add real-time updates and collaboration features',
+            tasks: ['Integrate Socket.io', 'Real-time notifications', 'Team collaboration', 'Live updates'],
+            estimatedDays: 5,
           ),
         ],
+        estimatedDuration: 15,
+        dailyStudyHours: 3,
+        difficulty: 'advanced',
+        category: 'Web Development',
+        createdAt: now.subtract(const Duration(days: 2)),
       ),
-    );
-  }
-
-  Widget _buildEmptyRecommended() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lightbulb_outline,
-            size: 64,
-            color: Colors.grey[400],
+      ProjectBlueprint(
+        id: 'blueprint_3',
+        userId: 'dummy_user',
+        title: 'Python Data Analysis Portfolio',
+        goalStatement: 'Build a comprehensive data analysis portfolio showcasing skills in data cleaning, visualization, and machine learning using real-world datasets.',
+        requiredSkills: ['Python', 'Pandas', 'NumPy', 'Matplotlib', 'Scikit-learn'],
+        requiredTools: ['Jupyter Notebook', 'Python', 'Git', 'Kaggle', 'GitHub Pages'],
+        milestones: [
+          ProjectMilestone(
+            id: 'milestone_1',
+            title: 'Data Collection & Cleaning',
+            description: 'Gather datasets and perform comprehensive data cleaning',
+            tasks: ['Find datasets', 'Data exploration', 'Handle missing values', 'Data preprocessing'],
+            estimatedDays: 3,
           ),
-          const SizedBox(height: 16),
-          Text(
-            'No Recommended Projects',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-            ),
+          ProjectMilestone(
+            id: 'milestone_2',
+            title: 'Exploratory Analysis',
+            description: 'Perform statistical analysis and create visualizations',
+            tasks: ['Statistical analysis', 'Create charts', 'Find patterns', 'Generate insights'],
+            estimatedDays: 4,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Complete some learning paths to get personalized project recommendations.',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey[500],
-            ),
-            textAlign: TextAlign.center,
+          ProjectMilestone(
+            id: 'milestone_3',
+            title: 'Portfolio Website',
+            description: 'Create and deploy portfolio website showcasing projects',
+            tasks: ['Build website', 'Write case studies', 'Deploy online', 'Add documentation'],
+            estimatedDays: 3,
           ),
         ],
+        estimatedDuration: 10,
+        dailyStudyHours: 2,
+        difficulty: 'beginner',
+        category: 'Data Science',
+        createdAt: now.subtract(const Duration(days: 5)),
       ),
-    );
-  }
-
-  Widget _buildEmptyMyProjects() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.folder_open_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No Projects Yet',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Start your first project by tapping the + button.',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey[500],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyCompleted() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No Completed Projects',
-            style: AppTextStyles.titleMedium.copyWith(
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Complete your projects to see them here.',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.grey[500],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
+    ];
   }
 
   void _showCreateProjectDialog() {
@@ -525,7 +516,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Create New Project'),
-        content: const Text('Project creation feature coming soon!'),
+        content: const Text('Project creation feature coming soon!\n\nThis will allow you to input your learning goals and generate custom project blueprints.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -536,12 +527,24 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen>
     );
   }
 
-  void _startProject(ProjectModel project) {
-    // TODO: Implement project start functionality
+  void _navigateToProjectDetail(ProjectBlueprint blueprint) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailScreen(blueprint: blueprint),
+      ),
+    );
+  }
+
+  void _startProject(ProjectBlueprint blueprint) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Starting project: ${project.title}'),
+        content: Text('${blueprint.isStarted ? 'Continuing' : 'Starting'} project: ${blueprint.title}'),
         backgroundColor: AppColors.primary,
+        action: SnackBarAction(
+          label: 'View Details',
+          textColor: Colors.white,
+          onPressed: () => _navigateToProjectDetail(blueprint),
+        ),
       ),
     );
   }

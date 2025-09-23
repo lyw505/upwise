@@ -27,6 +27,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
   late TabController _tabController;
   LearningPathModel? _learningPath;
   bool _isLoading = true;
+  bool _isDescriptionExpanded = false;
 
   @override
   void initState() {
@@ -286,15 +287,50 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description
+          // Description with expand/collapse
           if (_learningPath!.description.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _learningPath!.description,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isDescriptionExpanded = !_isDescriptionExpanded;
+                    });
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _learningPath!.description,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: _isDescriptionExpanded ? null : 2,
+                          overflow: _isDescriptionExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              _isDescriptionExpanded ? Icons.expand_less : Icons.expand_more,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _isDescriptionExpanded ? 'Show less' : 'Show more',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -684,7 +720,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     switch (status) {
       case TaskStatus.completed:
         return Icon(
-          Icons.check_circle,
+          Icons.check,
           color: AppColors.success,
           size: 24,
         );
@@ -697,7 +733,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       case TaskStatus.skipped:
         return Icon(
           Icons.skip_next,
-          color: AppColors.textTertiary,
+          color: Colors.orange,
           size: 24,
         );
       case TaskStatus.notStarted:

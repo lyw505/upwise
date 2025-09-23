@@ -32,18 +32,13 @@ class ConsistentHeader extends StatelessWidget {
                 children: [
                   if (showBackButton)
                     GestureDetector(
-                      onTap: onBackTap,
+                      onTap: onBackTap ?? () => Navigator.of(context).pop(),
                       child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          shape: BoxShape.circle,
-                        ),
+                        padding: const EdgeInsets.all(8),
                         child: const Icon(
                           Icons.arrow_back_ios,
                           color: Colors.black,
-                          size: 16,
+                          size: 20,
                         ),
                       ),
                     ),

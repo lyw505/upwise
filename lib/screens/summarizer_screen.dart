@@ -100,115 +100,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
     });
   }
 
-  Widget _buildModernAppBar() {
-    return Container(
-      color: AppColors.background,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  if (_showCreateForm)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios),
-                      onPressed: () {
-                        setState(() {
-                          _showCreateForm = false;
-                        });
-                      },
-                    ),
-                  Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.primary,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'AI Summarizer',
-                          style: AppTextStyles.headlineSmall.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Transform content into insights',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (!_showCreateForm) ...[
-                const SizedBox(height: 16),
-                Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!, width: 1),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Search summaries...',
-                      hintStyle: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey[500],
-                        size: 20,
-                      ),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: Colors.grey[500],
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() {
-                                  _searchQuery = '';
-                                });
-                              },
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showProfileMenu() {
     context.goToProfile();
@@ -440,94 +331,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           height: 1.5,
         ),
       ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTextStyles.titleMedium.copyWith(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
-  Widget _buildContentInput() {
-    if (_selectedContentType == ContentType.url) {
-      return TextFormField(
-        controller: _urlController,
-        decoration: const InputDecoration(
-          hintText: 'https://example.com/article',
-          prefixIcon: Icon(Icons.link),
-        ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Please enter a URL';
-          }
-          final uri = Uri.tryParse(value);
-          if (uri == null || !uri.hasAbsolutePath) {
-            return 'Please enter a valid URL';
-          }
-          return null;
-        },
-      );
-    } else {
-      return TextFormField(
-        controller: _contentController,
-        maxLines: 6,
-        decoration: const InputDecoration(
-          hintText: 'Paste or type your content here...',
-          prefixIcon: Icon(Icons.text_fields),
-        ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return 'Please enter content to summarize';
-          }
-          return null;
-        },
-      );
-    }
-  }
-
-  Widget _buildLearningPathIntegration() {
-    return Consumer<LearningPathProvider>(
-      builder: (context, provider, child) {
-        final learningPaths = provider.learningPaths;
-        if (learningPaths.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Link to Learning Path (Optional)'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _selectedLearningPathId,
-              decoration: const InputDecoration(
-                hintText: 'Select a learning path',
-                prefixIcon: Icon(Icons.school),
-              ),
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('None'),
-                ),
-                ...learningPaths.map((path) => DropdownMenuItem<String>(
-                  value: path.id,
-                  child: Text(path.topic),
-                )),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedLearningPathId = value;
-                });
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -958,117 +761,152 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
   Widget _buildLibraryTab() {
-    return Stack(
+    return Column(
       children: [
-        Consumer<SummarizerProvider>(
-          builder: (context, summarizerProvider, child) {
-            if (summarizerProvider.isLoading) {
-              return Center(
-                child: LoadingAnimationWidget.twistingDots(
-                  leftDotColor: AppColors.primary,
-                  rightDotColor: AppColors.secondary,
-                  size: 50,
-                ),
-              );
-            }
-
-            final allSummaries = summarizerProvider.summaries;
-            final summaries = _getFilteredSummaries(allSummaries);
-
-            if (allSummaries.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.library_books_outlined,
-                      size: 80,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No summaries yet',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Create your first AI summary',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: summaries.length,
-              itemBuilder: (context, index) {
-                final summary = summaries[index];
-                return _buildSummaryCard(summary);
+        // Search Bar
+        Container(
+          color: AppColors.background,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!, width: 1),
+            ),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
               },
-            );
-          },
-        ),
-        if (_showCreateForm)
-          Container(
-            color: Colors.black54,
-            child: Center(
-              child: Container(
-                margin: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Search summaries...',
+                hintStyle: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 14,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.grey[500],
+                  size: 20,
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.clear,
+                          color: Colors.grey[500],
+                          size: 20,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Create AI Summary',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _showCreateForm = false;
-                              });
-                            },
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: _buildCreateTab(),
-                    ),
-                  ],
-                ),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
               ),
             ),
           ),
+        ),
+        
+        // Content
+        Expanded(
+          child: Consumer<SummarizerProvider>(
+            builder: (context, summarizerProvider, child) {
+              if (summarizerProvider.isLoading) {
+                return Center(
+                  child: LoadingAnimationWidget.twistingDots(
+                    leftDotColor: AppColors.primary,
+                    rightDotColor: AppColors.secondary,
+                    size: 50,
+                  ),
+                );
+              }
+
+              final allSummaries = summarizerProvider.summaries;
+              final summaries = _getFilteredSummaries(allSummaries);
+
+              if (allSummaries.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.library_books_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No summaries yet',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Create your first AI summary',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              if (summaries.isEmpty && _searchQuery.isNotEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 80,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No summaries found',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Try adjusting your search terms',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: summaries.length,
+                itemBuilder: (context, index) {
+                  final summary = summaries[index];
+                  return _buildSummaryCard(summary);
+                },
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -1076,58 +914,97 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
 
 
   Widget _buildSummaryCard(ContentSummaryModel summary) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () {
-          // Check if this is a chat conversation
-          if (summary.tags.contains('conversation') && summary.tags.contains('ai-chat')) {
-            // Navigate to conversation viewer
-            context.pushNamed('conversation-viewer', extra: summary);
-          } else {
-            // Show summary details in a dialog
-            _showSummaryDetailsDialog(summary);
-          }
-        },
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    _getContentTypeIcon(summary.contentType),
-                    size: 20,
-                    color: AppColors.primary,
+    return GestureDetector(
+      onTap: () {
+        // Check if this is a chat conversation
+        if (summary.tags.contains('conversation') && summary.tags.contains('ai-chat')) {
+          // Navigate to conversation viewer
+          context.pushNamed('conversation-viewer', extra: summary);
+        } else {
+          // Show summary details in a dialog
+          _showSummaryDetailsDialog(summary);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.primary, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    summary.title,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      summary.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _getContentTypeText(summary.contentType),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  Consumer<SummarizerProvider>(
-                    builder: (context, provider, child) {
-                      return IconButton(
-                        onPressed: () => provider.toggleFavorite(summary.id),
-                        icon: Icon(
-                          summary.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: summary.isFavorite
-                              ? Colors.red
-                              : Colors.grey[400],
-                        ),
-                      );
-                    },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(
+                  Icons.schedule,
+                  size: 16,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatDate(summary.createdAt),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.grey[600],
                   ),
+                ),
+                const Spacer(),
+                Consumer<SummarizerProvider>(
+                  builder: (context, provider, child) {
+                    return GestureDetector(
+                      onTap: () => provider.toggleFavorite(summary.id),
+                      child: Icon(
+                        summary.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: summary.isFavorite
+                            ? Colors.red
+                            : Colors.grey[400],
+                        size: 20,
+                      ),
+                    );
+                  },
+                ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -1177,83 +1054,121 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );  
   }
 
-
-  Widget _buildStatsCard(String title, String value) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  String _getContentTypeText(ContentType contentType) {
+    switch (contentType) {
+      case ContentType.text:
+        return 'Text';
+      case ContentType.url:
+        return 'URL';
+      case ContentType.file:
+        return 'File';
+    }
   }
 
+  String _formatDate(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
 
   Future<void> _generateSummary() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Prepare content and source based on type
-    String content;
-    String? contentSource;
+    // Show dummy summary instead of navigating to AI chat
+    _showDummySummary();
+  }
+
+  void _showDummySummary() {
+    final String title = _titleController.text.trim().isEmpty 
+        ? 'AI Generated Summary' 
+        : _titleController.text.trim();
     
-    if (_selectedContentType == ContentType.url) {
-      contentSource = _urlController.text.trim();
-      // Use additional notes if provided, otherwise use URL
-      content = _contentController.text.trim().isEmpty 
-          ? contentSource 
-          : _contentController.text.trim();
-    } else {
-      content = _contentController.text.trim();
-      contentSource = null;
-    }
-
-    // Parse tags from the tags controller
-    List<String> tags = [];
-    if (_tagsController.text.trim().isNotEmpty) {
-      tags = _tagsController.text
-          .split(',')
-          .map((tag) => tag.trim())
-          .where((tag) => tag.isNotEmpty)
-          .toList();
-    }
-
-    // Navigate to AI Chat Screen with the form data
-    if (mounted) {
-      context.pushNamed('ai-chat', extra: {
-        'content': content,
-        'url': contentSource,
-        'contentType': _selectedContentType,
-        'title': _titleController.text.trim().isEmpty 
-            ? 'AI Summary Chat' 
-            : _titleController.text.trim(),
-        'targetDifficulty': _targetDifficulty,
-        'tags': tags,
-        'includeKeyPoints': _includeKeyPoints,
-        'learningPathId': _selectedLearningPathId,
-      });
-      
-      // Clear form after navigation
-      _clearForm();
-    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Summary',
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This is a comprehensive summary of the provided content. The key concepts have been extracted and organized in a clear, digestible format suitable for learning and review.',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Key Points:',
+                style: AppTextStyles.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• Main concept 1: Core principles and fundamentals\n'
+                '• Main concept 2: Practical applications and examples\n'
+                '• Main concept 3: Advanced techniques and best practices\n'
+                '• Main concept 4: Common pitfalls and how to avoid them',
+                style: AppTextStyles.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Difficulty Level: ${_targetDifficulty?.name ?? 'Not specified'}',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _clearForm();
+            },
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // TODO: Save summary functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Summary saved successfully!'),
+                  backgroundColor: AppColors.primary,
+                ),
+              );
+              _clearForm();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Save Summary'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _clearForm() {
@@ -1375,31 +1290,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
 
-  IconData _getContentTypeIcon(ContentType type) {
-    switch (type) {
-      case ContentType.text:
-        return Icons.text_fields;
-      case ContentType.url:
-        return Icons.link;
-      case ContentType.file:
-        return Icons.description;
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else {
-      return '${date.day}/${date.month}/${date.year}';
-    }
-  }
 }
 
 class SummaryDetailsScreen extends StatelessWidget {

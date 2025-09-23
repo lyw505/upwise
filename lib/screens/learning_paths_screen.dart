@@ -236,7 +236,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
           case 'Completed':
             return path.status == LearningPathStatus.completed;
           case 'Not Started':
-            return path.status == LearningPathStatus.notStarted;
+            return path.progressPercentage == 0.0;
           default:
             return true;
         }
@@ -345,16 +345,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            if (path.description.isNotEmpty)
-              Text(
-                path.description,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+            
             const SizedBox(height: 16),
             Row(
               children: [

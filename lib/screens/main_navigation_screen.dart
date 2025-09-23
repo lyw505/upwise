@@ -5,7 +5,6 @@ import '../screens/dashboard_screen.dart';
 import '../screens/learning_paths_screen.dart';
 import 'summarizer_screen.dart';
 import 'project_builder_screen.dart';
-import 'profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -28,7 +27,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const LearningPathsScreen(),
     const SummarizerScreen(),
     const ProjectBuilderScreen(),
-    const ProfileScreen(),
   ];
 
   @override
@@ -114,11 +112,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
               activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
               label: 'Projects',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outlined, size: AppDimensions.bottomNavIconSize),
-              activeIcon: Icon(Icons.person, size: AppDimensions.bottomNavIconSize),
-              label: 'Profile',
             ),
           ],
         ),

@@ -58,7 +58,10 @@ class SummarizerProvider with ChangeNotifier {
         // Sort by created date, newest first
         _summaries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       } else {
-        _summaries = [];
+        // Add dummy data if no summaries exist
+        _summaries = _createDummySummaries();
+        // Save dummy data to storage
+        await _saveSummariesToStorage();
       }
 
       developer.log('Loaded ${_summaries.length} summaries from local storage', name: 'SummarizerProvider');
@@ -457,5 +460,131 @@ class SummarizerProvider with ChangeNotifier {
     _isGenerating = false;
     _error = null;
     notifyListeners();
+  }
+
+  /// Create dummy summaries for demonstration
+  List<ContentSummaryModel> _createDummySummaries() {
+    final now = DateTime.now();
+    return [
+      ContentSummaryModel(
+        id: 'dummy_1',
+        userId: 'dummy_user',
+        title: 'Flutter State Management Guide',
+        originalContent: 'Flutter offers several state management solutions including Provider, Bloc, Riverpod, and GetX. Each has its own strengths and use cases...',
+        summary: 'A comprehensive overview of state management patterns in Flutter, covering Provider, Bloc, Riverpod, and GetX. This guide explains when to use each approach and provides practical examples for building scalable Flutter applications.',
+        contentType: ContentType.url,
+        contentSource: 'https://flutter.dev/docs/development/data-and-backend/state-mgmt',
+        tags: ['flutter', 'state-management', 'provider', 'bloc'],
+        keyPoints: [
+          'Provider is great for simple state management',
+          'Bloc provides predictable state management',
+          'Riverpod offers compile-time safety',
+          'Choose based on app complexity'
+        ],
+        createdAt: now.subtract(const Duration(hours: 2)),
+        updatedAt: now.subtract(const Duration(hours: 2)),
+        isFavorite: true,
+        wordCount: 1250,
+        estimatedReadTime: 5,
+        difficultyLevel: DifficultyLevel.intermediate,
+      ),
+      ContentSummaryModel(
+        id: 'dummy_2',
+        userId: 'dummy_user',
+        title: 'JavaScript ES6+ Features Summary',
+        originalContent: 'ES6 introduced many powerful features including arrow functions, destructuring, async/await, modules, and more...',
+        summary: 'Modern JavaScript features introduced in ES6 and beyond, including arrow functions, destructuring, async/await, modules, and more. Essential knowledge for modern web development.',
+        contentType: ContentType.text,
+        tags: ['javascript', 'es6', 'modern-js', 'web-development'],
+        keyPoints: [
+          'Arrow functions provide cleaner syntax',
+          'Destructuring simplifies data extraction',
+          'Async/await makes promises easier',
+          'Modules enable better code organization'
+        ],
+        createdAt: now.subtract(const Duration(days: 1)),
+        updatedAt: now.subtract(const Duration(days: 1)),
+        isFavorite: false,
+        wordCount: 890,
+        estimatedReadTime: 4,
+        difficultyLevel: DifficultyLevel.intermediate,
+      ),
+      ContentSummaryModel(
+        id: 'dummy_3',
+        userId: 'dummy_user',
+        title: 'React Hooks Best Practices',
+        originalContent: 'React Hooks revolutionized how we write React components by allowing us to use state and lifecycle methods in functional components...',
+        summary: 'Best practices for using React Hooks effectively, including useState, useEffect, useContext, and custom hooks. Learn how to avoid common pitfalls and write cleaner React code.',
+        contentType: ContentType.url,
+        contentSource: 'https://reactjs.org/docs/hooks-intro.html',
+        tags: ['react', 'hooks', 'best-practices', 'frontend'],
+        keyPoints: [
+          'Use useState for local component state',
+          'useEffect replaces lifecycle methods',
+          'Custom hooks enable logic reuse',
+          'Follow the rules of hooks'
+        ],
+        createdAt: now.subtract(const Duration(days: 3)),
+        updatedAt: now.subtract(const Duration(days: 3)),
+        isFavorite: true,
+        wordCount: 1100,
+        estimatedReadTime: 5,
+        difficultyLevel: DifficultyLevel.advanced,
+      ),
+      ContentSummaryModel(
+        id: 'dummy_4',
+        userId: 'dummy_user',
+        title: 'Python Data Science Fundamentals',
+        originalContent: 'Python is the leading language for data science with powerful libraries like NumPy, Pandas, and Matplotlib...',
+        summary: 'Introduction to data science with Python, covering NumPy, Pandas, and Matplotlib. Learn how to manipulate data, perform analysis, and create visualizations.',
+        contentType: ContentType.text,
+        tags: ['python', 'data-science', 'numpy', 'pandas'],
+        keyPoints: [
+          'NumPy provides efficient array operations',
+          'Pandas simplifies data manipulation',
+          'Matplotlib creates beautiful visualizations',
+          'Jupyter notebooks enhance workflow'
+        ],
+        createdAt: now.subtract(const Duration(days: 5)),
+        updatedAt: now.subtract(const Duration(days: 5)),
+        isFavorite: false,
+        wordCount: 1450,
+        estimatedReadTime: 6,
+        difficultyLevel: DifficultyLevel.beginner,
+      ),
+      ContentSummaryModel(
+        id: 'dummy_5',
+        userId: 'dummy_user',
+        title: 'Node.js Performance Optimization',
+        originalContent: 'Node.js performance optimization involves several strategies including clustering, caching, database optimization, and monitoring...',
+        summary: 'Techniques for optimizing Node.js application performance, including clustering, caching, database optimization, and monitoring. Essential for production applications.',
+        contentType: ContentType.url,
+        contentSource: 'https://nodejs.org/en/docs/guides/simple-profiling/',
+        tags: ['nodejs', 'performance', 'optimization', 'backend'],
+        keyPoints: [
+          'Use clustering for CPU-intensive tasks',
+          'Implement caching strategies',
+          'Optimize database queries',
+          'Monitor application metrics'
+        ],
+        createdAt: now.subtract(const Duration(days: 7)),
+        updatedAt: now.subtract(const Duration(days: 7)),
+        isFavorite: false,
+        wordCount: 980,
+        estimatedReadTime: 4,
+        difficultyLevel: DifficultyLevel.advanced,
+      ),
+    ];
+  }
+
+  /// Save summaries to local storage
+  Future<void> _saveSummariesToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final summariesJson = json.encode(_summaries.map((s) => s.toJson()).toList());
+      await prefs.setString(_summariesKey, summariesJson);
+    } catch (e) {
+      developer.log('Error saving summaries: $e', name: 'SummarizerProvider');
+    }
   }
 }
