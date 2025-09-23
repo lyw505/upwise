@@ -37,6 +37,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _showProfileMenu() {
+    // TODO: Implement profile menu
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile menu coming soon!')),
+    );
+  }
+
   Future<void> _handleLogout() async {
     final authProvider = context.read<AuthProvider>();
     await authProvider.signOut();
@@ -67,6 +74,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildWelcomeCard(),
                     const SizedBox(height: 24),
                     _buildStreakCard(),
+                    const SizedBox(height: 24),
+                    _buildActiveLearningPathSection(),
                   ],
                 ),
               ),
@@ -93,41 +102,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.psychology,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome back, $userName!',
-                          style: AppTextStyles.titleLarge.copyWith(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    'Welcome back, $userName!',
+                    style: AppTextStyles.titleLarge.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                'Ready to train your mind today?',
+                'Ready to continue your learning journey?',
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: Colors.grey[700],
                 ),
@@ -143,7 +132,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: const Text(
@@ -164,7 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         side: BorderSide(color: AppColors.primary, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: const Text(
