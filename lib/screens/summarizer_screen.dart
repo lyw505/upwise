@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/router/app_router.dart';
@@ -916,14 +915,12 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   Widget _buildSummaryCard(ContentSummaryModel summary) {
     return GestureDetector(
       onTap: () {
-        // Check if this is a chat conversation
-        if (summary.tags.contains('conversation') && summary.tags.contains('ai-chat')) {
-          // Navigate to conversation viewer
-          context.pushNamed('conversation-viewer', extra: summary);
-        } else {
-          // Show summary details in a dialog
-          _showSummaryDetailsDialog(summary);
-        }
+        // Navigate to summary detail screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => SummaryDetailsScreen(summary: summary),
+          ),
+        );
       },
       child: Container(
         width: double.infinity,
@@ -1095,78 +1092,49 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
         ? 'AI Generated Summary' 
         : _titleController.text.trim();
     
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Summary',
-                style: AppTextStyles.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'This is a comprehensive summary of the provided content. The key concepts have been extracted and organized in a clear, digestible format suitable for learning and review.',
-                style: AppTextStyles.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Key Points:',
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '• Main concept 1: Core principles and fundamentals\n'
-                '• Main concept 2: Practical applications and examples\n'
-                '• Main concept 3: Advanced techniques and best practices\n'
-                '• Main concept 4: Common pitfalls and how to avoid them',
-                style: AppTextStyles.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Difficulty Level: ${_targetDifficulty?.name ?? 'Not specified'}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _clearForm();
-            },
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Save summary functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Summary saved successfully!'),
-                  backgroundColor: AppColors.primary,
-                ),
-              );
-              _clearForm();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text('Save Summary'),
-          ),
-        ],
+    // Create dummy summary object
+    final dummySummary = ContentSummaryModel(
+      id: 'dummy_${DateTime.now().millisecondsSinceEpoch}',
+      userId: 'dummy_user',
+      title: title,
+      originalContent: _selectedContentType == ContentType.url 
+          ? _urlController.text.trim()
+          : _contentController.text.trim(),
+      summary: 'This is a comprehensive summary of the provided content. The key concepts have been extracted and organized in a clear, digestible format suitable for learning and review.\n\n'
+          'Key Points:\n'
+          '• Main concept 1: Core principles and fundamentals\n'
+          '• Main concept 2: Practical applications and examples\n'
+          '• Main concept 3: Advanced techniques and best practices\n'
+          '• Main concept 4: Common pitfalls and how to avoid them\n\n'
+          'This summary provides a structured overview that can be used for quick reference and deeper study.',
+      contentType: _selectedContentType,
+      difficultyLevel: _targetDifficulty ?? DifficultyLevel.intermediate,
+      keyPoints: [
+        'Core principles and fundamentals',
+        'Practical applications and examples', 
+        'Advanced techniques and best practices',
+        'Common pitfalls and how to avoid them'
+      ],
+      tags: ['ai-generated', 'dummy', _selectedContentType.name],
+      wordCount: 150,
+      estimatedReadTime: 3,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    // Navigate to detail screen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SummaryDetailsScreen(summary: dummySummary),
+      ),
+    );
+
+    // Clear form and show success message
+    _clearForm();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Summary generated successfully!'),
+        backgroundColor: AppColors.primary,
       ),
     );
   }
@@ -1183,100 +1151,6 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       _includeKeyPoints = true;
     });
   }
-
-  void _showSummaryDetailsDialog(ContentSummaryModel summary) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          summary.title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Summary info
-              Row(
-                children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${summary.contentTypeDisplay} • ${summary.estimatedReadTime ?? 0} min read',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              // Summary content
-              Text(
-                'Summary',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(summary.summary),
-              
-              if (summary.keyPoints.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Key Points',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...summary.keyPoints.asMap().entries.map((entry) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('${entry.key + 1}. ', 
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Expanded(child: Text(entry.value)),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-              
-              if (summary.tags.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Tags',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: summary.tags.map((tag) {
-                    return Chip(
-                      label: Text(tag, style: const TextStyle(fontSize: 12)),
-                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
 
   String _getContentHint() {
     switch (_selectedContentType) {
@@ -1302,32 +1176,19 @@ class SummaryDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(summary.title),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          Consumer<SummarizerProvider>(
-            builder: (context, provider, child) {
-              return IconButton(
-                onPressed: () => provider.toggleFavorite(summary.id),
-                icon: Icon(
-                  summary.isFavorite ? Icons.favorite : Icons.favorite_border,
-                ),
-              );
-            },
-          ),
-          IconButton(
-            onPressed: () => _showShareDialog(context),
-            icon: const Icon(Icons.share),
-          ),
-        ],
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoCard(context),
-            const SizedBox(height: 16),
             _buildSummaryCard(context),
             if (summary.keyPoints.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -1337,6 +1198,8 @@ class SummaryDetailsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildTagsCard(context),
             ],
+            const SizedBox(height: 16),
+            _buildInfoCard(context),
           ],
         ),
       ),
@@ -1344,9 +1207,22 @@ class SummaryDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildInfoCard(BuildContext context) {
-    return Card(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(0),
         child: Column(
           children: [
             Row(
@@ -1397,143 +1273,145 @@ class SummaryDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildSummaryCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.summarize, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Summary',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.summarize, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Summary',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              summary.summary,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            summary.summary,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildKeyPointsCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.list_alt, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Key Points',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.list_alt, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Key Points',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...summary.keyPoints.asMap().entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${entry.key + 1}. ',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...summary.keyPoints.asMap().entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${entry.key + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                  Expanded(
+                    child: Text(
+                      entry.value,
+                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        entry.value,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
 
   Widget _buildTagsCard(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.tag, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Tags',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: summary.tags.map((tag) {
-                return Chip(
-                  label: Text(tag),
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                  side: BorderSide.none,
-                );
-              }).toList(),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    );
-  }
-
-  void _showShareDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Share Summary'),
-        content: const Text('Share functionality will be implemented here.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.tag, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Tags',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: summary.tags.map((tag) {
+              return Chip(
+                label: Text(tag),
+                backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                side: BorderSide.none,
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -1542,5 +1420,29 @@ class SummaryDetailsScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+// Extension untuk ContentSummaryModel
+extension ContentSummaryModelExtension on ContentSummaryModel {
+  String get contentTypeDisplay {
+    switch (contentType) {
+      case ContentType.text:
+        return 'Text';
+      case ContentType.url:
+        return 'Web Article';
+      case ContentType.file:
+        return 'File';
+    }
+  }
+
+  String get difficultyLevelDisplay {
+    return difficultyLevel?.name.capitalize() ?? 'Not specified';
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

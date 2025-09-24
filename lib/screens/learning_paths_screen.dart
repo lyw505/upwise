@@ -21,6 +21,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

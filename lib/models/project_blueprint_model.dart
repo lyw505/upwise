@@ -120,7 +120,7 @@ class ProjectBlueprint extends Equatable {
   // Computed properties
   int get completedMilestones => milestones.where((m) => m.isCompleted).length;
   double get progress => milestones.isEmpty ? 0.0 : completedMilestones / milestones.length;
-  String get progressText => '${completedMilestones}/${milestones.length} milestones';
+  String get progressText => '$completedMilestones/${milestones.length} milestones';
 
   ProjectBlueprint copyWith({
     String? id,

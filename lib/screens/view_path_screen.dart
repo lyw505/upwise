@@ -298,7 +298,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                       _isDescriptionExpanded = !_isDescriptionExpanded;
                     });
                   },
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

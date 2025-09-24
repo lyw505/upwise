@@ -17,6 +17,7 @@ import '../../screens/summarizer_screen.dart';
 import '../../screens/ai_chat_screen.dart';
 import '../../screens/conversation_viewer_screen.dart';
 import '../../screens/project_builder_screen.dart';
+import '../../screens/create_project_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../../screens/analytics_screen.dart';
 import '../../models/content_summary_model.dart';
@@ -161,6 +162,12 @@ class AppRouter {
           path: '/project-builder',
           name: 'project-builder',
           builder: (context, state) => const ProjectBuilderScreen(),
+        ),
+
+        GoRoute(
+          path: '/create-project',
+          name: 'create-project',
+          builder: (context, state) => const CreateProjectScreen(),
         ),
 
         GoRoute(

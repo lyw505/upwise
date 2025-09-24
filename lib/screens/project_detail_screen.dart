@@ -398,7 +398,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             final isLast = index == widget.blueprint.milestones.length - 1;
             
             return _buildMilestoneItem(milestone, index + 1, !isLast);
-          }).toList(),
+          }),
         ],
       ),
     );

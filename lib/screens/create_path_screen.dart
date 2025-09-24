@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
-import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
 import '../widgets/consistent_header.dart';

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../widgets/consistent_header.dart';
-import '../providers/project_builder_provider.dart';
 import '../models/project_blueprint_model.dart';
 import 'project_detail_screen.dart';
 
@@ -154,11 +152,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showCreateProjectDialog,
-        backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -544,6 +538,40 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> {
           label: 'View Details',
           textColor: Colors.white,
           onPressed: () => _navigateToProjectDetail(blueprint),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingActionButton() {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).pushNamed('/create-project');
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: const Center(
+            child: Icon(
+              Icons.add,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
         ),
       ),
     );
