@@ -5,9 +5,8 @@ import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
 import '../widgets/consistent_header.dart';
 import '../providers/auth_provider.dart';
-import '../providers/learning_path_provider.dart';
-import '../providers/user_provider.dart';
-import '../models/learning_path_model.dart';
+import '../providers/analytics_provider.dart';
+import '../models/analytics_model.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -17,20 +16,6 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  bool _isLoading = true;
-  
-  // Analytics data
-  int _totalLearningPaths = 0;
-  int _completedPaths = 0;
-  int _activePaths = 0;
-  int _totalTasksCompleted = 0;
-  int _totalStudyTimeMinutes = 0;
-  int _currentStreak = 0;
-  int _longestStreak = 0;
-  List<LearningPathModel> _learningPaths = [];
-  Map<String, int> _weeklyProgress = {};
-  Map<String, int> _monthlyProgress = {};
-
   @override
   void initState() {
     super.initState();
@@ -42,82 +27,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _loadAnalyticsData() async {
     final authProvider = context.read<AuthProvider>();
-    final learningPathProvider = context.read<LearningPathProvider>();
-    final userProvider = context.read<UserProvider>();
+    final analyticsProvider = context.read<AnalyticsProvider>();
     
     if (authProvider.currentUser != null) {
-      // Load user data
-      await userProvider.loadUser(authProvider.currentUser!.id);
-      
-      // Load learning paths
-      await learningPathProvider.loadLearningPaths(authProvider.currentUser!.id);
-      
-      // Calculate analytics
-      _calculateAnalytics(learningPathProvider.learningPaths, userProvider.user);
+      await analyticsProvider.loadAnalytics(authProvider.currentUser!.id);
     }
-    
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  void _calculateAnalytics(List<LearningPathModel> paths, user) {
-    _learningPaths = paths;
-    _totalLearningPaths = paths.length;
-    _completedPaths = paths.where((p) => p.status == LearningPathStatus.completed).length;
-    _activePaths = paths.where((p) => p.status == LearningPathStatus.inProgress).length;
-    
-    // Calculate total tasks completed and study time
-    _totalTasksCompleted = 0;
-    _totalStudyTimeMinutes = 0;
-    
-    for (final path in paths) {
-      final completedTasks = path.dailyTasks.where((t) => t.status == TaskStatus.completed || t.status == TaskStatus.skipped);
-      _totalTasksCompleted += completedTasks.length;
-      
-      for (final task in completedTasks) {
-        _totalStudyTimeMinutes += task.timeSpentMinutes ?? 30; // Default 30 minutes if not specified
-      }
-    }
-    
-    // User streak data
-    _currentStreak = user?.currentStreak ?? 0;
-    _longestStreak = user?.longestStreak ?? 0;
-    
-    // Generate mock weekly/monthly data for charts
-    _generateProgressData();
-  }
-
-  void _generateProgressData() {
-    // Generate last 7 days data
-    _weeklyProgress = {};
-    final now = DateTime.now();
-    for (int i = 6; i >= 0; i--) {
-      final date = now.subtract(Duration(days: i));
-      final dayName = _getDayName(date.weekday);
-      // Mock data - in real app, this would come from database
-      _weeklyProgress[dayName] = (i < 3) ? (7 - i) * 10 : 0;
-    }
-    
-    // Generate last 6 months data
-    _monthlyProgress = {};
-    for (int i = 5; i >= 0; i--) {
-      final date = DateTime(now.year, now.month - i, 1);
-      final monthName = _getMonthName(date.month);
-      // Mock data - in real app, this would come from database
-      _monthlyProgress[monthName] = (i < 4) ? (6 - i) * 20 : 0;
-    }
-  }
-
-  String _getDayName(int weekday) {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days[weekday - 1];
-  }
-
-  String _getMonthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return months[month - 1];
   }
 
   @override
@@ -131,57 +45,104 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             showProfile: false,
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
+            child: Consumer<AnalyticsProvider>(
+          builder: (context, analyticsProvider, child) {
+            if (analyticsProvider.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                ),
+              );
+            }
+
+            if (analyticsProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: AppColors.error,
                     ),
-                  )
-                : _buildAnalyticsContent(),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load analytics',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      analyticsProvider.error!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadAnalyticsData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (analyticsProvider.analyticsData == null) {
+              return const Center(
+                child: Text('No analytics data available'),
+              );
+            }
+
+            return _buildAnalyticsContent(analyticsProvider.analyticsData!);
+          },
+        ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAnalyticsContent() {
+  Widget _buildAnalyticsContent(AnalyticsData data) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Stats Cards (only Tasks Done and Study Time)
-          _buildStatsGrid(),
+          _buildStatsGrid(data),
           
           const SizedBox(height: 16),
           
           // Streak Cards Row
           Row(
             children: [
-              Expanded(child: _buildCurrentStreakCard()),
+              Expanded(child: _buildCurrentStreakCard(data)),
               const SizedBox(width: 16),
-              Expanded(child: _buildLongestStreakCard()),
+              Expanded(child: _buildLongestStreakCard(data)),
             ],
           ),
           
           const SizedBox(height: 16),
           
           // Study Habits Card (full width)
-          _buildStudyHabitsCard(),
+          _buildStudyHabitsCard(data),
           
           const SizedBox(height: 32),
           
           // Weekly Progress Chart
           _buildSectionTitle('Weekly Progress'),
           const SizedBox(height: 16),
-          _buildWeeklyChart(),
+          _buildWeeklyChart(data.weeklyProgress),
           
           const SizedBox(height: 32),
           
           // Monthly Progress Chart
           _buildSectionTitle('Monthly Progress'),
           const SizedBox(height: 16),
-          _buildMonthlyChart(),
+          _buildMonthlyChart(data.monthlyProgress),
           
           const SizedBox(height: 24), // Bottom padding
         ],
@@ -199,13 +160,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStatsGrid() {
+  Widget _buildStatsGrid(AnalyticsData data) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             'Tasks Done',
-            _totalTasksCompleted.toString(),
+            data.totalTasksCompleted.toString(),
             Icons.task_alt_outlined,
             AppColors.info,
           ),
@@ -214,7 +175,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         Expanded(
           child: _buildStatCard(
             'Study Time',
-            '${(_totalStudyTimeMinutes / 60).toStringAsFixed(1)}h',
+            '${data.totalStudyTimeHours.toStringAsFixed(1)}h',
             Icons.access_time_outlined,
             AppColors.warning,
           ),
@@ -277,7 +238,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
 
 
-  Widget _buildWeeklyChart() {
+  Widget _buildWeeklyChart(Map<String, int> weeklyProgress) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -307,9 +268,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: _weeklyProgress.entries.map((entry) {
-                final maxValue = _weeklyProgress.values.isNotEmpty 
-                    ? _weeklyProgress.values.reduce((a, b) => a > b ? a : b) 
+              children: weeklyProgress.entries.map((entry) {
+                final maxValue = weeklyProgress.values.isNotEmpty 
+                    ? weeklyProgress.values.reduce((a, b) => a > b ? a : b) 
                     : 1;
                 final height = maxValue > 0 ? (entry.value / maxValue) * 100 : 0.0;
                 
@@ -355,7 +316,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildMonthlyChart() {
+  Widget _buildMonthlyChart(Map<String, int> monthlyProgress) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -385,9 +346,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: _monthlyProgress.entries.map((entry) {
-                final maxValue = _monthlyProgress.values.isNotEmpty 
-                    ? _monthlyProgress.values.reduce((a, b) => a > b ? a : b) 
+              children: monthlyProgress.entries.map((entry) {
+                final maxValue = monthlyProgress.values.isNotEmpty 
+                    ? monthlyProgress.values.reduce((a, b) => a > b ? a : b) 
                     : 1;
                 final height = maxValue > 0 ? (entry.value / maxValue) * 120 : 0.0;
                 
@@ -438,7 +399,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildCurrentStreakCard() {
+  Widget _buildCurrentStreakCard(AnalyticsData data) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -468,7 +429,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               const Spacer(),
               Text(
-                _currentStreak.toString(),
+                data.currentStreak.toString(),
                 style: AppTextStyles.headlineMedium.copyWith(
                   color: AppColors.warning,
                   fontWeight: FontWeight.w700,
@@ -489,7 +450,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildLongestStreakCard() {
+  Widget _buildLongestStreakCard(AnalyticsData data) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -519,7 +480,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               const Spacer(),
               Text(
-                _longestStreak.toString(),
+                data.longestStreak.toString(),
                 style: AppTextStyles.headlineMedium.copyWith(
                   color: AppColors.success,
                   fontWeight: FontWeight.w700,
@@ -562,7 +523,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStudyHabitsCard() {
+  Widget _buildStudyHabitsCard(AnalyticsData data) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -591,11 +552,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildHabitItem('Avg/Day', '${(_totalStudyTimeMinutes / 60 / 7).toStringAsFixed(1)}h', Icons.access_time),
+                child: _buildHabitItem('Avg/Day', '${data.studyHabits.avgStudyTimePerDay.toStringAsFixed(1)}h', Icons.access_time),
               ),
               const SizedBox(width: 24),
               Expanded(
-                child: _buildHabitItem('Rate', '${_totalLearningPaths > 0 ? ((_completedPaths / _totalLearningPaths) * 100).toStringAsFixed(0) : 0}%', Icons.trending_up),
+                child: _buildHabitItem('Rate', '${data.studyHabits.completionRate.toStringAsFixed(0)}%', Icons.trending_up),
               ),
             ],
           ),

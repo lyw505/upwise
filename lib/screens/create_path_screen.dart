@@ -73,13 +73,6 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Create Learning Path'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -88,6 +81,29 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Create Learning Path',
+                        style: AppTextStyles.headlineMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Let AI create a personalized learning journey for you',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 
                 // Topic Field
                 _buildSectionTitle('What do you want to learn?'),
@@ -285,22 +301,39 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
   }
 
   Widget _buildExperienceLevelSelector() {
-    return Wrap(
-      spacing: 8,
+    return Row(
       children: ExperienceLevel.values.map((level) {
         final isSelected = _experienceLevel == level;
-        return FilterChip(
-          label: Text(_getExperienceLevelLabel(level)),
-          selected: isSelected,
-          onSelected: (selected) {
-            setState(() {
-              _experienceLevel = level;
-            });
-          },
-          backgroundColor: AppColors.surfaceVariant,
-          selectedColor: AppColors.primary,
-          labelStyle: AppTextStyles.labelMedium.copyWith(
-            color: isSelected ? Colors.white : AppColors.textPrimary,
+        final index = ExperienceLevel.values.indexOf(level);
+        
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: index < ExperienceLevel.values.length - 1 ? 8.0 : 0.0,
+            ),
+            child: FilterChip(
+              label: Text(
+                _getExperienceLevelLabel(level),
+                textAlign: TextAlign.center,
+              ),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _experienceLevel = level;
+                });
+              },
+              backgroundColor: AppColors.surfaceVariant,
+              selectedColor: AppColors.primary,
+              labelStyle: AppTextStyles.labelMedium.copyWith(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: isSelected ? AppColors.primary : AppColors.border,
+                ),
+              ),
+            ),
           ),
         );
       }).toList(),

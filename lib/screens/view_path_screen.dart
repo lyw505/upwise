@@ -117,6 +117,91 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
     }
   }
 
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 1, // Highlight "Paths" since we're in learning path detail
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.goToDashboard();
+              break;
+            case 1:
+              context.goToLearningPaths();
+              break;
+            case 2:
+              context.goToCreatePath();
+              break;
+            case 3:
+              context.goToSummarizer();
+              break;
+            case 4:
+              context.goToProjectBuilder();
+              break;
+            case 5:
+              context.goToAnalytics();
+              break;
+          }
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: Colors.grey[500],
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 12,
+        ),
+        elevation: 0,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.home, size: AppDimensions.bottomNavIconSize),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.school, size: AppDimensions.bottomNavIconSize),
+            label: 'Paths',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.add_circle, size: AppDimensions.bottomNavIconSize),
+            label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.article, size: AppDimensions.bottomNavIconSize),
+            label: 'Summary',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
+            label: 'Projects',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.analytics, size: AppDimensions.bottomNavIconSize),
+            label: 'Analytics',
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -124,14 +209,12 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: const Text('Learning Path'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            onPressed: () => context.goToDashboard(),
-          ),
+          automaticallyImplyLeading: false,
         ),
         body: const Center(
           child: CircularProgressIndicator(),
         ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       );
     }
 
@@ -140,10 +223,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
         backgroundColor: AppColors.background,
         appBar: AppBar(
           title: const Text('Learning Path'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios),
-            onPressed: () => context.goToDashboard(),
-          ),
+          automaticallyImplyLeading: false,
         ),
         body: Center(
           child: Column(
@@ -164,11 +244,12 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => context.goToDashboard(),
-                child: const Text('Back to Dashboard'),
+                child: const Text('Go to Dashboard'),
               ),
             ],
           ),
         ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       );
     }
 
@@ -176,11 +257,17 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(_learningPath!.topic),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
-        ),
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+        elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
+          if (_learningPath!.status == LearningPathStatus.inProgress)
+            IconButton(
+              icon: const Icon(Icons.today),
+              onPressed: () => context.goToDaily(),
+              tooltip: 'Daily Tasks',
+            ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
@@ -201,17 +288,25 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             ],
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Learning Plan'),
-            Tab(text: 'Projects'),
-          ],
-        ),
       ),
       body: Column(
         children: [
-          // Header with progress and actions
+          // Tab Bar
+          Container(
+            color: AppColors.surface,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppColors.primary,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorColor: AppColors.primary,
+              tabs: const [
+                Tab(text: 'Learning Plan'),
+                Tab(text: 'Projects'),
+              ],
+            ),
+          ),
+          
+          // Progress Header
           _buildHeader(),
           
           // Tab content
@@ -226,6 +321,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
           ),
         ],
       ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -574,9 +670,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                           child: OutlinedButton.icon(
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              side: BorderSide(color: Colors.grey.shade300, width: 1),
-                              foregroundColor: Colors.grey.shade600,
+                              backgroundColor: Colors.green.withValues(alpha: 0.05),
+                              side: BorderSide(color: Colors.green, width: 2),
+                              foregroundColor: Colors.green.shade700,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
                               ),
@@ -589,7 +685,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             label: Text(
                               'Completed',
                               style: AppTextStyles.buttonMedium.copyWith(
-                                color: Colors.grey.shade600,
+                                color: Colors.green.shade700,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -603,9 +699,9 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                           child: OutlinedButton.icon(
                             onPressed: () => _updateTaskStatus(task.id, TaskStatus.notStarted),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              side: BorderSide(color: Colors.grey.shade300, width: 1),
-                              foregroundColor: Colors.grey.shade600,
+                              backgroundColor: Colors.orange.withValues(alpha: 0.05),
+                              side: BorderSide(color: Colors.orange, width: 2),
+                              foregroundColor: Colors.orange.shade700,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
                               ),
@@ -618,7 +714,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                             label: Text(
                               'Skipped',
                               style: AppTextStyles.buttonMedium.copyWith(
-                                color: Colors.grey.shade600,
+                                color: Colors.orange.shade700,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

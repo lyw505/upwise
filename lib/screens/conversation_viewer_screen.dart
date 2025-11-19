@@ -19,129 +19,167 @@ class ConversationViewerScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(conversation.title),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              conversation.isFavorite ? Icons.favorite : Icons.favorite_border,
-            ),
-            onPressed: () => _toggleFavorite(context),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'delete') {
-                _deleteConversation(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete Conversation'),
-                  ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.border),
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Header with conversation info
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.psychology, size: 20, color: Colors.white),
+                      child: const Icon(Icons.arrow_back_ios, size: 16, color: Colors.white),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'AI Conversation',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            'Saved ${_formatDate(conversation.createdAt)}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                        ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      conversation.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  ],
-                ),
-                if (conversation.tags.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: conversation.tags
-                        .where((tag) => tag != 'conversation' && tag != 'ai-chat')
-                        .map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                tag,
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ))
-                        .toList(),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      conversation.isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => _toggleFavorite(context),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'delete') {
+                        _deleteConversation(context);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete Conversation'),
+                          ],
+                        ),
+                      ),
+                    ],
+                    icon: const Icon(Icons.more_vert, color: Colors.white),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-          // Chat messages
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                return _buildMessageBubble(message);
-              },
+            Expanded(
+              child: Column(
+                children: [
+                  // Header with conversation info
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(Icons.psychology, size: 20, color: Colors.white),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'AI Conversation',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Saved ${_formatDate(conversation.createdAt)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (conversation.tags.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: conversation.tags
+                                .where((tag) => tag != 'conversation' && tag != 'ai-chat')
+                                .map((tag) => Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        tag,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  // Chat messages
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        return _buildMessageBubble(message);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

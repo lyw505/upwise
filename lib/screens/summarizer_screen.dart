@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/config/env_config.dart';
 import '../widgets/consistent_header.dart';
 import '../models/content_summary_model.dart';
 import '../providers/summarizer_provider.dart';
@@ -83,18 +84,27 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
   void _loadData() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final summarizerProvider = context.read<SummarizerProvider>();
       final learningPathProvider = context.read<LearningPathProvider>();
       final authProvider = context.read<AuthProvider>();
       
-      // Load summaries from local storage (no auth required)
-      summarizerProvider.loadSummaries();
-      summarizerProvider.loadCategories();
-      
-      // Still load learning paths if user is authenticated for integration
+      // Check if user is authenticated for database access
       if (authProvider.currentUser != null) {
+        // Initialize default categories for new users
+        await summarizerProvider.initializeDefaultCategories();
+        
+        // Load summaries and categories from Supabase database
+        summarizerProvider.loadSummaries();
+        summarizerProvider.loadCategories();
+        
+        // Load learning paths for integration
         learningPathProvider.loadLearningPaths(authProvider.currentUser!.id);
+      } else {
+        // Redirect to login if not authenticated
+        if (mounted) {
+          context.go('/login');
+        }
       }
     });
   }
@@ -145,6 +155,23 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                       ],
                     ),
                   ),
+                  if (!_showCreateForm) ...[
+                    IconButton(
+                      icon: const Icon(Icons.category_outlined),
+                      onPressed: _showCategoriesDialog,
+                      tooltip: 'Manage Categories',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: _showCreateCategoryDialog,
+                      tooltip: 'Create Category',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.bug_report_outlined),
+                      onPressed: _showDebugInfo,
+                      tooltip: 'Debug Info',
+                    ),
+                  ],
                 ],
               ),
               if (!_showCreateForm) ...[
@@ -869,7 +896,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                       ),
                       const SizedBox(width: 12),
                       const Text(
-                        'Generating...',
+                        'Generating Summary...',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -884,7 +911,7 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                       ),
                       const SizedBox(width: 12),
                       const Text(
-                        'Generate AI Summary',
+                        'Generate Summary',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -909,11 +936,242 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       return summaries;
     }
     
+    // For now, use local filtering. Database search can be implemented separately
     return summaries.where((summary) {
       return summary.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
              summary.summary.toLowerCase().contains(_searchQuery.toLowerCase()) ||
              summary.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
     }).toList();
+  }
+
+  /// Perform database search (can be called separately)
+  Future<void> _performDatabaseSearch() async {
+    if (_searchQuery.isEmpty) return;
+    
+    final summarizerProvider = context.read<SummarizerProvider>();
+    final searchResults = await summarizerProvider.searchSummaries(_searchQuery);
+    
+    // You can handle search results here if needed
+    // For example, show in a separate dialog or update the UI
+  }
+
+  /// Show categories management dialog
+  void _showCategoriesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => _CategoriesDialog(),
+    );
+  }
+
+  /// Show category creation dialog
+  void _showCreateCategoryDialog() {
+    final nameController = TextEditingController();
+    final colorController = TextEditingController(text: '#3B82F6');
+    final iconController = TextEditingController(text: 'folder');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create Category'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Category Name',
+                hintText: 'Enter category name',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: colorController,
+              decoration: const InputDecoration(
+                labelText: 'Color (Hex)',
+                hintText: '#3B82F6',
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: iconController,
+              decoration: const InputDecoration(
+                labelText: 'Icon Name',
+                hintText: 'folder',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isNotEmpty) {
+                final summarizerProvider = context.read<SummarizerProvider>();
+                final success = await summarizerProvider.createCategory(
+                  name: nameController.text.trim(),
+                  color: colorController.text.trim(),
+                  icon: iconController.text.trim(),
+                );
+                
+                if (success && mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Category created successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show debug information dialog
+  void _showDebugInfo() {
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.currentUser;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Debug Information'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDebugItem('Authentication', user != null ? 'Logged in' : 'Not logged in'),
+              _buildDebugItem('User ID', user?.id ?? 'N/A'),
+              _buildDebugItem('User Email', user?.email ?? 'N/A'),
+              const Divider(),
+              _buildDebugItem('Gemini API Key', EnvConfig.hasGeminiApiKey ? 'Configured' : 'Missing'),
+              _buildDebugItem('Supabase URL', EnvConfig.supabaseUrl.isNotEmpty ? 'Configured' : 'Missing'),
+              _buildDebugItem('Supabase Key', EnvConfig.supabaseAnonKey.isNotEmpty ? 'Configured' : 'Missing'),
+              const Divider(),
+              _buildDebugItem('Environment', EnvConfig.appEnv),
+              _buildDebugItem('Debug Mode', EnvConfig.isDebugMode.toString()),
+              _buildDebugItem('API Timeout', '${EnvConfig.apiTimeout}ms'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          if (EnvConfig.hasGeminiApiKey && user != null)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _testAIGeneration();
+              },
+              child: const Text('Test AI'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDebugItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: value.contains('Missing') || value.contains('Not logged') 
+                    ? Colors.red[600] 
+                    : Colors.green[600],
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Test AI generation with simple content
+  Future<void> _testAIGeneration() async {
+    try {
+      final summarizerProvider = context.read<SummarizerProvider>();
+      
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Testing AI generation...'),
+            ],
+          ),
+        ),
+      );
+
+      final testRequest = SummaryRequestModel(
+        content: 'This is a test content for AI summarization. Flutter is a UI toolkit for building natively compiled applications.',
+        contentType: ContentType.text,
+        title: 'Test Summary',
+      );
+
+      final result = await summarizerProvider.generateSummary(
+        request: testRequest,
+        autoSave: false,
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (result != null) {
+        // Show success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ AI generation test successful!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // Show failure
+        final error = summarizerProvider.error ?? 'Unknown error';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ AI generation test failed: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Test error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _buildFloatingActionButton() {
@@ -963,6 +1221,42 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                   leftDotColor: AppColors.primary,
                   rightDotColor: AppColors.secondary,
                   size: 50,
+                ),
+              );
+            }
+
+            // Show error if there's a database error
+            if (summarizerProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 80,
+                      color: Colors.red[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Database Error',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: Colors.red[600],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      summarizerProvider.error!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.red[500],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => _loadData(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
               );
             }
@@ -1231,23 +1525,45 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
           .toList();
     }
 
-    // Navigate to AI Chat Screen with the form data
-    if (mounted) {
-      context.pushNamed('ai-chat', extra: {
-        'content': content,
-        'url': contentSource,
-        'contentType': _selectedContentType,
-        'title': _titleController.text.trim().isEmpty 
-            ? 'AI Summary Chat' 
-            : _titleController.text.trim(),
-        'targetDifficulty': _targetDifficulty,
-        'tags': tags,
-        'includeKeyPoints': _includeKeyPoints,
-        'learningPathId': _selectedLearningPathId,
-      });
-      
-      // Clear form after navigation
-      _clearForm();
+    // Create summary request
+    final request = SummaryRequestModel(
+      content: content,
+      contentType: _selectedContentType,
+      contentSource: contentSource,
+      title: _titleController.text.trim().isEmpty 
+          ? null 
+          : _titleController.text.trim(),
+      targetDifficulty: _targetDifficulty,
+      tags: tags,
+      includeKeyPoints: _includeKeyPoints,
+      learningPathId: _selectedLearningPathId,
+    );
+
+    try {
+      // Generate summary directly
+      final summarizerProvider = context.read<SummarizerProvider>();
+      final summary = await summarizerProvider.generateSummary(
+        request: request,
+        autoSave: true,
+      );
+
+      if (summary != null && mounted) {
+        // Show summary result dialog
+        _showSummaryResultDialog(summary);
+        
+        // Clear form after successful generation
+        _clearForm();
+      } else if (mounted) {
+        // Show error if generation failed
+        final summarizerProvider = context.read<SummarizerProvider>();
+        final errorMessage = summarizerProvider.error ?? 'Failed to generate summary. Please try again.';
+        
+        _showErrorDialog(errorMessage);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorDialog('Error: $e');
+      }
     }
   }
 
@@ -1262,6 +1578,81 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       _selectedLearningPathId = null;
       _includeKeyPoints = true;
     });
+  }
+
+  /// Show summary result in a beautiful dialog
+  void _showSummaryResultDialog(ContentSummaryModel summary) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => SummaryResultDialog(summary: summary),
+    );
+  }
+
+  /// Show error dialog with detailed information
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red[600]),
+            const SizedBox(width: 12),
+            const Text('Generation Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Unable to generate summary. This could be due to:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 12),
+            const Text('• Network connection issues'),
+            const Text('• API service temporarily unavailable'),
+            const Text('• Content format not supported'),
+            const Text('• Authentication problems'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Text(
+                'Error Details:\n$errorMessage',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red[700],
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Retry generation
+              _generateSummary();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSummaryDetailsDialog(ContentSummaryModel summary) {
@@ -1647,5 +2038,557 @@ class SummaryDetailsScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+/// Categories management dialog
+class _CategoriesDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: 400,
+        height: 500,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Text(
+                  'Manage Categories',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Consumer<SummarizerProvider>(
+                builder: (context, provider, child) {
+                  if (provider.categories.isEmpty) {
+                    return const Center(
+                      child: Text('No categories yet'),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: provider.categories.length,
+                    itemBuilder: (context, index) {
+                      final category = provider.categories[index];
+                      return ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Color(int.parse(category.color.replaceFirst('#', '0xFF'))),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.folder,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(category.name),
+                        subtitle: category.description != null 
+                            ? Text(category.description!)
+                            : null,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Category'),
+                                content: Text('Are you sure you want to delete "${category.name}"?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirmed == true) {
+                              await provider.deleteCategory(category.id);
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Create New Category'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+/// Beautiful dialog to show summary results
+class SummaryResultDialog extends StatefulWidget {
+  final ContentSummaryModel summary;
+
+  const SummaryResultDialog({
+    super.key,
+    required this.summary,
+  });
+
+  @override
+  State<SummaryResultDialog> createState() => _SummaryResultDialogState();
+}
+
+class _SummaryResultDialogState extends State<SummaryResultDialog>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    Expanded(
+                      child: _buildContent(),
+                    ),
+                    _buildActions(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Summary Generated!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'AI has analyzed your content',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.close,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          _buildSectionTitle('Title'),
+          const SizedBox(height: 8),
+          _buildContentCard(
+            child: Text(
+              widget.summary.title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Summary
+          _buildSectionTitle('Summary'),
+          const SizedBox(height: 8),
+          _buildContentCard(
+            child: Text(
+              widget.summary.summary,
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Key Points
+          if (widget.summary.keyPoints.isNotEmpty) ...[
+            _buildSectionTitle('Key Points'),
+            const SizedBox(height: 8),
+            _buildContentCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget.summary.keyPoints.map((point) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            point,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.5,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          
+          // Tags
+          if (widget.summary.tags.isNotEmpty) ...[
+            _buildSectionTitle('Tags'),
+            const SizedBox(height: 8),
+            _buildContentCard(
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.summary.tags.map((tag) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          
+          // Metadata
+          _buildMetadata(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColors.primary,
+      ),
+    );
+  }
+
+  Widget _buildContentCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[200]!,
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildMetadata() {
+    return _buildContentCard(
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.schedule,
+                size: 16,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Reading Time: ${widget.summary.estimatedReadTime ?? 0} min',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.text_fields,
+                size: 16,
+                color: Colors.grey[600],
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Words: ${widget.summary.wordCount ?? 0}',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          if (widget.summary.difficultyLevel != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(
+                  Icons.signal_cellular_alt,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Level: ${widget.summary.difficultyLevelDisplay}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.category,
+                  size: 16,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Type: ${widget.summary.contentTypeDisplay}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Chat Button (Optional)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                // Navigate to chat with this summary
+                context.pushNamed('ai-chat', extra: {
+                  'content': widget.summary.originalContent,
+                  'url': widget.summary.contentSource,
+                  'contentType': widget.summary.contentType,
+                  'title': widget.summary.title,
+                  'summary': widget.summary,
+                });
+              },
+              icon: const Icon(Icons.chat_bubble_outline),
+              label: const Text('Chat About This'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // View Details Button
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                // Navigate to summary details
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SummaryDetailsScreen(summary: widget.summary),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.visibility),
+              label: const Text('View Details'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

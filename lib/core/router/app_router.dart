@@ -113,11 +113,10 @@ class AppRouter {
           builder: (context, state) => const MainNavigationScreen(initialIndex: 1),
         ),
         
-        // Future routes for learning path features
         GoRoute(
           path: '/create-path',
           name: 'create-path',
-          builder: (context, state) => const CreatePathScreen(),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 2),
         ),
         
         GoRoute(
@@ -140,7 +139,7 @@ class AppRouter {
         GoRoute(
           path: '/analytics',
           name: 'analytics',
-          builder: (context, state) => const MainNavigationScreen(initialIndex: 2),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 5),
         ),
         
         GoRoute(
@@ -152,13 +151,13 @@ class AppRouter {
         GoRoute(
           path: '/summarizer',
           name: 'summarizer',
-          builder: (context, state) => const SummarizerScreen(),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 3),
         ),
 
         GoRoute(
           path: '/project-builder',
           name: 'project-builder',
-          builder: (context, state) => const ProjectBuilderScreen(),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 4),
         ),
 
         GoRoute(

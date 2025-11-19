@@ -150,34 +150,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
-          onPressed: () => context.goToDashboard(),
-        ),
-        actions: [
-          if (_isEditing)
-            TextButton(
-              onPressed: _isLoading ? null : _saveProfile,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      'Save',
-                      style: AppTextStyles.labelLarge.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
+          children: [
+            // Custom Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.border),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Settings',
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Manage your account and preferences',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_isEditing)
+                    TextButton(
+                      onPressed: _isLoading ? null : _saveProfile,
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              'Save',
+                              style: AppTextStyles.labelLarge.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Section
@@ -197,6 +227,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             
             // Account Actions Section
             _buildAccountActionsSection(),
+          ],
+        ),
+              ),
+            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/router/app_router.dart';
@@ -45,6 +46,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _showProfileMenu() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.person, color: AppColors.primary),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to profile screen when implemented
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings, color: AppColors.primary),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                context.goToSettings();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.pop(context);
+                _handleLogout();
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +119,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildWelcomeCard(),
                     const SizedBox(height: 24),
                     _buildStreakCard(),
+                    const SizedBox(height: 24),
+                    _buildActiveLearningPathSection(),
                   ],
                 ),
               ),
@@ -137,7 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => context.goToCreatePath(),
+                      onPressed: () => context.go('/create-path'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -371,7 +425,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  context.goToLearningPaths();
+                  context.go('/learning-paths');
                 },
                 icon: const Icon(
                   Icons.arrow_forward,

@@ -114,11 +114,15 @@ class SummarizerService {
     required SummaryRequestModel request,
   }) async {
     try {
+      developer.log('SummarizerService: Starting summary generation', name: 'SummarizerService');
+      
       // Check if Gemini API key is available
       if (!EnvConfig.hasGeminiApiKey) {
         developer.log('Gemini API key not configured, using fallback', name: 'SummarizerService');
         return _generateFallbackSummary(request);
       }
+      
+      developer.log('Gemini API key found, proceeding with AI generation', name: 'SummarizerService');
 
       // Process content based on type
       String processedContent = request.content;
@@ -226,8 +230,10 @@ class SummarizerService {
   /// Call Gemini API with prompt
   Future<String?> _callGeminiApi(String prompt) async {
     try {
+      developer.log('Calling Gemini API...', name: 'SummarizerService');
       final apiKey = EnvConfig.geminiApiKey;
       final url = Uri.parse('$_baseUrl?key=$apiKey');
+      developer.log('API URL: $_baseUrl', name: 'SummarizerService');
 
       final requestBody = {
         'contents': [
@@ -265,11 +271,18 @@ class SummarizerService {
         Duration(seconds: EnvConfig.apiTimeout),
       );
 
+      developer.log('API Response status: ${response.statusCode}', name: 'SummarizerService');
+      
       if (response.statusCode == 200) {
+        developer.log('API call successful, parsing response...', name: 'SummarizerService');
         final data = json.decode(response.body);
+        
         if (data['candidates'] != null && data['candidates'].isNotEmpty) {
           final content = data['candidates'][0]['content']['parts'][0]['text'];
+          developer.log('Successfully extracted content from API response', name: 'SummarizerService');
           return content?.toString();
+        } else {
+          developer.log('No candidates found in API response', name: 'SummarizerService');
         }
       } else {
         developer.log('Gemini API error: ${response.statusCode} - ${response.body}', name: 'SummarizerService');

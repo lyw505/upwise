@@ -98,12 +98,10 @@ class ContentSummaryModel extends Equatable {
     );
   }
 
-  /// Convert to JSON
+  /// Convert to JSON for database
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final json = {
       'user_id': userId,
-      'learning_path_id': learningPathId,
       'title': title,
       'original_content': originalContent,
       'content_type': contentType.value,
@@ -115,9 +113,19 @@ class ContentSummaryModel extends Equatable {
       'estimated_read_time': estimatedReadTime,
       'difficulty_level': difficultyLevel?.value,
       'is_favorite': isFavorite,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
     };
+    
+    // Only include learning_path_id if it's not null and not empty
+    if (learningPathId != null && learningPathId!.isNotEmpty) {
+      json['learning_path_id'] = learningPathId;
+    }
+    
+    // Only include ID if it's not empty (for updates)
+    if (id.isNotEmpty) {
+      json['id'] = id;
+    }
+    
+    return json;
   }
 
 

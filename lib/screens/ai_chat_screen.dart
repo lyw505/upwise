@@ -240,71 +240,89 @@ class _AiChatScreenState extends State<AiChatScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
+      body: SafeArea(
+        child: Column(
           children: [
+            // Custom Header
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.primary,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.border),
+                ),
               ),
-              child: const Icon(Icons.psychology, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  const Text(
-                    'AI Assistant',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios, size: 16, color: Colors.white),
+                    ),
                   ),
-                  Text(
-                    'Chat with AI about your content',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.psychology, size: 20, color: Colors.white),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AI Assistant',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        Text(
+                          'Chat with AI about your content',
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.save, color: Colors.white),
+                    onPressed: _saveConversation,
+                    tooltip: 'Save to Library',
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveConversation,
-            tooltip: 'Save to Library',
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey[50]!,
-                    Colors.white,
-                  ],
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.grey[50]!,
+                      Colors.white,
+                    ],
+                  ),
+                ),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    return _buildMessageBubble(_messages[index]);
+                  },
                 ),
               ),
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  return _buildMessageBubble(_messages[index]);
-                },
-              ),
             ),
-          ),
-          _buildMessageInput(),
-        ],
+            _buildMessageInput(),
+          ],
+        ),
       ),
     );
   }

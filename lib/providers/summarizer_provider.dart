@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/content_summary_model.dart';
 import '../services/summarizer_service.dart';
 
 class SummarizerProvider with ChangeNotifier {
   final SummarizerService _summarizerService = SummarizerService();
-  static const String _summariesKey = 'upwise_summaries';
-  static const String _categoriesKey = 'upwise_categories';
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   // State variables
   List<ContentSummaryModel> _summaries = [];
@@ -36,7 +35,7 @@ class SummarizerProvider with ChangeNotifier {
     return sorted.take(10).toList();
   }
 
-  /// Load all summaries from local storage
+  /// Load all summaries from Supabase database
   Future<void> loadSummaries() async {
     if (_isLoading) return;
 
@@ -44,24 +43,36 @@ class SummarizerProvider with ChangeNotifier {
     _clearError();
 
     try {
-      developer.log('Loading summaries from local storage', name: 'SummarizerProvider');
+      developer.log('Loading summaries from Supabase database', name: 'SummarizerProvider');
 
-      final prefs = await SharedPreferences.getInstance();
-      final summariesJson = prefs.getString(_summariesKey);
-      
-      if (summariesJson != null) {
-        final List<dynamic> summariesList = json.decode(summariesJson);
-        _summaries = summariesList
-            .map((json) => ContentSummaryModel.fromJson(json))
-            .toList();
-        
-        // Sort by created date, newest first
-        _summaries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      } else {
-        _summaries = [];
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
       }
 
-      developer.log('Loaded ${_summaries.length} summaries from local storage', name: 'SummarizerProvider');
+      // Try to load from view first, fallback to table if view doesn't exist
+      List<dynamic> response;
+      try {
+        response = await _supabase
+            .from('summaries_with_categories')
+            .select()
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
+      } catch (e) {
+        developer.log('View not available, using table directly: $e', name: 'SummarizerProvider');
+        // Fallback to direct table query
+        response = await _supabase
+            .from('content_summaries')
+            .select()
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
+      }
+
+      _summaries = response
+          .map((json) => ContentSummaryModel.fromJson(json))
+          .toList();
+
+      developer.log('Loaded ${_summaries.length} summaries from database', name: 'SummarizerProvider');
       notifyListeners();
 
     } catch (e) {
@@ -73,30 +84,31 @@ class SummarizerProvider with ChangeNotifier {
     }
   }
 
-  /// Load categories from local storage
+  /// Load categories from Supabase database
   Future<void> loadCategories() async {
     try {
-      developer.log('Loading categories from local storage', name: 'SummarizerProvider');
+      developer.log('Loading categories from Supabase database', name: 'SummarizerProvider');
 
-      final prefs = await SharedPreferences.getInstance();
-      final categoriesJson = prefs.getString(_categoriesKey);
-      
-      if (categoriesJson != null) {
-        final List<dynamic> categoriesList = json.decode(categoriesJson);
-        _categories = categoriesList
-            .map((json) => SummaryCategoryModel.fromJson(json))
-            .toList();
-        
-        // Sort by name
-        _categories.sort((a, b) => a.name.compareTo(b.name));
-      } else {
-        _categories = [];
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
       }
+
+      final response = await _supabase
+          .from('summary_categories')
+          .select()
+          .eq('user_id', userId)
+          .order('name');
+
+      _categories = response
+          .map((json) => SummaryCategoryModel.fromJson(json))
+          .toList();
 
       notifyListeners();
 
     } catch (e) {
       developer.log('Error loading categories: $e', name: 'SummarizerProvider');
+      _setError('Failed to load categories: $e');
       _categories = [];
     }
   }
@@ -112,24 +124,34 @@ class SummarizerProvider with ChangeNotifier {
     _clearError();
 
     try {
-      developer.log('Generating summary for content type: ${request.contentType.value}', name: 'SummarizerProvider');
+      developer.log('Starting summary generation for content type: ${request.contentType.value}', name: 'SummarizerProvider');
+      developer.log('Content length: ${request.content.length} characters', name: 'SummarizerProvider');
+      
+      // Check authentication first
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated. Please login first.');
+      }
+      developer.log('User authenticated: $userId', name: 'SummarizerProvider');
 
       // Generate summary using AI service
+      developer.log('Calling AI service for summary generation...', name: 'SummarizerProvider');
       final summaryData = await _summarizerService.generateSummary(request: request);
       
       if (summaryData == null) {
-        throw Exception('Failed to generate summary');
+        throw Exception('AI service returned null. Check API configuration.');
       }
+      
+      developer.log('AI service returned data: ${summaryData.keys}', name: 'SummarizerProvider');
 
       // Calculate word count and reading time
       final wordCount = ContentSummaryModel.calculateWordCount(request.content);
       final readingTime = ContentSummaryModel.estimateReadingTime(wordCount);
 
-      // Create summary model with unique ID
-      final summary = ContentSummaryModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: 'local_user', // Frontend-only user
-        learningPathId: request.learningPathId,
+      // Create summary model compatible with database schema
+      developer.log('Creating summary model...', name: 'SummarizerProvider');
+      final summary = createCompatibleSummary(
+        userId: userId,
         title: summaryData['title'] ?? 'Untitled Summary',
         originalContent: request.content,
         contentType: request.contentType,
@@ -140,16 +162,16 @@ class SummarizerProvider with ChangeNotifier {
         wordCount: wordCount,
         estimatedReadTime: readingTime,
         difficultyLevel: DifficultyLevel.fromString(summaryData['difficulty_level'] ?? 'intermediate'),
-        createdAt: DateTime.now(),
+        learningPathId: request.learningPathId, // This will be ignored in createCompatibleSummary
       );
 
-      // Save to local storage only if autoSave is true
+      // Save to database only if autoSave is true
       if (autoSave) {
-        final savedSummary = await _saveSummaryToLocal(summary);
+        final savedSummary = await _saveSummaryToDatabase(summary);
         if (savedSummary != null) {
           _summaries.insert(0, savedSummary);
           _currentSummary = savedSummary;
-          developer.log('Summary generated and saved to local storage', name: 'SummarizerProvider');
+          developer.log('Summary generated and saved to database', name: 'SummarizerProvider');
           notifyListeners();
           return savedSummary;
         }
@@ -170,52 +192,77 @@ class SummarizerProvider with ChangeNotifier {
     }
   }
 
-  /// Save summary to local storage
-  Future<ContentSummaryModel?> _saveSummaryToLocal(ContentSummaryModel summary) async {
+  /// Save summary to Supabase database
+  Future<ContentSummaryModel?> _saveSummaryToDatabase(ContentSummaryModel summary) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final summaryJson = summary.toJson();
+      summaryJson.remove('id'); // Let database generate ID
       
-      // Add new summary to existing list
-      _summaries.insert(0, summary);
+      developer.log('Attempting to save summary to database...', name: 'SummarizerProvider');
+      developer.log('Summary JSON keys: ${summaryJson.keys.toList()}', name: 'SummarizerProvider');
       
-      // Convert to JSON and save
-      final summariesJson = json.encode(
-        _summaries.map((s) => s.toJson()).toList()
-      );
+      final response = await _supabase
+          .from('content_summaries')
+          .insert(summaryJson)
+          .select()
+          .single();
       
-      await prefs.setString(_summariesKey, summariesJson);
-      
-      developer.log('Summary saved to local storage', name: 'SummarizerProvider');
-      return summary;
+      final savedSummary = ContentSummaryModel.fromJson(response);
+      developer.log('Summary saved to database successfully', name: 'SummarizerProvider');
+      return savedSummary;
 
     } catch (e) {
-      developer.log('Error saving summary to local storage: $e', name: 'SummarizerProvider');
-      return null;
+      developer.log('Error saving summary to database: $e', name: 'SummarizerProvider');
+      
+      // Try to save without learning_path_id if that's the issue
+      if (e.toString().contains('learning_path_id')) {
+        try {
+          developer.log('Retrying without learning_path_id...', name: 'SummarizerProvider');
+          final summaryJsonRetry = summary.toJson();
+          summaryJsonRetry.remove('id');
+          summaryJsonRetry.remove('learning_path_id'); // Remove problematic field
+          
+          final response = await _supabase
+              .from('content_summaries')
+              .insert(summaryJsonRetry)
+              .select()
+              .single();
+          
+          final savedSummary = ContentSummaryModel.fromJson(response);
+          developer.log('Summary saved to database (without learning_path_id)', name: 'SummarizerProvider');
+          return savedSummary;
+          
+        } catch (retryError) {
+          developer.log('Retry also failed: $retryError', name: 'SummarizerProvider');
+          _setError('Failed to save summary: $retryError');
+          return null;
+        }
+      } else {
+        _setError('Failed to save summary: $e');
+        return null;
+      }
     }
   }
 
-  /// Update existing summary in local storage
+  /// Update existing summary in database
   Future<bool> updateSummary(ContentSummaryModel summary) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final updatedSummary = summary.copyWith(updatedAt: DateTime.now());
+      
+      await _supabase
+          .from('content_summaries')
+          .update(updatedSummary.toJson())
+          .eq('id', summary.id);
       
       // Update local list
       final index = _summaries.indexWhere((s) => s.id == summary.id);
       if (index != -1) {
-        _summaries[index] = summary.copyWith(updatedAt: DateTime.now());
-        
-        // Save updated list to local storage
-        final summariesJson = json.encode(
-          _summaries.map((s) => s.toJson()).toList()
-        );
-        await prefs.setString(_summariesKey, summariesJson);
-        
+        _summaries[index] = updatedSummary;
         notifyListeners();
-        developer.log('Summary updated successfully in local storage', name: 'SummarizerProvider');
-        return true;
       }
-
-      return false;
+      
+      developer.log('Summary updated successfully in database', name: 'SummarizerProvider');
+      return true;
 
     } catch (e) {
       developer.log('Error updating summary: $e', name: 'SummarizerProvider');
@@ -224,10 +271,13 @@ class SummarizerProvider with ChangeNotifier {
     }
   }
 
-  /// Delete summary from local storage
+  /// Delete summary from database
   Future<bool> deleteSummary(String summaryId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      await _supabase
+          .from('content_summaries')
+          .delete()
+          .eq('id', summaryId);
       
       _summaries.removeWhere((s) => s.id == summaryId);
       
@@ -235,14 +285,8 @@ class SummarizerProvider with ChangeNotifier {
         _currentSummary = null;
       }
 
-      // Save updated list to local storage
-      final summariesJson = json.encode(
-        _summaries.map((s) => s.toJson()).toList()
-      );
-      await prefs.setString(_summariesKey, summariesJson);
-
       notifyListeners();
-      developer.log('Summary deleted successfully from local storage', name: 'SummarizerProvider');
+      developer.log('Summary deleted successfully from database', name: 'SummarizerProvider');
       return true;
 
     } catch (e) {
@@ -252,22 +296,17 @@ class SummarizerProvider with ChangeNotifier {
     }
   }
 
-  /// Add new summary to local storage
+  /// Add new summary to database
   Future<bool> addSummary(ContentSummaryModel summary) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      _summaries.insert(0, summary); // Add to beginning of list
-      
-      // Save updated list to local storage
-      final summariesJson = json.encode(
-        _summaries.map((s) => s.toJson()).toList()
-      );
-      await prefs.setString(_summariesKey, summariesJson);
-      
-      notifyListeners();
-      developer.log('Summary added successfully to local storage', name: 'SummarizerProvider');
-      return true;
+      final savedSummary = await _saveSummaryToDatabase(summary);
+      if (savedSummary != null) {
+        _summaries.insert(0, savedSummary);
+        notifyListeners();
+        developer.log('Summary added successfully to database', name: 'SummarizerProvider');
+        return true;
+      }
+      return false;
 
     } catch (e) {
       developer.log('Error adding summary: $e', name: 'SummarizerProvider');
@@ -279,27 +318,66 @@ class SummarizerProvider with ChangeNotifier {
   /// Toggle favorite status
   Future<bool> toggleFavorite(String summaryId) async {
     try {
-      final summary = _summaries.firstWhere((s) => s.id == summaryId);
-      final updatedSummary = summary.copyWith(isFavorite: !summary.isFavorite);
+      // Get current state from database
+      final response = await _supabase
+          .from('content_summaries')
+          .select('is_favorite')
+          .eq('id', summaryId)
+          .single();
       
-      return await updateSummary(updatedSummary);
+      final currentFavorite = response['is_favorite'] ?? false;
+      
+      // Update in database
+      await _supabase
+          .from('content_summaries')
+          .update({'is_favorite': !currentFavorite})
+          .eq('id', summaryId);
+      
+      // Update local list
+      final index = _summaries.indexWhere((s) => s.id == summaryId);
+      if (index != -1) {
+        _summaries[index] = _summaries[index].copyWith(isFavorite: !currentFavorite);
+        notifyListeners();
+      }
+      
+      return true;
 
     } catch (e) {
       developer.log('Error toggling favorite: $e', name: 'SummarizerProvider');
+      _setError('Failed to toggle favorite: $e');
       return false;
     }
   }
 
-  /// Search summaries
-  List<ContentSummaryModel> searchSummaries(String query) {
+  /// Search summaries using database full-text search
+  Future<List<ContentSummaryModel>> searchSummaries(String query) async {
     if (query.isEmpty) return _summaries;
 
-    final lowercaseQuery = query.toLowerCase();
-    return _summaries.where((summary) {
-      return summary.title.toLowerCase().contains(lowercaseQuery) ||
-             summary.summary.toLowerCase().contains(lowercaseQuery) ||
-             summary.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery));
-    }).toList();
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      final response = await _supabase
+          .from('content_summaries')
+          .select()
+          .eq('user_id', userId)
+          .or('title.ilike.%$query%,summary.ilike.%$query%')
+          .order('created_at', ascending: false);
+
+      return response
+          .map((json) => ContentSummaryModel.fromJson(json))
+          .toList();
+
+    } catch (e) {
+      developer.log('Error searching summaries: $e', name: 'SummarizerProvider');
+      // Fallback to local search
+      final lowercaseQuery = query.toLowerCase();
+      return _summaries.where((summary) {
+        return summary.title.toLowerCase().contains(lowercaseQuery) ||
+               summary.summary.toLowerCase().contains(lowercaseQuery) ||
+               summary.tags.any((tag) => tag.toLowerCase().contains(lowercaseQuery));
+      }).toList();
+    }
   }
 
   /// Filter summaries by content type
@@ -326,7 +404,7 @@ class SummarizerProvider with ChangeNotifier {
     return allTags.toList()..sort();
   }
 
-  /// Create new category in local storage
+  /// Create new category in database
   Future<bool> createCategory({
     required String name,
     String? description,
@@ -334,29 +412,29 @@ class SummarizerProvider with ChangeNotifier {
     String? icon,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
 
-      final category = SummaryCategoryModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: 'local_user',
-        name: name,
-        description: description,
-        color: color,
-        icon: icon,
-        createdAt: DateTime.now(),
-      );
+      final response = await _supabase
+          .from('summary_categories')
+          .insert({
+            'user_id': userId,
+            'name': name,
+            'description': description,
+            'color': color,
+            'icon': icon,
+          })
+          .select()
+          .single();
 
+      final category = SummaryCategoryModel.fromJson(response);
       _categories.add(category);
       _categories.sort((a, b) => a.name.compareTo(b.name));
 
-      // Save to local storage
-      final categoriesJson = json.encode(
-        _categories.map((c) => c.toJson()).toList()
-      );
-      await prefs.setString(_categoriesKey, categoriesJson);
-
       notifyListeners();
-      developer.log('Category created successfully in local storage', name: 'SummarizerProvider');
+      developer.log('Category created successfully in database', name: 'SummarizerProvider');
       return true;
 
     } catch (e) {
@@ -446,6 +524,237 @@ class SummarizerProvider with ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+
+  /// Delete category from database
+  Future<bool> deleteCategory(String categoryId) async {
+    try {
+      await _supabase
+          .from('summary_categories')
+          .delete()
+          .eq('id', categoryId);
+      
+      _categories.removeWhere((c) => c.id == categoryId);
+      notifyListeners();
+      
+      developer.log('Category deleted successfully from database', name: 'SummarizerProvider');
+      return true;
+
+    } catch (e) {
+      developer.log('Error deleting category: $e', name: 'SummarizerProvider');
+      _setError('Failed to delete category: $e');
+      return false;
+    }
+  }
+
+  /// Assign summary to category
+  Future<bool> assignSummaryToCategory(String summaryId, String categoryId) async {
+    try {
+      await _supabase
+          .from('summary_category_relations')
+          .insert({
+            'summary_id': summaryId,
+            'category_id': categoryId,
+          });
+      
+      developer.log('Summary assigned to category successfully', name: 'SummarizerProvider');
+      return true;
+
+    } catch (e) {
+      developer.log('Error assigning summary to category: $e', name: 'SummarizerProvider');
+      _setError('Failed to assign summary to category: $e');
+      return false;
+    }
+  }
+
+  /// Remove summary from category
+  Future<bool> removeSummaryFromCategory(String summaryId, String categoryId) async {
+    try {
+      await _supabase
+          .from('summary_category_relations')
+          .delete()
+          .eq('summary_id', summaryId)
+          .eq('category_id', categoryId);
+      
+      developer.log('Summary removed from category successfully', name: 'SummarizerProvider');
+      return true;
+
+    } catch (e) {
+      developer.log('Error removing summary from category: $e', name: 'SummarizerProvider');
+      _setError('Failed to remove summary from category: $e');
+      return false;
+    }
+  }
+
+  /// Get summaries by category
+  Future<List<ContentSummaryModel>> getSummariesByCategory(String categoryId) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
+      final response = await _supabase
+          .from('content_summaries')
+          .select('''
+            *,
+            summary_category_relations!inner(category_id)
+          ''')
+          .eq('user_id', userId)
+          .eq('summary_category_relations.category_id', categoryId)
+          .order('created_at', ascending: false);
+
+      return response
+          .map((json) => ContentSummaryModel.fromJson(json))
+          .toList();
+
+    } catch (e) {
+      developer.log('Error getting summaries by category: $e', name: 'SummarizerProvider');
+      return [];
+    }
+  }
+
+  /// Get user statistics from database
+  Future<Map<String, dynamic>> getDatabaseStatistics() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return {};
+
+      final response = await _supabase
+          .from('content_summaries')
+          .select()
+          .eq('user_id', userId);
+
+      final totalSummaries = response.length;
+      final favoritesCount = response.where((s) => s['is_favorite'] == true).length;
+      final totalWordCount = response.fold<int>(
+        0, 
+        (sum, summary) => sum + ((summary['word_count'] ?? 0) as int),
+      );
+      final avgReadTime = totalSummaries > 0 
+          ? response.fold<int>(
+              0, 
+              (sum, summary) => sum + ((summary['estimated_read_time'] ?? 0) as int),
+            ) / totalSummaries
+          : 0;
+
+      final typeDistribution = <String, int>{};
+      for (final summary in response) {
+        final type = summary['content_type'] ?? 'text';
+        typeDistribution[type] = (typeDistribution[type] ?? 0) + 1;
+      }
+
+      return {
+        'totalSummaries': totalSummaries,
+        'favoritesCount': favoritesCount,
+        'totalWordCount': totalWordCount,
+        'averageReadTime': avgReadTime.round(),
+        'typeDistribution': typeDistribution,
+        'thisWeek': response.where((s) {
+          final created = DateTime.parse(s['created_at']);
+          return DateTime.now().difference(created).inDays <= 7;
+        }).length,
+        'thisMonth': response.where((s) {
+          final created = DateTime.parse(s['created_at']);
+          return DateTime.now().difference(created).inDays <= 30;
+        }).length,
+      };
+
+    } catch (e) {
+      developer.log('Error getting database statistics: $e', name: 'SummarizerProvider');
+      return getStatistics(); // Fallback to local statistics
+    }
+  }
+
+  /// Initialize default categories for new user
+  Future<void> initializeDefaultCategories() async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      // Check if user already has categories
+      final existingCategories = await _supabase
+          .from('summary_categories')
+          .select('id')
+          .eq('user_id', userId);
+
+      if (existingCategories.isNotEmpty) return; // User already has categories
+
+      // Create default categories
+      final defaultCategories = [
+        {'name': 'General', 'color': '#6B7280', 'icon': 'folder'},
+        {'name': 'Work', 'color': '#3B82F6', 'icon': 'briefcase'},
+        {'name': 'Study', 'color': '#10B981', 'icon': 'book'},
+        {'name': 'Personal', 'color': '#F59E0B', 'icon': 'user'},
+      ];
+
+      for (final category in defaultCategories) {
+        await _supabase
+            .from('summary_categories')
+            .insert({
+              'user_id': userId,
+              'name': category['name'],
+              'color': category['color'],
+              'icon': category['icon'],
+            });
+      }
+
+      // Reload categories
+      await loadCategories();
+      
+      developer.log('Default categories initialized', name: 'SummarizerProvider');
+
+    } catch (e) {
+      developer.log('Error initializing default categories: $e', name: 'SummarizerProvider');
+    }
+  }
+
+  /// Check database schema compatibility
+  Future<bool> checkDatabaseSchema() async {
+    try {
+      // Try to query with learning_path_id to see if column exists
+      await _supabase
+          .from('content_summaries')
+          .select('learning_path_id')
+          .limit(1);
+      
+      developer.log('Database schema is compatible', name: 'SummarizerProvider');
+      return true;
+    } catch (e) {
+      developer.log('Database schema issue detected: $e', name: 'SummarizerProvider');
+      return false;
+    }
+  }
+
+  /// Create a summary model compatible with current database schema
+  ContentSummaryModel createCompatibleSummary({
+    required String userId,
+    required String title,
+    required String originalContent,
+    required ContentType contentType,
+    String? contentSource,
+    required String summary,
+    required List<String> keyPoints,
+    required List<String> tags,
+    int? wordCount,
+    int? estimatedReadTime,
+    DifficultyLevel? difficultyLevel,
+    String? learningPathId,
+  }) {
+    return ContentSummaryModel(
+      id: '', // Will be generated by database
+      userId: userId,
+      learningPathId: null, // Always null to avoid schema issues
+      title: title,
+      originalContent: originalContent,
+      contentType: contentType,
+      contentSource: contentSource,
+      summary: summary,
+      keyPoints: keyPoints,
+      tags: tags,
+      wordCount: wordCount,
+      estimatedReadTime: estimatedReadTime,
+      difficultyLevel: difficultyLevel,
+      createdAt: DateTime.now(),
+    );
   }
 
   /// Reset provider state

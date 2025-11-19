@@ -176,8 +176,7 @@ class _LearningPathsScreenState extends State<LearningPathsScreen> {
               },
             ),
           ),
-          ],
-        ),
+        ],
       ),
     );
   }

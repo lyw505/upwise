@@ -22,47 +22,86 @@ class _ConfigStatusScreenState extends State<ConfigStatusScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Configuration Status'),
-        backgroundColor: AppColors.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Overall Status Card
-            _buildStatusCard(configErrors),
-            
-            const SizedBox(height: 24),
-            
-            // Configuration Details
-            _buildConfigSection('Environment Configuration', configSummary),
-            
-            const SizedBox(height: 24),
-            
-            // API Status
-            _buildApiStatusSection(),
-            
-            const SizedBox(height: 24),
-            
-            // Supabase Status  
-            _buildSupabaseStatusSection(),
-            
-            const SizedBox(height: 24),
-            
-            // Test Connection Button
-            _buildTestConnectionButton(),
-            
-            const SizedBox(height: 24),
-            
-            // Validation Errors
-            if (configErrors.isNotEmpty) _buildErrorsSection(configErrors),
-            
-            const SizedBox(height: 24),
-            
-            // Setup Instructions
-            _buildInstructionsSection(),
+            // Custom Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                border: Border(
+                  bottom: BorderSide(color: AppColors.border),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Configuration Status',
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Check your app configuration',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Overall Status Card
+                    _buildStatusCard(configErrors),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Configuration Details
+                    _buildConfigSection('Environment Configuration', configSummary),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // API Status
+                    _buildApiStatusSection(),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Supabase Status  
+                    _buildSupabaseStatusSection(),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Test Connection Button
+                    _buildTestConnectionButton(),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Validation Errors
+                    if (configErrors.isNotEmpty) _buildErrorsSection(configErrors),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Setup Instructions
+                    _buildInstructionsSection(),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

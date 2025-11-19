@@ -4,6 +4,8 @@ import '../core/constants/app_dimensions.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/learning_paths_screen.dart';
 import '../screens/analytics_screen.dart';
+import '../screens/create_path_screen.dart';
+import '../screens/settings_screen.dart';
 import 'summarizer_screen.dart';
 import 'project_builder_screen.dart';
 
@@ -26,6 +28,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const LearningPathsScreen(),
+    const CreatePathScreen(),
     const SummarizerScreen(),
     const ProjectBuilderScreen(),
     const AnalyticsScreen(),
@@ -98,12 +101,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined, size: AppDimensions.bottomNavIconSize),
               activeIcon: Icon(Icons.home, size: AppDimensions.bottomNavIconSize),
-              label: 'Dashboard',
+              label: 'Home',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.school_outlined, size: AppDimensions.bottomNavIconSize),
               activeIcon: Icon(Icons.school, size: AppDimensions.bottomNavIconSize),
               label: 'Paths',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline, size: AppDimensions.bottomNavIconSize),
+              activeIcon: Icon(Icons.add_circle, size: AppDimensions.bottomNavIconSize),
+              label: 'Create',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
