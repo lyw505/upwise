@@ -146,9 +146,6 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               context.goToSummarizer();
               break;
             case 4:
-              context.goToProjectBuilder();
-              break;
-            case 5:
               context.goToAnalytics();
               break;
           }
@@ -186,11 +183,6 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
             activeIcon: Icon(Icons.article, size: AppDimensions.bottomNavIconSize),
             label: 'Summary',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
-            activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
-            label: 'Projects',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),

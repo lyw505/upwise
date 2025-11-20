@@ -95,12 +95,16 @@ class ProjectProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
+      print('🚀 Starting project for userId: $userId, templateId: $templateId');
+
       // Get template details
       final templateResponse = await _supabase
           .from('project_templates')
           .select()
           .eq('id', templateId)
           .single();
+
+      print('📋 Template response: $templateResponse');
 
       final template = ProjectTemplate.fromJson(templateResponse);
       
@@ -116,11 +120,15 @@ class ProjectProvider with ChangeNotifier {
         'estimated_hours': template.estimatedHours,
       };
 
+      print('💾 Project data to insert: $projectData');
+
       final projectResponse = await _supabase
           .from('user_projects')
           .insert(projectData)
           .select()
           .single();
+
+      print('✅ Project created: $projectResponse');
 
       final userProject = UserProject.fromJson(projectResponse);
 
@@ -141,11 +149,15 @@ class ProjectProvider with ChangeNotifier {
           .from('project_step_completions')
           .insert(stepCompletions);
 
+      print('📝 Step completions created: ${stepCompletions.length} steps');
+
       // Reload user projects
       await loadUserProjects(userId);
       
+      print('🎉 Project started successfully!');
       return true;
     } catch (e) {
+      print('❌ Error starting project: $e');
       _setError('Failed to start project: $e');
       return false;
     } finally {

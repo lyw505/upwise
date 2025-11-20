@@ -931,12 +931,23 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
     final authProvider = context.read<AuthProvider>();
     final projectProvider = context.read<ProjectProvider>();
     
-    if (authProvider.currentUser == null) return;
+    print('🎯 _startProject called for template: ${template.title}');
+    print('👤 Current user: ${authProvider.currentUser?.id}');
+    
+    if (authProvider.currentUser == null) {
+      print('❌ No current user, showing error');
+      SnackbarUtils.showError(context, 'Please log in to start a project');
+      return;
+    }
 
+    print('🔄 Calling projectProvider.startProject...');
     final success = await projectProvider.startProject(
       userId: authProvider.currentUser!.id,
       templateId: template.id,
     );
+
+    print('📊 startProject result: $success');
+    print('🔍 projectProvider.error: ${projectProvider.error}');
 
     if (success && mounted) {
       SnackbarUtils.showSuccess(context, 'Project started successfully!');

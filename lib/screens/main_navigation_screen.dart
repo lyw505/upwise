@@ -5,9 +5,8 @@ import '../screens/dashboard_screen.dart';
 import '../screens/learning_paths_screen.dart';
 import '../screens/analytics_screen.dart';
 import '../screens/create_path_screen.dart';
-import '../screens/settings_screen.dart';
+
 import 'summarizer_screen.dart';
-import 'project_builder_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -30,7 +29,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const LearningPathsScreen(),
     const CreatePathScreen(),
     const SummarizerScreen(),
-    const ProjectBuilderScreen(),
     const AnalyticsScreen(),
   ];
 
@@ -117,11 +115,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
               activeIcon: Icon(Icons.article, size: AppDimensions.bottomNavIconSize),
               label: 'Summary',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
-              activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
-              label: 'Projects',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),

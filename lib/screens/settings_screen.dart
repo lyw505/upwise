@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
+import '../core/constants/app_dimensions.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
@@ -150,64 +151,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom Header
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border(
-                  bottom: BorderSide(color: AppColors.border),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Settings',
-                          style: AppTextStyles.headlineSmall.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Manage your account and preferences',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+      appBar: AppBar(
+        title: Text(
+          'Settings',
+          style: AppTextStyles.headlineSmall.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        actions: [
+          if (_isEditing)
+            TextButton(
+              onPressed: _isLoading ? null : _saveProfile,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      'Save',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  if (_isEditing)
-                    TextButton(
-                      onPressed: _isLoading ? null : _saveProfile,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              'Save',
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                    ),
-                ],
-              ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Section
@@ -229,11 +205,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildAccountActionsSection(),
           ],
         ),
-              ),
-            ),
-          ],
-        ),
       ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -620,6 +593,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
             )
           : null,
       onTap: onTap,
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: 0,
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              context.goToDashboard();
+              break;
+            case 1:
+              context.goToLearningPaths();
+              break;
+            case 2:
+              context.goToCreatePath();
+              break;
+            case 3:
+              context.goToSummarizer();
+              break;
+            case 4:
+              context.goToAnalytics();
+              break;
+          }
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.grey[500], // Make selected same as unselected
+        unselectedItemColor: Colors.grey[500],
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.normal,
+          fontSize: 12,
+        ),
+        elevation: 0,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.home, size: AppDimensions.bottomNavIconSize),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.school, size: AppDimensions.bottomNavIconSize),
+            label: 'Paths',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.add_circle, size: AppDimensions.bottomNavIconSize),
+            label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.article, size: AppDimensions.bottomNavIconSize),
+            label: 'Summary',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.analytics, size: AppDimensions.bottomNavIconSize),
+            label: 'Analytics',
+          ),
+        ],
+      ),
     );
   }
 }

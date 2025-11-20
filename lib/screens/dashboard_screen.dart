@@ -316,23 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              context.goToProjectBuilder();
-            },
-            icon: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
-            label: Text(
-              'AI Project Builder',
-              style: AppTextStyles.buttonMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
+
       ],
     );
   }
