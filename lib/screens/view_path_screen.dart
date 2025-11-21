@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
@@ -9,6 +10,7 @@ import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../providers/user_provider.dart';
 import '../models/learning_path_model.dart';
+import '../services/youtube_search_service.dart';
 
 class ViewPathScreen extends StatefulWidget {
   final String pathId;
@@ -30,7 +32,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     // Use addPostFrameCallback to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadLearningPath();
@@ -293,6 +295,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               indicatorColor: AppColors.primary,
               tabs: const [
                 Tab(text: 'Learning Plan'),
+                Tab(text: 'Videos'),
                 Tab(text: 'Projects'),
               ],
             ),
@@ -307,6 +310,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               controller: _tabController,
               children: [
                 _buildLearningPlanTab(),
+                _buildVideosTab(),
                 _buildProjectsTab(),
               ],
             ),
@@ -586,6 +590,8 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
                   const SizedBox(height: 12),
                 ],
                 
+
+                
                 // Task actions
                 if (_learningPath!.status == LearningPathStatus.inProgress)
                   Column(
@@ -751,6 +757,290 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
           size: 24,
         );
     }
+  }
+
+  Widget _buildVideosTab() {
+    // Collect all YouTube videos from all daily tasks
+    final allVideos = <YouTubeVideo>[];
+    for (final task in _learningPath!.dailyTasks) {
+      allVideos.addAll(task.youtubeVideos);
+    }
+
+    if (allVideos.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.video_library_outlined,
+              size: 64,
+              color: AppColors.textTertiary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Video Recommendations',
+              style: AppTextStyles.headlineSmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This learning path doesn\'t include video recommendations.\nEnable "Recommend YouTube Videos" when creating a learning path.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textTertiary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with video count
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.video_library,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Curated Video Collection',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${allVideos.length} handpicked videos to enhance your learning journey',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Video grid
+          Text(
+            'Recommended Videos',
+            style: AppTextStyles.titleLarge.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Videos list
+          ...allVideos.asMap().entries.map((entry) {
+            final index = entry.key;
+            final video = entry.value;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: _buildVideoCard(video, index + 1),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVideoCard(YouTubeVideo video, int index) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Video header with index
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    '$index',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  video.title,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Video metadata
+          Row(
+            children: [
+              Icon(
+                Icons.account_circle,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                video.channel,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Icon(
+                Icons.access_time,
+                size: 16,
+                color: AppColors.textTertiary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                video.estimatedDuration,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getDifficultyColor(video.difficulty).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  video.difficulty.toUpperCase(),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: _getDifficultyColor(video.difficulty),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Video description
+          Text(
+            video.description,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Why relevant
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    video.whyRelevant,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Watch button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _openYouTubeVideo(video),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.play_circle_filled, size: 20),
+              label: const Text('Watch on YouTube'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildProjectsTab() {
@@ -953,5 +1243,37 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
         ],
       ),
     );
+  }
+
+
+
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
+        return AppColors.success;
+      case 'intermediate':
+        return AppColors.warning;
+      case 'advanced':
+        return AppColors.error;
+      default:
+        return AppColors.textTertiary;
+    }
+  }
+
+  Future<void> _openYouTubeVideo(YouTubeVideo video) async {
+    try {
+      final uri = Uri.parse(video.youtubeUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          SnackbarUtils.showError(context, 'Could not open YouTube video');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarUtils.showError(context, 'Error opening video: $e');
+      }
+    }
   }
 }

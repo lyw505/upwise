@@ -75,24 +75,37 @@ class LearningPathProvider extends ChangeNotifier {
     required String outputGoal,
     bool includeProjects = false,
     bool includeExercises = false,
+    bool includeVideos = true,
     String? notes,
   }) async {
     try {
       _setGenerating(true);
       _clearError();
 
-      // Generate learning path using Gemini AI
-      final generatedPath = await _geminiService.generateLearningPath(
-        topic: topic,
-        durationDays: durationDays,
-        dailyTimeMinutes: dailyTimeMinutes,
-        experienceLevel: experienceLevel,
-        learningStyle: learningStyle,
-        outputGoal: outputGoal,
-        includeProjects: includeProjects,
-        includeExercises: includeExercises,
-        notes: notes,
-      );
+      // Generate learning path with or without YouTube videos using Gemini AI
+      final generatedPath = includeVideos 
+          ? await _geminiService.generateLearningPathWithVideos(
+              topic: topic,
+              durationDays: durationDays,
+              dailyTimeMinutes: dailyTimeMinutes,
+              experienceLevel: experienceLevel,
+              learningStyle: learningStyle,
+              outputGoal: outputGoal,
+              includeProjects: includeProjects,
+              includeExercises: includeExercises,
+              notes: notes,
+            )
+          : await _geminiService.generateLearningPath(
+              topic: topic,
+              durationDays: durationDays,
+              dailyTimeMinutes: dailyTimeMinutes,
+              experienceLevel: experienceLevel,
+              learningStyle: learningStyle,
+              outputGoal: outputGoal,
+              includeProjects: includeProjects,
+              includeExercises: includeExercises,
+              notes: notes,
+            );
 
       if (generatedPath == null) {
         _setError('Failed to generate learning path');
@@ -152,10 +165,12 @@ class LearningPathProvider extends ChangeNotifier {
             'material_title': task['material_title'],
             'exercise': task['exercise'],
             'status': TaskStatus.notStarted.name,
+            'youtube_videos': task['youtube_videos'] ?? [], // Add YouTube videos
           };
 
           if (EnvConfig.isDebugMode) {
             print('Inserting task ${i + 1}: ${task['main_topic']}');
+            print('YouTube videos count: ${(task['youtube_videos'] as List?)?.length ?? 0}');
           }
 
           await _supabase.from('daily_learning_tasks').insert(taskData);

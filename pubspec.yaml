@@ -68,6 +68,9 @@ dependencies:
   # Loading indicators
   loading_animation_widget: ^1.2.1
 
+  # URL launcher for opening YouTube videos
+  url_launcher: ^6.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,3 +1,5 @@
+import '../services/youtube_search_service.dart';
+
 enum LearningPathStatus {
   notStarted,
   inProgress,
@@ -229,6 +231,7 @@ class DailyLearningTask {
   final TaskStatus status;
   final DateTime? completedAt;
   final int? timeSpentMinutes;
+  final List<YouTubeVideo> youtubeVideos;
 
   const DailyLearningTask({
     required this.id,
@@ -242,6 +245,7 @@ class DailyLearningTask {
     this.status = TaskStatus.notStarted,
     this.completedAt,
     this.timeSpentMinutes,
+    this.youtubeVideos = const [],
   });
 
   factory DailyLearningTask.fromJson(Map<String, dynamic> json) {
@@ -262,6 +266,9 @@ class DailyLearningTask {
           ? DateTime.parse(json['completed_at'] as String) 
           : null,
       timeSpentMinutes: json['time_spent_minutes'] as int?,
+      youtubeVideos: (json['youtube_videos'] as List<dynamic>?)
+          ?.map((video) => YouTubeVideo.fromJson(video as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -278,6 +285,7 @@ class DailyLearningTask {
       'status': status.name,
       'completed_at': completedAt?.toIso8601String(),
       'time_spent_minutes': timeSpentMinutes,
+      'youtube_videos': youtubeVideos.map((video) => video.toJson()).toList(),
     };
   }
 
@@ -293,6 +301,7 @@ class DailyLearningTask {
     TaskStatus? status,
     DateTime? completedAt,
     int? timeSpentMinutes,
+    List<YouTubeVideo>? youtubeVideos,
   }) {
     return DailyLearningTask(
       id: id ?? this.id,
@@ -306,6 +315,7 @@ class DailyLearningTask {
       status: status ?? this.status,
       completedAt: completedAt ?? this.completedAt,
       timeSpentMinutes: timeSpentMinutes ?? this.timeSpentMinutes,
+      youtubeVideos: youtubeVideos ?? this.youtubeVideos,
     );
   }
 }

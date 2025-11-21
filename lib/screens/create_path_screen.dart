@@ -28,6 +28,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
   LearningStyle _learningStyle = LearningStyle.visual;
   bool _includeProjects = false;
   bool _includeExercises = true;
+  bool _includeVideos = true;
 
   @override
   void dispose() {
@@ -58,6 +59,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
       outputGoal: _outputGoalController.text.trim(),
       includeProjects: _includeProjects,
       includeExercises: _includeExercises,
+      includeVideos: _includeVideos,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
     );
 
@@ -183,6 +185,12 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
                 
                 const SizedBox(height: 24),
                 
+                // Options Section
+                _buildSectionTitle('Options'),
+                const SizedBox(height: 8),
+                _buildOptionsSection(),
+                
+                const SizedBox(height: 24),
                 
                 // Notes (Optional)
                 _buildSectionTitle('Additional Notes (Optional)'),
@@ -401,6 +409,26 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
           onChanged: (value) {
             setState(() {
               _includeExercises = value!;
+            });
+          },
+          activeColor: AppColors.primary,
+          contentPadding: EdgeInsets.zero,
+        ),
+        CheckboxListTile(
+          title: Text(
+            'Recommend YouTube Videos',
+            style: AppTextStyles.bodyMedium,
+          ),
+          subtitle: Text(
+            'Get curated video recommendations for better learning',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          value: _includeVideos,
+          onChanged: (value) {
+            setState(() {
+              _includeVideos = value!;
             });
           },
           activeColor: AppColors.primary,
