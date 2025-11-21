@@ -8,7 +8,7 @@ import 'youtube_search_service.dart';
 
 class GeminiService {
   static String get _apiKey => EnvConfig.geminiApiKey;
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
 
   Future<Map<String, dynamic>?> generateLearningPath({
     required String topic,
@@ -20,6 +20,7 @@ class GeminiService {
     bool includeProjects = false,
     bool includeExercises = false,
     String? notes,
+    String language = 'id', // Default to Indonesian
   }) async {
     try {
       // Check if API key is configured
@@ -48,8 +49,16 @@ class GeminiService {
         outputGoal: outputGoal,
         includeProjects: includeProjects,
         includeExercises: includeExercises,
+        language: language,
         notes: notes,
       );
+
+      if (EnvConfig.isDebugMode) {
+        print('🤖 Making request to Gemini API...');
+        print('📍 URL: $_baseUrl');
+        print('🔑 API Key: ${_apiKey.substring(0, 10)}...');
+        print('🌍 Language: $language');
+      }
 
       final response = await http.post(
         Uri.parse('$_baseUrl?key=$_apiKey'),
@@ -159,7 +168,9 @@ class GeminiService {
         }
       } else {
         if (EnvConfig.isDebugMode) {
-          print('Gemini API error: ${response.statusCode}, using fallback');
+          print('❌ Gemini API error: ${response.statusCode}');
+          print('📄 Response body: ${response.body}');
+          print('🔄 Using fallback learning path');
         }
         return createFallbackLearningPath(
           topic: topic,
@@ -262,7 +273,7 @@ CRITICAL: Ensure each day has a clear learning objective, builds on previous kno
       case LearningStyle.auditory:
         return 'podcasts, lectures, audio explanations, discussion-based content, and verbal instructions that help understand concepts through listening';
       case LearningStyle.kinesthetic:
-        return 'hands-on labs, coding exercises, practical projects, interactive tutorials, and learning-by-doing activities that help understand concepts through practice';
+        return 'hands-on activities, practical exercises, interactive projects, step-by-step tutorials, and learning-by-doing activities that help understand concepts through direct practice';
       case LearningStyle.readingWriting:
         return 'comprehensive articles, documentation, written guides, text-based exercises, and note-taking activities that help understand concepts through reading and writing';
     }
@@ -271,8 +282,9 @@ CRITICAL: Ensure each day has a clear learning objective, builds on previous kno
   String _getTopicContext(String topic) {
     final topicLower = topic.toLowerCase();
     
-    // Enhanced topic context with prerequisites and learning objectives
+    // Enhanced topic context with prerequisites and learning objectives - Universal Learning Support
     final contextMap = {
+      // Programming & Technology
       'flutter': '''
 Flutter is Google's UI toolkit for building natively compiled applications for mobile, web, and desktop from a single codebase.
 Prerequisites: Basic programming concepts, familiarity with object-oriented programming
@@ -314,6 +326,81 @@ Prerequisites: Basic statistics, programming skills, mathematical thinking
 Key Learning Areas: Data analysis, Statistical modeling, Data visualization, Machine learning, Big data tools, Business intelligence
 Industry Applications: Business analytics, Research, Healthcare analytics, Financial modeling, Marketing optimization
 Career Relevance: High demand across industries as organizations become more data-driven''',
+      
+      // Culinary & Cooking
+      'memasak': '''
+Memasak adalah seni kuliner yang menggabungkan kreativitas, teknik, dan pengetahuan bahan untuk menciptakan makanan lezat dan bergizi.
+Prerequisites: Pengetahuan dasar bahan makanan, keselamatan dapur, dan kebersihan
+Key Learning Areas: Teknik memasak dasar, penggunaan bumbu, food safety, presentasi makanan, nutrisi
+Industry Applications: Chef profesional, food blogger, catering business, culinary instructor
+Career Relevance: Tinggi dalam industri kuliner yang terus berkembang dan content creation''',
+      
+      'cooking': '''
+Cooking is a culinary art that combines creativity, technique, and ingredient knowledge to create delicious and nutritious food.
+Prerequisites: Basic knowledge of ingredients, kitchen safety, and hygiene
+Key Learning Areas: Basic cooking techniques, seasoning, food safety, food presentation, nutrition
+Industry Applications: Professional chef, food blogger, catering business, culinary instructor
+Career Relevance: High in the growing culinary industry and content creation''',
+      
+      // Fitness & Sports
+      'olahraga': '''
+Olahraga dan fitness adalah aktivitas fisik yang meningkatkan kesehatan, kekuatan, dan kesejahteraan mental.
+Prerequisites: Pemahaman dasar kondisi kesehatan, motivasi konsisten, dan komitmen jangka panjang
+Key Learning Areas: Exercise techniques, nutrition, recovery, injury prevention, goal setting
+Industry Applications: Personal trainer, fitness instructor, sports coach, wellness consultant
+Career Relevance: Tinggi dengan meningkatnya kesadaran kesehatan masyarakat''',
+      
+      'fitness': '''
+Fitness and sports are physical activities that improve health, strength, and mental well-being.
+Prerequisites: Basic understanding of health condition, consistent motivation, and long-term commitment
+Key Learning Areas: Exercise techniques, nutrition, recovery, injury prevention, goal setting
+Industry Applications: Personal trainer, fitness instructor, sports coach, wellness consultant
+Career Relevance: High with increasing public health awareness''',
+      
+      // Arts & Design
+      'seni': '''
+Seni adalah ekspresi kreatif yang menggunakan berbagai medium untuk menyampaikan ide, emosi, dan keindahan.
+Prerequisites: Kreativitas, kesabaran, dan apresiasi terhadap estetika visual
+Key Learning Areas: Drawing techniques, color theory, composition, digital tools, art history
+Industry Applications: Graphic designer, illustrator, concept artist, art director
+Career Relevance: Tinggi dalam industri kreatif, advertising, dan media digital''',
+      
+      'art': '''
+Art is creative expression using various mediums to convey ideas, emotions, and beauty.
+Prerequisites: Creativity, patience, and appreciation for visual aesthetics
+Key Learning Areas: Drawing techniques, color theory, composition, digital tools, art history
+Industry Applications: Graphic designer, illustrator, concept artist, art director
+Career Relevance: High in creative industries, advertising, and digital media''',
+      
+      // Business & Finance
+      'bisnis': '''
+Bisnis adalah kegiatan ekonomi yang melibatkan produksi, distribusi, dan penjualan barang atau jasa untuk mencapai keuntungan.
+Prerequisites: Pemahaman dasar matematika, komunikasi yang baik, dan mindset entrepreneurial
+Key Learning Areas: Business planning, financial management, marketing, leadership, operations
+Industry Applications: Entrepreneur, business manager, consultant, financial advisor
+Career Relevance: Universal - berlaku di semua industri dan sektor ekonomi''',
+      
+      'business': '''
+Business is economic activity involving the production, distribution, and sale of goods or services to achieve profit.
+Prerequisites: Basic mathematics understanding, good communication skills, and entrepreneurial mindset
+Key Learning Areas: Business planning, financial management, marketing, leadership, operations
+Industry Applications: Entrepreneur, business manager, consultant, financial advisor
+Career Relevance: Universal - applicable across all industries and economic sectors''',
+      
+      // Music
+      'musik': '''
+Musik adalah seni suara yang menggabungkan melodi, harmoni, dan ritme untuk menciptakan ekspresi artistik dan emosional.
+Prerequisites: Apresiasi musik, kesabaran untuk latihan, dan pendengaran yang baik
+Key Learning Areas: Music theory, instrument techniques, composition, recording, performance
+Industry Applications: Musician, music teacher, composer, sound engineer, music therapist
+Career Relevance: Tinggi dalam industri entertainment, pendidikan, dan terapi''',
+      
+      'music': '''
+Music is the art of sound that combines melody, harmony, and rhythm to create artistic and emotional expression.
+Prerequisites: Music appreciation, patience for practice, and good hearing
+Key Learning Areas: Music theory, instrument techniques, composition, recording, performance
+Industry Applications: Musician, music teacher, composer, sound engineer, music therapist
+Career Relevance: High in entertainment, education, and therapy industries''',
     };
     
     // Check for partial matches
@@ -323,13 +410,13 @@ Career Relevance: High demand across industries as organizations become more dat
       }
     }
     
-    // Generic context for unknown topics
+    // Generic context for any learning topic - Universal Learning Support
     return '''
-This topic represents a specialized area of knowledge that requires structured learning and practical application.
-Prerequisites: Varies based on topic complexity - may require foundational knowledge in related areas
-Key Learning Areas: Fundamental concepts, practical applications, best practices, real-world implementation
-Industry Applications: Depends on the specific field and its relevance to current market needs
-Career Relevance: Continuous learning and skill development are essential in today's rapidly evolving professional landscape''';
+This topic represents an area of knowledge that can be learned through structured, progressive learning and practical application.
+Prerequisites: Varies based on topic complexity - basic curiosity and willingness to learn are the main requirements
+Key Learning Areas: Fundamental concepts, practical applications, best practices, real-world implementation, skill development
+Industry Applications: Learning any skill can open new opportunities for personal growth, career advancement, or hobby development
+Career Relevance: Continuous learning and skill development are essential for personal fulfillment and professional growth in any field''';
   }
 
   String _generateLearningPhases(int durationDays) {
@@ -636,7 +723,7 @@ Phase 4 (Days ${thirdPhase + 1}-$durationDays): Mastery & Specialization
   }
 
   Map<String, dynamic> _getTopicSpecificData(String topic) {
-    // Enhanced topic-specific data with real resources
+    // Universal topic-specific data with real resources for any subject
     final topicMap = {
       'flutter': {
         'description': 'Master Flutter development from fundamentals to production-ready apps. Learn to build beautiful, performant cross-platform mobile applications using Google\'s modern UI toolkit and achieve: {goal}',
@@ -819,6 +906,124 @@ Phase 4 (Days ${thirdPhase + 1}-$durationDays): Mastery & Specialization
           {'title': 'E-commerce API Platform', 'description': 'Create a scalable e-commerce backend with product management, order processing, payment integration, and inventory tracking', 'difficulty': 'intermediate', 'estimated_hours': 50},
           {'title': 'Real-time Collaboration Platform', 'description': 'Develop a real-time collaboration backend with WebSocket support, document sharing, live editing, and user presence tracking', 'difficulty': 'advanced', 'estimated_hours': 75}
         ]
+      },
+      
+      // Universal Topics - Culinary Arts
+      'memasak': {
+        'description': 'Kuasai seni memasak dari dasar hingga teknik advanced. Pelajari cara membuat makanan lezat, sehat, dan menarik untuk keluarga atau karir kuliner dan capai: {goal}',
+        'phases': [
+          {
+            'name': 'Dasar-Dasar Memasak',
+            'tasks': [
+              {'topic': 'Keselamatan Dapur & Kebersihan', 'title': 'Food Safety dan Hygiene dalam Memasak', 'url': 'https://www.google.com/search?q=food+safety+hygiene+cooking+basics', 'exercise': 'Praktik mencuci tangan, membersihkan peralatan, dan menyimpan bahan makanan dengan benar'},
+              {'topic': 'Teknik Memotong Dasar', 'title': 'Cara Memotong Sayuran dan Daging dengan Benar', 'url': 'https://www.google.com/search?q=basic+knife+skills+cutting+vegetables', 'exercise': 'Latihan memotong bawang, wortel, dan kentang dengan berbagai teknik'},
+              {'topic': 'Metode Memasak Fundamental', 'title': 'Teknik Merebus, Menggoreng, dan Menumis', 'url': 'https://www.google.com/search?q=basic+cooking+methods+boiling+frying', 'exercise': 'Masak nasi, tumis sayuran, dan goreng telur dengan teknik yang benar'},
+              {'topic': 'Bumbu dan Rasa Dasar', 'title': 'Mengenal Bumbu Dapur dan Cara Menggunakannya', 'url': 'https://www.google.com/search?q=basic+spices+seasoning+cooking', 'exercise': 'Buat bumbu dasar untuk masakan Indonesia dan cicipi perbedaan rasa'},
+            ]
+          },
+          {
+            'name': 'Teknik Memasak Lanjutan',
+            'tasks': [
+              {'topic': 'Memasak Protein', 'title': 'Teknik Memasak Daging, Ikan, dan Ayam', 'url': 'https://www.google.com/search?q=cooking+meat+fish+chicken+techniques', 'exercise': 'Masak ayam bakar, ikan goreng, dan daging sapi dengan tingkat kematangan yang tepat'},
+              {'topic': 'Membuat Saus dan Kuah', 'title': 'Cara Membuat Saus, Kuah, dan Kaldu', 'url': 'https://www.google.com/search?q=making+sauce+broth+cooking', 'exercise': 'Buat saus tomat, kuah soto, dan kaldu ayam dari bahan dasar'},
+              {'topic': 'Teknik Memanggang', 'title': 'Memanggang dan Mengoven Makanan', 'url': 'https://www.google.com/search?q=baking+roasting+oven+cooking', 'exercise': 'Panggang kue sederhana dan roast sayuran dengan oven'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Menu Keluarga Sehat', 'description': 'Buat menu makanan sehat untuk keluarga selama seminggu dengan variasi protein, sayuran, dan karbohidrat', 'difficulty': 'beginner', 'estimated_hours': 15},
+          {'title': 'Katering Rumahan', 'description': 'Mulai bisnis katering kecil dengan menu signature dan sistem pemesanan', 'difficulty': 'intermediate', 'estimated_hours': 30},
+        ]
+      },
+      
+      'cooking': {
+        'description': 'Master the art of cooking from basics to advanced techniques. Learn to create delicious, healthy, and appealing food for family or culinary career and achieve: {goal}',
+        'phases': [
+          {
+            'name': 'Cooking Fundamentals',
+            'tasks': [
+              {'topic': 'Kitchen Safety & Hygiene', 'title': 'Food Safety and Hygiene in Cooking', 'url': 'https://www.google.com/search?q=food+safety+hygiene+cooking+basics', 'exercise': 'Practice proper handwashing, equipment cleaning, and food storage techniques'},
+              {'topic': 'Basic Knife Skills', 'title': 'How to Cut Vegetables and Meat Properly', 'url': 'https://www.google.com/search?q=basic+knife+skills+cutting+vegetables', 'exercise': 'Practice cutting onions, carrots, and potatoes using various techniques'},
+              {'topic': 'Fundamental Cooking Methods', 'title': 'Boiling, Frying, and Sautéing Techniques', 'url': 'https://www.google.com/search?q=basic+cooking+methods+boiling+frying', 'exercise': 'Cook rice, sauté vegetables, and fry eggs using proper techniques'},
+              {'topic': 'Basic Seasonings and Flavors', 'title': 'Understanding Spices and How to Use Them', 'url': 'https://www.google.com/search?q=basic+spices+seasoning+cooking', 'exercise': 'Create basic spice blends and taste the difference in flavors'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Healthy Family Menu', 'description': 'Create a week-long healthy meal plan for family with variety of proteins, vegetables, and carbohydrates', 'difficulty': 'beginner', 'estimated_hours': 15},
+        ]
+      },
+      
+      // Fitness & Sports
+      'olahraga': {
+        'description': 'Kuasai olahraga dan fitness untuk kesehatan optimal. Pelajari teknik exercise, nutrisi, dan gaya hidup sehat untuk mencapai: {goal}',
+        'phases': [
+          {
+            'name': 'Dasar-Dasar Fitness',
+            'tasks': [
+              {'topic': 'Pemanasan dan Pendinginan', 'title': 'Teknik Warm-up dan Cool-down yang Benar', 'url': 'https://www.google.com/search?q=proper+warm+up+cool+down+exercise', 'exercise': 'Lakukan rutinitas pemanasan 10 menit dan pendinginan 5 menit'},
+              {'topic': 'Latihan Kardio Dasar', 'title': 'Cardio Training untuk Pemula', 'url': 'https://www.google.com/search?q=beginner+cardio+workout+routine', 'exercise': 'Lakukan jalan cepat 20 menit atau jogging ringan sesuai kemampuan'},
+              {'topic': 'Latihan Kekuatan Bodyweight', 'title': 'Strength Training Tanpa Alat', 'url': 'https://www.google.com/search?q=bodyweight+strength+training+beginner', 'exercise': 'Lakukan push-up, squat, dan plank dengan form yang benar'},
+              {'topic': 'Nutrisi untuk Olahraga', 'title': 'Pola Makan Sehat untuk Aktif Berolahraga', 'url': 'https://www.google.com/search?q=nutrition+for+exercise+healthy+eating', 'exercise': 'Buat meal plan seimbang untuk mendukung aktivitas olahraga'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Program Fitness Personal', 'description': 'Buat program latihan personal selama 30 hari dengan target spesifik dan tracking progress', 'difficulty': 'beginner', 'estimated_hours': 20},
+        ]
+      },
+      
+      'fitness': {
+        'description': 'Master fitness and sports for optimal health. Learn exercise techniques, nutrition, and healthy lifestyle to achieve: {goal}',
+        'phases': [
+          {
+            'name': 'Fitness Fundamentals',
+            'tasks': [
+              {'topic': 'Warm-up and Cool-down', 'title': 'Proper Warm-up and Cool-down Techniques', 'url': 'https://www.google.com/search?q=proper+warm+up+cool+down+exercise', 'exercise': 'Perform 10-minute warm-up and 5-minute cool-down routine'},
+              {'topic': 'Basic Cardio Training', 'title': 'Cardio Training for Beginners', 'url': 'https://www.google.com/search?q=beginner+cardio+workout+routine', 'exercise': 'Do 20-minute brisk walk or light jogging according to your ability'},
+              {'topic': 'Bodyweight Strength Training', 'title': 'Strength Training Without Equipment', 'url': 'https://www.google.com/search?q=bodyweight+strength+training+beginner', 'exercise': 'Perform push-ups, squats, and planks with proper form'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Personal Fitness Program', 'description': 'Create a 30-day personal workout program with specific goals and progress tracking', 'difficulty': 'beginner', 'estimated_hours': 20},
+        ]
+      },
+      
+      // Arts & Design
+      'seni': {
+        'description': 'Kuasai seni dan desain untuk ekspresi kreatif. Pelajari teknik menggambar, melukis, dan desain digital untuk mencapai: {goal}',
+        'phases': [
+          {
+            'name': 'Dasar-Dasar Seni',
+            'tasks': [
+              {'topic': 'Teknik Menggambar Dasar', 'title': 'Belajar Menggambar Bentuk dan Proporsi', 'url': 'https://www.google.com/search?q=basic+drawing+techniques+shapes+proportions', 'exercise': 'Gambar bentuk geometri dasar dan objek sederhana dengan pensil'},
+              {'topic': 'Teori Warna', 'title': 'Memahami Warna dan Kombinasinya', 'url': 'https://www.google.com/search?q=color+theory+basics+art', 'exercise': 'Buat color wheel dan eksplorasi kombinasi warna komplementer'},
+              {'topic': 'Komposisi dan Layout', 'title': 'Prinsip Komposisi dalam Seni Visual', 'url': 'https://www.google.com/search?q=composition+principles+visual+art', 'exercise': 'Buat sketsa dengan menerapkan rule of thirds dan balance'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Portfolio Seni Digital', 'description': 'Buat portfolio seni digital dengan berbagai teknik dan style untuk showcase kemampuan', 'difficulty': 'beginner', 'estimated_hours': 25},
+        ]
+      },
+      
+      // Music
+      'musik': {
+        'description': 'Kuasai musik dan instrumen untuk ekspresi artistik. Pelajari teori musik, teknik bermain, dan komposisi untuk mencapai: {goal}',
+        'phases': [
+          {
+            'name': 'Dasar-Dasar Musik',
+            'tasks': [
+              {'topic': 'Teori Musik Dasar', 'title': 'Not, Tangga Nada, dan Chord Dasar', 'url': 'https://www.google.com/search?q=basic+music+theory+notes+scales', 'exercise': 'Pelajari tangga nada C mayor dan mainkan chord C-F-G'},
+              {'topic': 'Ritme dan Tempo', 'title': 'Memahami Beat, Rhythm, dan Time Signature', 'url': 'https://www.google.com/search?q=rhythm+tempo+music+basics', 'exercise': 'Latihan clapping dengan berbagai time signature dan tempo'},
+              {'topic': 'Teknik Instrumen Dasar', 'title': 'Cara Memegang dan Memainkan Instrumen', 'url': 'https://www.google.com/search?q=basic+instrument+techniques+beginner', 'exercise': 'Pilih satu instrumen dan pelajari posisi dasar serta chord/scale sederhana'},
+            ]
+          }
+        ],
+        'projects': [
+          {'title': 'Komposisi Musik Sederhana', 'description': 'Buat komposisi musik sederhana menggunakan software atau instrumen akustik', 'difficulty': 'beginner', 'estimated_hours': 20},
+        ]
       }
     };
 
@@ -890,6 +1095,14 @@ Phase 4 (Days ${thirdPhase + 1}-$durationDays): Mastery & Specialization
         final mainTopic = taskMap['main_topic'] as String;
         final subTopic = taskMap['sub_topic'] as String;
         
+        // Debug: Log the topics being used for video search
+        if (EnvConfig.isDebugMode) {
+          print('🔍 Searching videos for:');
+          print('   Main Topic: "$mainTopic"');
+          print('   Sub Topic: "$subTopic"');
+          print('   Experience Level: "${experienceLevel.name}"');
+        }
+        
         // Find relevant YouTube videos for this specific task
         final videos = await YouTubeSearchService.findRelevantVideos(
           topic: mainTopic,
@@ -938,6 +1151,7 @@ Phase 4 (Days ${thirdPhase + 1}-$durationDays): Mastery & Specialization
     bool includeProjects = false,
     bool includeExercises = false,
     String? notes,
+    String language = 'id', // Default to Indonesian
   }) async {
     // Generate the base learning path
     final baseLearningPath = await generateLearningPath(
@@ -950,6 +1164,7 @@ Phase 4 (Days ${thirdPhase + 1}-$durationDays): Mastery & Specialization
       includeProjects: includeProjects,
       includeExercises: includeExercises,
       notes: notes,
+      language: language,
     );
 
     if (baseLearningPath == null) {

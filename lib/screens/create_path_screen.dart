@@ -29,6 +29,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
   bool _includeProjects = false;
   bool _includeExercises = true;
   bool _includeVideos = true;
+  String _language = 'id'; // Default to Indonesian
 
   @override
   void dispose() {
@@ -61,6 +62,7 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
       includeExercises: _includeExercises,
       includeVideos: _includeVideos,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      language: _language,
     );
 
     if (learningPath != null && mounted) {
@@ -162,6 +164,13 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
                 _buildSectionTitle('Your Experience Level'),
                 const SizedBox(height: 16),
                 _buildExperienceLevelSelector(),
+                
+                const SizedBox(height: 24),
+                
+                // Language Selection
+                _buildSectionTitle('Content Language'),
+                const SizedBox(height: 16),
+                _buildLanguageSelector(),
                 
                 const SizedBox(height: 24),
                 
@@ -435,6 +444,62 @@ class _CreatePathScreenState extends State<CreatePathScreen> {
           contentPadding: EdgeInsets.zero,
         ),
       ],
+    );
+  }
+
+  Widget _buildLanguageSelector() {
+    final languages = [
+      {'code': 'id', 'name': 'Bahasa Indonesia', 'flag': '🇮🇩'},
+      {'code': 'en', 'name': 'English', 'flag': '🇺🇸'},
+      {'code': 'es', 'name': 'Español', 'flag': '🇪🇸'},
+      {'code': 'fr', 'name': 'Français', 'flag': '🇫🇷'},
+      {'code': 'de', 'name': 'Deutsch', 'flag': '🇩🇪'},
+      {'code': 'ja', 'name': '日本語', 'flag': '🇯🇵'},
+      {'code': 'ko', 'name': '한국어', 'flag': '🇰🇷'},
+      {'code': 'zh', 'name': '中文', 'flag': '🇨🇳'},
+      {'code': 'pt', 'name': 'Português', 'flag': '🇵🇹'},
+      {'code': 'ru', 'name': 'Русский', 'flag': '🇷🇺'},
+      {'code': 'ar', 'name': 'العربية', 'flag': '🇸🇦'},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _language,
+          isExpanded: true,
+          icon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+          items: languages.map((language) {
+            return DropdownMenuItem<String>(
+              value: language['code'],
+              child: Row(
+                children: [
+                  Text(
+                    language['flag']!,
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    language['name']!,
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _language = value;
+              });
+            }
+          },
+        ),
+      ),
     );
   }
 

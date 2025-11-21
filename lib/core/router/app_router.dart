@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../screens/welcome_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/register_screen.dart';
+import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/view_path_screen.dart';
 import '../../screens/daily_tracker_screen.dart';
 import '../../screens/settings_screen.dart';
@@ -41,7 +42,7 @@ class AppRouter {
         final currentPath = state.uri.toString();
         final isOnSplashPage = currentPath == '/splash';
         final isOnOnboardingPage = currentPath == '/onboarding';
-        final isOnAuthPages = ['/welcome', '/login', '/register'].contains(currentPath);
+        final isOnAuthPages = ['/welcome', '/login', '/register', '/forgot-password'].contains(currentPath);
         final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings', '/summarizer'].contains(currentPath);
         
         // Allow splash and onboarding screens to load
@@ -95,6 +96,12 @@ class AppRouter {
           path: '/register',
           name: 'register',
           builder: (context, state) => const RegisterScreen(),
+        ),
+        
+        GoRoute(
+          path: '/forgot-password',
+          name: 'forgot-password',
+          builder: (context, state) => const ForgotPasswordScreen(),
         ),
         
         // Protected Routes (require authentication)
@@ -239,6 +246,7 @@ extension AppRouterExtension on BuildContext {
   void goToWelcome() => go('/welcome');
   void goToLogin() => go('/login');
   void goToRegister() => go('/register');
+  void goToForgotPassword() => go('/forgot-password');
   void goToDashboard() => go('/dashboard');
   void goToCreatePath() => go('/create-path');
   void goToViewPath(String pathId) => go('/view-path/$pathId');
@@ -267,6 +275,7 @@ class AppRoutes {
   static const String welcome = '/welcome';
   static const String login = '/login';
   static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
   static const String dashboard = '/dashboard';
   static const String createPath = '/create-path';
   static const String viewPath = '/view-path';

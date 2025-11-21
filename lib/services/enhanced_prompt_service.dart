@@ -14,15 +14,19 @@ class EnhancedPromptService {
     bool includeProjects = false,
     bool includeExercises = false,
     String? notes,
+    String language = 'id', // Default to Indonesian
   }) {
     final contextualInfo = _getTopicContextualInfo(topic);
     final learningPhases = _generateDetailedLearningPhases(durationDays, topic);
     final styleOptimization = _getLearningStyleOptimization(learningStyle);
     final experienceAdjustments = _getExperienceLevelAdjustments(experienceLevel);
     final qualityFramework = _getQualityAssuranceFramework();
+    final languageInstructions = _getLanguageInstructions(language);
     
     return '''
 # EXPERT LEARNING PATH DESIGNER PROMPT
+
+$languageInstructions
 
 You are a world-class curriculum designer and educational expert with deep expertise in instructional design, cognitive science, and adult learning principles. Your task is to create an exceptional $durationDays-day learning path for "$topic" that will transform a learner from their current level to achieving their specific goal.
 
@@ -99,6 +103,7 @@ Start your response with { and end with }. No additional text or explanations.
     final topicLower = topic.toLowerCase();
     
     final contextMap = {
+      // Programming & Technology
       'flutter': '''
 **Domain**: Cross-platform mobile development using Google's UI toolkit
 **Industry Relevance**: High demand in mobile app development, especially for startups and rapid prototyping
@@ -123,21 +128,175 @@ Start your response with { and end with }. No additional text or explanations.
 **Career Applications**: Front-end developer, Full-stack developer, Web application developer, Mobile app developer (React Native)
 **Learning Complexity**: Easy to start, complex to master due to asynchronous nature and ecosystem complexity''',
       
-      'react': '''
-**Domain**: JavaScript library for building user interfaces, particularly single-page applications
-**Industry Relevance**: Extremely high demand, used by major companies like Facebook, Netflix, Airbnb
-**Prerequisites**: Solid JavaScript knowledge, HTML/CSS proficiency, understanding of ES6+ features
-**Key Technologies**: JSX, Component architecture, Hooks, State management, Virtual DOM, Ecosystem tools
-**Career Applications**: Front-end developer, React developer, UI developer, Full-stack developer
-**Learning Complexity**: Moderate - requires good JavaScript foundation and understanding of component-based architecture''',
+      // Culinary & Cooking
+      'memasak': '''
+**Domain**: Seni kuliner dan keterampilan memasak untuk kehidupan sehari-hari dan profesional
+**Industry Relevance**: Tinggi dalam industri kuliner, restoran, katering, dan content creation
+**Prerequisites**: Pengetahuan dasar bahan makanan, keselamatan dapur, dan kebersihan
+**Key Technologies**: Teknik memasak, penggunaan peralatan dapur, food safety, presentasi makanan
+**Career Applications**: Chef, food blogger, catering business, culinary instructor, food photographer
+**Learning Complexity**: Mudah untuk pemula, membutuhkan latihan konsisten untuk menguasai teknik advanced''',
       
-      'node.js': '''
-**Domain**: JavaScript runtime for server-side development and backend applications
-**Industry Relevance**: High demand for full-stack JavaScript development and API creation
-**Prerequisites**: Strong JavaScript knowledge, understanding of asynchronous programming, basic server concepts
-**Key Technologies**: NPM ecosystem, Express.js, Database integration, Authentication, API development
-**Career Applications**: Backend developer, Full-stack developer, API developer, DevOps engineer
-**Learning Complexity**: Moderate to advanced - requires understanding of server architecture and asynchronous patterns''',
+      'cooking': '''
+**Domain**: Culinary arts and cooking skills for daily life and professional applications
+**Industry Relevance**: High in culinary industry, restaurants, catering, and content creation
+**Prerequisites**: Basic knowledge of ingredients, kitchen safety, and hygiene
+**Key Technologies**: Cooking techniques, kitchen equipment usage, food safety, food presentation
+**Career Applications**: Chef, food blogger, catering business, culinary instructor, food photographer
+**Learning Complexity**: Easy for beginners, requires consistent practice for advanced techniques''',
+      
+      // Fitness & Sports
+      'olahraga': '''
+**Domain**: Aktivitas fisik dan kebugaran untuk kesehatan dan performa atletik
+**Industry Relevance**: Tinggi dalam industri fitness, wellness, dan healthcare
+**Prerequisites**: Pemahaman dasar anatomi, kondisi kesehatan personal, dan motivasi konsisten
+**Key Technologies**: Exercise techniques, nutrition science, recovery methods, performance tracking
+**Career Applications**: Personal trainer, fitness instructor, sports coach, wellness consultant, physiotherapist
+**Learning Complexity**: Mudah dimulai, membutuhkan dedikasi dan konsistensi untuk hasil optimal''',
+      
+      'fitness': '''
+**Domain**: Physical activity and wellness for health and athletic performance
+**Industry Relevance**: High in fitness, wellness, and healthcare industries
+**Prerequisites**: Basic understanding of anatomy, personal health condition, and consistent motivation
+**Key Technologies**: Exercise techniques, nutrition science, recovery methods, performance tracking
+**Career Applications**: Personal trainer, fitness instructor, sports coach, wellness consultant, physiotherapist
+**Learning Complexity**: Easy to start, requires dedication and consistency for optimal results''',
+      
+      // Arts & Design
+      'seni': '''
+**Domain**: Ekspresi kreatif melalui berbagai medium visual dan digital
+**Industry Relevance**: Tinggi dalam industri kreatif, advertising, game development, dan media
+**Prerequisites**: Kreativitas, kesabaran, dan apresiasi terhadap estetika visual
+**Key Technologies**: Drawing techniques, digital tools (Photoshop, Illustrator), color theory, composition
+**Career Applications**: Graphic designer, illustrator, concept artist, art director, freelance artist
+**Learning Complexity**: Mudah dimulai, membutuhkan latihan konsisten dan pengembangan style personal''',
+      
+      'art': '''
+**Domain**: Creative expression through various visual and digital mediums
+**Industry Relevance**: High in creative industries, advertising, game development, and media
+**Prerequisites**: Creativity, patience, and appreciation for visual aesthetics
+**Key Technologies**: Drawing techniques, digital tools (Photoshop, Illustrator), color theory, composition
+**Career Applications**: Graphic designer, illustrator, concept artist, art director, freelance artist
+**Learning Complexity**: Easy to start, requires consistent practice and personal style development''',
+      
+      // Business & Finance
+      'bisnis': '''
+**Domain**: Kewirausahaan dan manajemen bisnis untuk kesuksesan finansial
+**Industry Relevance**: Universal - berlaku di semua industri dan sektor ekonomi
+**Prerequisites**: Pemahaman dasar matematika, komunikasi yang baik, dan mindset entrepreneurial
+**Key Technologies**: Business planning, financial management, marketing strategies, digital tools
+**Career Applications**: Entrepreneur, business manager, consultant, financial advisor, startup founder
+**Learning Complexity**: Moderate - membutuhkan kombinasi teori dan praktik real-world''',
+      
+      'business': '''
+**Domain**: Entrepreneurship and business management for financial success
+**Industry Relevance**: Universal - applicable across all industries and economic sectors
+**Prerequisites**: Basic mathematics understanding, good communication skills, and entrepreneurial mindset
+**Key Technologies**: Business planning, financial management, marketing strategies, digital tools
+**Career Applications**: Entrepreneur, business manager, consultant, financial advisor, startup founder
+**Learning Complexity**: Moderate - requires combination of theory and real-world practice''',
+      
+      // Music
+      'musik': '''
+**Domain**: Seni musik dan keterampilan bermusik untuk ekspresi dan karir
+**Industry Relevance**: Tinggi dalam industri entertainment, pendidikan, dan terapi
+**Prerequisites**: Apresiasi musik, kesabaran untuk latihan, dan pendengaran yang baik
+**Key Technologies**: Music theory, instrument techniques, recording software, performance skills
+**Career Applications**: Musician, music teacher, composer, sound engineer, music therapist
+**Learning Complexity**: Mudah dimulai, membutuhkan latihan rutin dan dedikasi jangka panjang''',
+      
+      'music': '''
+**Domain**: Musical arts and skills for expression and career development
+**Industry Relevance**: High in entertainment, education, and therapy industries
+**Prerequisites**: Music appreciation, patience for practice, and good hearing
+**Key Technologies**: Music theory, instrument techniques, recording software, performance skills
+**Career Applications**: Musician, music teacher, composer, sound engineer, music therapist
+**Learning Complexity**: Easy to start, requires regular practice and long-term dedication''',
+      
+      // Languages & Communication
+      'bahasa': '''
+**Domain**: Pembelajaran bahasa untuk komunikasi dan pengembangan karir global
+**Industry Relevance**: Tinggi dalam era globalisasi, diplomasi, pariwisata, dan bisnis internasional
+**Prerequisites**: Motivasi belajar, kesabaran, dan praktik konsisten
+**Key Technologies**: Grammar rules, vocabulary building, pronunciation, cultural context, conversation practice
+**Career Applications**: Translator, interpreter, language teacher, international business, tourism guide
+**Learning Complexity**: Moderate - membutuhkan latihan speaking, listening, reading, dan writing secara seimbang''',
+      
+      'language': '''
+**Domain**: Language learning for communication and global career development
+**Industry Relevance**: High in globalization era, diplomacy, tourism, and international business
+**Prerequisites**: Learning motivation, patience, and consistent practice
+**Key Technologies**: Grammar rules, vocabulary building, pronunciation, cultural context, conversation practice
+**Career Applications**: Translator, interpreter, language teacher, international business, tourism guide
+**Learning Complexity**: Moderate - requires balanced practice in speaking, listening, reading, and writing''',
+      
+      // Health & Wellness
+      'kesehatan': '''
+**Domain**: Kesehatan dan wellness untuk kehidupan yang lebih baik dan karir di bidang kesehatan
+**Industry Relevance**: Sangat tinggi dengan meningkatnya kesadaran kesehatan masyarakat
+**Prerequisites**: Pemahaman dasar anatomi, motivasi untuk hidup sehat, dan komitmen jangka panjang
+**Key Technologies**: Nutrition science, exercise physiology, mental health practices, preventive care
+**Career Applications**: Nutritionist, wellness coach, health educator, fitness trainer, healthcare worker
+**Learning Complexity**: Moderate - membutuhkan pemahaman ilmiah dan aplikasi praktis sehari-hari''',
+      
+      'health': '''
+**Domain**: Health and wellness for better living and healthcare career development
+**Industry Relevance**: Very high with increasing public health awareness
+**Prerequisites**: Basic anatomy understanding, motivation for healthy living, and long-term commitment
+**Key Technologies**: Nutrition science, exercise physiology, mental health practices, preventive care
+**Career Applications**: Nutritionist, wellness coach, health educator, fitness trainer, healthcare worker
+**Learning Complexity**: Moderate - requires scientific understanding and practical daily application''',
+      
+      // Photography & Visual Arts
+      'fotografi': '''
+**Domain**: Seni fotografi untuk ekspresi kreatif dan karir profesional
+**Industry Relevance**: Tinggi dalam era digital, social media, marketing, dan content creation
+**Prerequisites**: Mata artistik, kesabaran, dan akses ke kamera (smartphone sudah cukup untuk memulai)
+**Key Technologies**: Camera techniques, composition rules, lighting, photo editing software, digital workflow
+**Career Applications**: Professional photographer, content creator, social media manager, visual storyteller
+**Learning Complexity**: Mudah dimulai dengan smartphone, berkembang kompleks dengan teknik advanced''',
+      
+      'photography': '''
+**Domain**: Photography arts for creative expression and professional career
+**Industry Relevance**: High in digital era, social media, marketing, and content creation
+**Prerequisites**: Artistic eye, patience, and access to camera (smartphone sufficient to start)
+**Key Technologies**: Camera techniques, composition rules, lighting, photo editing software, digital workflow
+**Career Applications**: Professional photographer, content creator, social media manager, visual storyteller
+**Learning Complexity**: Easy to start with smartphone, becomes complex with advanced techniques''',
+      
+      // Crafting & DIY
+      'kerajinan': '''
+**Domain**: Seni kerajinan tangan untuk hobi, terapi, dan peluang bisnis
+**Industry Relevance**: Tinggi dalam industri kreatif, handmade market, dan therapeutic activities
+**Prerequisites**: Kreativitas, kesabaran, dan keterampilan motorik halus
+**Key Technologies**: Various crafting techniques, material knowledge, tool usage, design principles
+**Career Applications**: Craft entrepreneur, art therapist, workshop instructor, product designer
+**Learning Complexity**: Mudah dimulai dengan proyek sederhana, berkembang dengan teknik yang lebih kompleks''',
+      
+      'crafting': '''
+**Domain**: Handicraft arts for hobby, therapy, and business opportunities
+**Industry Relevance**: High in creative industries, handmade market, and therapeutic activities
+**Prerequisites**: Creativity, patience, and fine motor skills
+**Key Technologies**: Various crafting techniques, material knowledge, tool usage, design principles
+**Career Applications**: Craft entrepreneur, art therapist, workshop instructor, product designer
+**Learning Complexity**: Easy to start with simple projects, develops with more complex techniques''',
+      
+      // Gardening & Agriculture
+      'berkebun': '''
+**Domain**: Seni berkebun untuk kemandirian pangan, hobi, dan bisnis pertanian
+**Industry Relevance**: Tinggi dengan tren urban farming, organic food, dan sustainability
+**Prerequisites**: Kesabaran, observasi alam, dan komitmen perawatan rutin
+**Key Technologies**: Plant biology, soil science, irrigation systems, pest management, harvest techniques
+**Career Applications**: Urban farmer, landscape designer, agricultural consultant, organic food producer
+**Learning Complexity**: Mudah dimulai dengan tanaman sederhana, berkembang dengan sistem yang kompleks''',
+      
+      'gardening': '''
+**Domain**: Gardening arts for food independence, hobby, and agricultural business
+**Industry Relevance**: High with urban farming trends, organic food, and sustainability
+**Prerequisites**: Patience, nature observation, and commitment to routine care
+**Key Technologies**: Plant biology, soil science, irrigation systems, pest management, harvest techniques
+**Career Applications**: Urban farmer, landscape designer, agricultural consultant, organic food producer
+**Learning Complexity**: Easy to start with simple plants, develops with complex systems''',
     };
     
     for (final key in contextMap.keys) {
@@ -147,12 +306,12 @@ Start your response with { and end with }. No additional text or explanations.
     }
     
     return '''
-**Domain**: Specialized knowledge area requiring structured learning approach
-**Industry Relevance**: Varies based on current market demands and technological trends
-**Prerequisites**: Foundation knowledge may be required depending on topic complexity
-**Key Technologies**: Topic-specific tools, frameworks, and methodologies
-**Career Applications**: Depends on industry application and specialization level
-**Learning Complexity**: Varies - assess based on learner's background and topic depth''';
+**Domain**: Universal learning area with broad applications across personal and professional development
+**Industry Relevance**: Applicable across multiple industries and personal growth contexts
+**Prerequisites**: Basic curiosity and willingness to learn - no specific background required
+**Key Technologies**: Learning-specific tools, techniques, and best practices for the subject area
+**Career Applications**: Skill development for personal enrichment, career advancement, or professional specialization
+**Learning Complexity**: Adaptable to learner's pace and background - structured approach ensures progressive mastery''';
   }
 
   static String _generateDetailedLearningPhases(int durationDays, String topic) {
@@ -319,5 +478,141 @@ Start your response with { and end with }. No additional text or explanations.
 3. **Retention Strategies**: Build in review and reinforcement mechanisms
 4. **Engagement**: Maintain learner interest through varied activities
 5. **Assessment**: Provide opportunities for self-evaluation and progress tracking''';
+  }
+
+  static String _getLanguageInstructions(String language) {
+    switch (language.toLowerCase()) {
+      case 'id':
+      case 'indonesian':
+        return '''
+## INSTRUKSI BAHASA
+PENTING: Hasilkan seluruh konten learning path dalam BAHASA INDONESIA yang natural dan mudah dipahami. 
+- Gunakan terminologi teknis dalam bahasa Inggris jika diperlukan, tetapi berikan penjelasan dalam bahasa Indonesia
+- Struktur kalimat harus sesuai dengan tata bahasa Indonesia yang baik dan benar
+- Gunakan gaya bahasa yang ramah dan mudah dipahami untuk pembelajar Indonesia
+- Semua judul, deskripsi, dan konten harus dalam bahasa Indonesia
+''';
+
+      case 'en':
+      case 'english':
+        return '''
+## LANGUAGE INSTRUCTIONS
+IMPORTANT: Generate all learning path content in NATURAL and CLEAR ENGLISH.
+- Use proper English grammar and sentence structure
+- Maintain a friendly and accessible tone for English-speaking learners
+- Use technical terminology appropriately with clear explanations
+- All titles, descriptions, and content should be in English
+''';
+
+      case 'es':
+      case 'spanish':
+        return '''
+## INSTRUCCIONES DE IDIOMA
+IMPORTANTE: Genera todo el contenido del plan de aprendizaje en ESPAÑOL NATURAL y CLARO.
+- Usa gramática y estructura de oraciones apropiadas en español
+- Mantén un tono amigable y accesible para estudiantes de habla hispana
+- Usa terminología técnica apropiadamente con explicaciones claras
+- Todos los títulos, descripciones y contenido deben estar en español
+''';
+
+      case 'fr':
+      case 'french':
+        return '''
+## INSTRUCTIONS DE LANGUE
+IMPORTANT: Générez tout le contenu du parcours d'apprentissage en FRANÇAIS NATUREL et CLAIR.
+- Utilisez une grammaire française appropriée et une structure de phrase correcte
+- Maintenez un ton amical et accessible pour les apprenants francophones
+- Utilisez la terminologie technique de manière appropriée avec des explications claires
+- Tous les titres, descriptions et contenus doivent être en français
+''';
+
+      case 'de':
+      case 'german':
+        return '''
+## SPRACHANWEISUNGEN
+WICHTIG: Erstellen Sie alle Lernpfad-Inhalte in NATÜRLICHEM und KLAREM DEUTSCH.
+- Verwenden Sie angemessene deutsche Grammatik und Satzstruktur
+- Behalten Sie einen freundlichen und zugänglichen Ton für deutschsprachige Lernende bei
+- Verwenden Sie Fachterminologie angemessen mit klaren Erklärungen
+- Alle Titel, Beschreibungen und Inhalte sollten auf Deutsch sein
+''';
+
+      case 'ja':
+      case 'japanese':
+        return '''
+## 言語指示
+重要：学習パスのすべてのコンテンツを自然で明確な日本語で生成してください。
+- 適切な日本語の文法と文構造を使用してください
+- 日本語学習者にとって親しみやすくアクセスしやすいトーンを維持してください
+- 技術用語を適切に使用し、明確な説明を提供してください
+- すべてのタイトル、説明、コンテンツは日本語である必要があります
+''';
+
+      case 'ko':
+      case 'korean':
+        return '''
+## 언어 지침
+중요: 모든 학습 경로 콘텐츠를 자연스럽고 명확한 한국어로 생성하세요.
+- 적절한 한국어 문법과 문장 구조를 사용하세요
+- 한국어 학습자들에게 친근하고 접근하기 쉬운 톤을 유지하세요
+- 기술 용어를 적절히 사용하고 명확한 설명을 제공하세요
+- 모든 제목, 설명, 콘텐츠는 한국어로 작성되어야 합니다
+''';
+
+      case 'zh':
+      case 'chinese':
+        return '''
+## 语言说明
+重要：用自然清晰的中文生成所有学习路径内容。
+- 使用正确的中文语法和句子结构
+- 为中文学习者保持友好和易于理解的语调
+- 适当使用技术术语并提供清晰的解释
+- 所有标题、描述和内容都应该用中文
+''';
+
+      case 'pt':
+      case 'portuguese':
+        return '''
+## INSTRUÇÕES DE IDIOMA
+IMPORTANTE: Gere todo o conteúdo do caminho de aprendizagem em PORTUGUÊS NATURAL e CLARO.
+- Use gramática portuguesa apropriada e estrutura de frases
+- Mantenha um tom amigável e acessível para estudantes de língua portuguesa
+- Use terminologia técnica apropriadamente com explicações claras
+- Todos os títulos, descrições e conteúdo devem estar em português
+''';
+
+      case 'ru':
+      case 'russian':
+        return '''
+## ЯЗЫКОВЫЕ ИНСТРУКЦИИ
+ВАЖНО: Создавайте весь контент учебного пути на ЕСТЕСТВЕННОМ и ПОНЯТНОМ РУССКОМ ЯЗЫКЕ.
+- Используйте правильную русскую грамматику и структуру предложений
+- Поддерживайте дружелюбный и доступный тон для русскоязычных учащихся
+- Используйте техническую терминологию уместно с четкими объяснениями
+- Все заголовки, описания и контент должны быть на русском языке
+''';
+
+      case 'ar':
+      case 'arabic':
+        return '''
+## تعليمات اللغة
+مهم: قم بإنشاء جميع محتويات مسار التعلم باللغة العربية الطبيعية والواضحة.
+- استخدم القواعد النحوية العربية المناسبة وبنية الجملة
+- حافظ على نبرة ودية ومتاحة للمتعلمين الناطقين بالعربية
+- استخدم المصطلحات التقنية بشكل مناسب مع تفسيرات واضحة
+- يجب أن تكون جميع العناوين والأوصاف والمحتوى باللغة العربية
+''';
+
+      default:
+        // Default to English if language not supported
+        return '''
+## LANGUAGE INSTRUCTIONS
+IMPORTANT: Generate all learning path content in NATURAL and CLEAR ENGLISH.
+- Use proper English grammar and sentence structure
+- Maintain a friendly and accessible tone for learners
+- Use technical terminology appropriately with clear explanations
+- All titles, descriptions, and content should be in English
+''';
+    }
   }
 }

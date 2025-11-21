@@ -801,55 +801,7 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with video count
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.video_library,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Curated Video Collection',
-                        style: AppTextStyles.titleMedium.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${allVideos.length} handpicked videos to enhance your learning journey',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 24),
+
           
           // Video grid
           Text(
@@ -862,14 +814,11 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
           const SizedBox(height: 16),
           
           // Videos list
-          ...allVideos.asMap().entries.map((entry) {
-            final index = entry.key;
-            final video = entry.value;
-            return Container(
+          for (final entry in allVideos.asMap().entries)
+            Container(
               margin: const EdgeInsets.only(bottom: 16),
-              child: _buildVideoCard(video, index + 1),
-            );
-          }).toList(),
+              child: _buildVideoCard(entry.value, entry.key + 1),
+            ),
         ],
       ),
     );

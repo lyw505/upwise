@@ -77,6 +77,7 @@ class LearningPathProvider extends ChangeNotifier {
     bool includeExercises = false,
     bool includeVideos = true,
     String? notes,
+    String language = 'id', // Default to Indonesian
   }) async {
     try {
       _setGenerating(true);
@@ -94,6 +95,7 @@ class LearningPathProvider extends ChangeNotifier {
               includeProjects: includeProjects,
               includeExercises: includeExercises,
               notes: notes,
+              language: language,
             )
           : await _geminiService.generateLearningPath(
               topic: topic,
@@ -105,6 +107,7 @@ class LearningPathProvider extends ChangeNotifier {
               includeProjects: includeProjects,
               includeExercises: includeExercises,
               notes: notes,
+              language: language,
             );
 
       if (generatedPath == null) {

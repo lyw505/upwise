@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
@@ -192,18 +191,53 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> resetPassword(String email) async {
+  Future<bool> resetPassword(String email, {BuildContext? context}) async {
     try {
       _setLoading(true);
       _clearError();
 
-      await _supabase.auth.resetPasswordForEmail(email);
+      debugPrint('Attempting to send password reset email to: $email');
+
+      await _supabase.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.supabase.upwise://reset-password', // Deep link for mobile app
+      );
+
+      debugPrint('Password reset email sent successfully');
+      
+      if (context != null && context.mounted) {
+        SimpleToast.showSuccess(context, 'Password reset link sent to your email!');
+      }
+      
       return true;
     } catch (e) {
-      _setError('Failed to send reset email: ${e.toString()}');
+      debugPrint('Password reset error: $e');
+      final errorMsg = _getReadableResetErrorMessage(e.toString());
+      _setError(errorMsg);
+      
+      if (context != null && context.mounted) {
+        SimpleToast.showError(context, errorMsg);
+      }
+      
       return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  String _getReadableResetErrorMessage(String error) {
+    debugPrint('Raw reset error: $error');
+    
+    if (error.contains('User not found') || error.contains('Invalid email')) {
+      return 'No account found with this email address.';
+    } else if (error.contains('Too many requests')) {
+      return 'Too many reset requests. Please wait a few minutes before trying again.';
+    } else if (error.contains('Network') || error.contains('SocketException') || error.contains('Connection')) {
+      return 'Network error. Please check your internet connection and try again.';
+    } else if (error.contains('timeout')) {
+      return 'Request timeout. Please check your internet connection and try again.';
+    } else {
+      return 'Failed to send reset email. Please try again later.';
     }
   }
 
@@ -312,7 +346,7 @@ class AuthProvider extends ChangeNotifier {
     } else if (error.contains('Invalid email')) {
       return 'Please enter a valid email address.';
     } else {
-      return 'Authentication failed: ${error.length > 100 ? error.substring(0, 100) + '...' : error}';
+      return 'Authentication failed: ${error.length > 100 ? '${error.substring(0, 100)}...' : error}';
     }
   }
 }
