@@ -15,11 +15,11 @@ class EnvConfig {
   }
 
   /// Google Gemini API Configuration
-  static String get geminiApiKey => _getEnvVar('GEMINI_API_KEY', '');
+  static String get geminiApiKey => _getEnvVar('GEMINI_API_KEY', 'AIzaSyAB7DAlcP6M9LH7lJWquEPIXHOnQ_ibxME');
   
   /// Supabase Configuration
-  static String get supabaseUrl => _getEnvVar('SUPABASE_URL', '');
-  static String get supabaseAnonKey => _getEnvVar('SUPABASE_ANON_KEY', '');
+  static String get supabaseUrl => _getEnvVar('SUPABASE_URL', 'https://emelocetqqlirzuqyygd.supabase.co');
+  static String get supabaseAnonKey => _getEnvVar('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtZWxvY2V0cXFsaXJ6dXF5eWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDA4MzMsImV4cCI6MjA3MjI3NjgzM30.nHjxz6t3YYiHfzF9NfC6vYHuOfvKMEf-hC-PkF287Hc');
   
   /// App Configuration
   static String get appEnv => _getEnvVar('APP_ENV', 'development');

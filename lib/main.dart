@@ -19,25 +19,25 @@ void main() async {
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    // If .env file doesn't exist or can't be loaded (especially on web), continue with default values
-    print('Warning: .env file not found or could not be loaded, using default configuration');
+    // If .env file doesn't exist or can't be loaded (especially on release builds), continue with default values
+    print('Warning: .env file not found or could not be loaded, using hardcoded configuration for release');
     print('Error: $e');
   }
 
-  // Validate environment configuration
-  final configErrors = EnvConfig.validateConfig();
-  if (configErrors.isNotEmpty && EnvConfig.isProduction) {
-    throw Exception('Missing required environment variables: ${configErrors.join(', ')}');
-  }
-
-  // Initialize Supabase
-  if (EnvConfig.supabaseUrl.isEmpty || EnvConfig.supabaseAnonKey.isEmpty) {
-    throw Exception('Supabase configuration is missing. Please check your .env file.');
+  // Initialize Supabase with fallback configuration for release builds
+  String supabaseUrl = EnvConfig.supabaseUrl;
+  String supabaseAnonKey = EnvConfig.supabaseAnonKey;
+  
+  // Fallback configuration for release builds when .env is not available
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    supabaseUrl = 'https://emelocetqqlirzuqyygd.supabase.co';
+    supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtZWxvY2V0cXFsaXJ6dXF5eWdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDA4MzMsImV4cCI6MjA3MjI3NjgzM30.nHjxz6t3YYiHfzF9NfC6vYHuOfvKMEf-hC-PkF287Hc';
+    print('Using fallback Supabase configuration for release build');
   }
 
   await Supabase.initialize(
-    url: EnvConfig.supabaseUrl,
-    anonKey: EnvConfig.supabaseAnonKey,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(const UpwiseApp());

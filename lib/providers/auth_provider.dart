@@ -107,11 +107,15 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
+      debugPrint('Attempting to sign up with email: $email, name: $name');
+
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
         data: {'name': name},
       );
+
+      debugPrint('Sign up response: ${response.user?.id}');
 
       if (response.user != null) {
         _currentUser = response.user;
@@ -123,8 +127,12 @@ class AuthProvider extends ChangeNotifier {
       
       return false;
     } catch (e) {
-      final errorMsg = 'Failed to create account: ${e.toString()}';
+      debugPrint('Sign up error: $e');
+      final errorMsg = _getReadableErrorMessage(e.toString());
       _setError(errorMsg);
+      if (context != null && context.mounted) {
+        SimpleToast.showError(context, errorMsg);
+      }
       return false;
     } finally {
       _setLoading(false);
@@ -140,10 +148,14 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
+      debugPrint('Attempting to sign in with email: $email');
+
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
+
+      debugPrint('Sign in response: ${response.user?.id}');
 
       if (response.user != null) {
         _currentUser = response.user;
@@ -155,6 +167,7 @@ class AuthProvider extends ChangeNotifier {
       
       return false;
     } catch (e) {
+      debugPrint('Sign in error: $e');
       final errorMsg = _getReadableErrorMessage(e.toString());
       _setError(errorMsg);
       if (context != null && context.mounted) {
@@ -278,6 +291,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String _getReadableErrorMessage(String error) {
+    debugPrint('Raw error: $error');
+    
     if (error.contains('Invalid login credentials')) {
       return 'Invalid email or password. Please check your credentials.';
     } else if (error.contains('Email not confirmed')) {
@@ -286,10 +301,18 @@ class AuthProvider extends ChangeNotifier {
       return 'No account found with this email address.';
     } else if (error.contains('Too many requests')) {
       return 'Too many login attempts. Please try again later.';
-    } else if (error.contains('Network')) {
-      return 'Network error. Please check your internet connection.';
+    } else if (error.contains('Network') || error.contains('SocketException') || error.contains('Connection')) {
+      return 'Network error. Please check your internet connection and try again.';
+    } else if (error.contains('timeout')) {
+      return 'Request timeout. Please check your internet connection and try again.';
+    } else if (error.contains('User already registered')) {
+      return 'An account with this email already exists. Please sign in instead.';
+    } else if (error.contains('Password should be at least')) {
+      return 'Password should be at least 6 characters long.';
+    } else if (error.contains('Invalid email')) {
+      return 'Please enter a valid email address.';
     } else {
-      return 'Login failed. Please try again.';
+      return 'Authentication failed: ${error.length > 100 ? error.substring(0, 100) + '...' : error}';
     }
   }
 }
