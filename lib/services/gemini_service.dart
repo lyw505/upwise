@@ -5,10 +5,14 @@ import '../core/config/env_config.dart';
 import 'enhanced_prompt_service.dart';
 import 'content_quality_service.dart';
 import 'youtube_search_service.dart';
+import 'enhanced_ai_service.dart';
 
 class GeminiService {
   static String get _apiKey => EnvConfig.geminiApiKey;
   static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+  
+  // Instance of enhanced AI service
+  final EnhancedAIService _enhancedAI = EnhancedAIService();
 
   Future<Map<String, dynamic>?> generateLearningPath({
     required String topic,
@@ -26,19 +30,56 @@ class GeminiService {
       // Check if API key is configured
       if (!EnvConfig.isConfigured) {
         if (EnvConfig.isDebugMode) {
-          print('Gemini API key not configured, using fallback');
+          print('Gemini API key not configured, using enhanced fallback');
         }
-        return createFallbackLearningPath(
+        return _enhancedAI.generateAccurateLearningPath(
           topic: topic,
           durationDays: durationDays,
+          dailyTimeMinutes: dailyTimeMinutes,
+          experienceLevel: experienceLevel,
+          learningStyle: learningStyle,
           outputGoal: outputGoal,
           includeProjects: includeProjects,
           includeExercises: includeExercises,
-          experienceLevel: experienceLevel,
-          learningStyle: learningStyle,
+          notes: notes,
+          language: language,
         );
       }
 
+      // Use enhanced AI service for better, more casual results
+      if (EnvConfig.isDebugMode) {
+        print('🚀 Using Enhanced AI Service for more accurate and casual learning path');
+      }
+      
+      final result = await _enhancedAI.generateAccurateLearningPath(
+        topic: topic,
+        durationDays: durationDays,
+        dailyTimeMinutes: dailyTimeMinutes,
+        experienceLevel: experienceLevel,
+        learningStyle: learningStyle,
+        outputGoal: outputGoal,
+        includeProjects: includeProjects,
+        includeExercises: includeExercises,
+        notes: notes,
+        language: language,
+      );
+      
+      if (result != null) {
+        // Add YouTube videos to enhance the learning experience
+        final enhancedWithVideos = await _addYouTubeVideosToTasks(result, experienceLevel);
+        
+        if (EnvConfig.isDebugMode) {
+          print('✅ Enhanced AI generated casual and accurate learning path with ${(result['daily_tasks'] as List).length} tasks');
+        }
+        
+        return enhancedWithVideos;
+      }
+
+      // Fallback to original method if enhanced AI fails
+      if (EnvConfig.isDebugMode) {
+        print('⚠️ Enhanced AI failed, falling back to original method');
+      }
+      
       // Use enhanced prompt service for better AI responses
       final prompt = EnhancedPromptService.generateAdvancedPrompt(
         topic: topic,

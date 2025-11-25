@@ -1,49 +1,135 @@
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as dom;
 import '../core/config/env_config.dart';
 import '../models/content_summary_model.dart';
+import 'enhanced_content_extractor.dart';
 
 class SummarizerService {
   static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
   
-  /// Extract content from URL (including YouTube)
-  Future<String?> extractContentFromUrl(String url) async {
+  /// Enhanced content extraction from URL using new enhanced extractor
+  Future<Map<String, dynamic>> extractContentFromUrl(String url) async {
     try {
+      developer.log('🚀 Using Enhanced Content Extractor for: $url', name: 'SummarizerService');
+      
+      // Use the new enhanced content extractor
+      final result = await EnhancedContentExtractor.extractFromUrl(url);
+      
+      developer.log('✅ Enhanced extraction completed. Success: ${result['isSuccess']}', name: 'SummarizerService');
+      
+      return result;
+      
+    } catch (e) {
+      developer.log('❌ Enhanced extraction failed: $e', name: 'SummarizerService');
+      
+      // Fallback to original method if enhanced extractor fails
+      return await _extractContentFromUrlFallback(url);
+    }
+  }
+
+  /// Fallback content extraction method
+  Future<Map<String, dynamic>> _extractContentFromUrlFallback(String url) async {
+    try {
+      developer.log('🔄 Using fallback extraction method', name: 'SummarizerService');
+      
       // Handle YouTube URLs
       if (_isYouTubeUrl(url)) {
         return await _extractYouTubeContent(url);
       }
       
-      // Handle regular web URLs
-      return await _extractWebContent(url);
+      // Handle regular web URLs with enhanced extraction
+      return await _extractWebContentEnhanced(url);
       
     } catch (e) {
-      developer.log('Error extracting content from URL: $e', name: 'SummarizerService');
-      return null;
+      developer.log('Error in fallback extraction: $e', name: 'SummarizerService');
+      return {
+        'content': 'Web Article from: $url\n\nNote: Unable to extract content automatically. This could be due to:\n• Website blocking automated access\n• JavaScript-heavy content\n• Network connectivity issues\n• Content behind authentication\n\nPlease copy and paste the article text manually for better summarization.',
+        'title': 'Web Article',
+        'isSuccess': false,
+        'errorMessage': e.toString(),
+      };
     }
   }
-  
+
   /// Check if URL is a YouTube URL
   bool _isYouTubeUrl(String url) {
     return url.contains('youtube.com') || url.contains('youtu.be');
   }
-  
-  /// Extract content from YouTube URL
-  Future<String?> _extractYouTubeContent(String url) async {
+
+  /// Enhanced YouTube content extraction
+  Future<Map<String, dynamic>> _extractYouTubeContent(String url) async {
     try {
-      // For YouTube, we'll use the URL as a description and let AI know it's a video
       final videoId = _extractYouTubeVideoId(url);
-      if (videoId != null) {
-        return 'YouTube Video URL: $url\nVideo ID: $videoId\nNote: This is a YouTube video. Please provide a summary request for this video content.'
-            '\n\nTo get the best summary, please describe what the video is about or paste the video transcript if available.';
+      if (videoId == null) {
+        throw Exception('Invalid YouTube URL');
       }
-      return 'YouTube Video: $url\nNote: This is a YouTube video URL. For better summarization, please provide the video transcript or description.';
+
+      // Try to extract basic info from YouTube page
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        },
+      ).timeout(const Duration(seconds: 15));
+
+      String title = 'YouTube Video';
+      String description = '';
+
+      if (response.statusCode == 200) {
+        final document = html_parser.parse(response.body);
+        
+        // Try to extract title from meta tags
+        final titleElement = document.querySelector('meta[property="og:title"]') ??
+                           document.querySelector('title');
+        if (titleElement != null) {
+          title = titleElement.attributes['content'] ?? titleElement.text ?? title;
+          title = title.replaceAll(' - YouTube', '').trim();
+        }
+
+        // Try to extract description
+        final descElement = document.querySelector('meta[property="og:description"]') ??
+                          document.querySelector('meta[name="description"]');
+        if (descElement != null) {
+          description = descElement.attributes['content'] ?? '';
+        }
+      }
+
+      final content = '''YouTube Video: $title
+
+Video URL: $url
+Video ID: $videoId
+
+${description.isNotEmpty ? 'Description: $description\n' : ''}
+Note: This is a YouTube video. For the most accurate summary, please:
+1. Watch the video and provide key points manually, or
+2. Paste the video transcript if available, or  
+3. Describe the main topics covered in the video
+
+The AI will do its best to provide insights based on the title and description, but manual input will yield better results.''';
+
+      return {
+        'content': content,
+        'title': title,
+        'isSuccess': true,
+        'metadata': {
+          'videoId': videoId,
+          'url': url,
+          'platform': 'youtube',
+        },
+      };
     } catch (e) {
-      return 'YouTube Video: $url';
+      return {
+        'content': 'YouTube Video: $url\n\nNote: Unable to extract video information. Please provide the video transcript or describe the content manually.',
+        'title': 'YouTube Video',
+        'isSuccess': false,
+        'errorMessage': e.toString(),
+      };
     }
   }
-  
+
   /// Extract YouTube video ID from URL
   String? _extractYouTubeVideoId(String url) {
     try {
@@ -58,55 +144,147 @@ class SummarizerService {
     }
     return null;
   }
-  
-  /// Extract content from regular web URL
-  Future<String?> _extractWebContent(String url) async {
+
+  /// Enhanced web content extraction with HTML parsing
+  Future<Map<String, dynamic>> _extractWebContentEnhanced(String url) async {
     try {
+      developer.log('Extracting web content from: $url', name: 'SummarizerService');
+
       final response = await http.get(
         Uri.parse(url),
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
         },
-      ).timeout(Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        // Basic HTML content extraction
-        String content = response.body;
-        
-        // Remove HTML tags and extract text content
-        content = _extractTextFromHtml(content);
-        
-        return content.isNotEmpty ? content : 'Web content from: $url';
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) {
+        throw Exception('HTTP ${response.statusCode}: Failed to fetch content');
       }
+
+      // Parse HTML content
+      final document = html_parser.parse(response.body);
+      
+      // Extract title
+      String title = _extractTitle(document, url);
+      
+      // Extract main content
+      String content = _extractMainContent(document);
+      
+      if (content.trim().isEmpty) {
+        throw Exception('No readable content found on the page');
+      }
+
+      // Limit content length
+      if (content.length > 10000) {
+        content = '${content.substring(0, 10000)}...';
+      }
+
+      developer.log('Successfully extracted ${content.length} characters from web page', name: 'SummarizerService');
+
+      return {
+        'content': content,
+        'title': title,
+        'isSuccess': true,
+        'metadata': {
+          'url': url,
+          'contentLength': content.length,
+          'extractedAt': DateTime.now().toIso8601String(),
+        },
+      };
     } catch (e) {
       developer.log('Error extracting web content: $e', name: 'SummarizerService');
+      return {
+        'content': 'Web Article from: $url\n\nNote: Unable to extract content automatically. This could be due to:\n• Website blocking automated access\n• JavaScript-heavy content\n• Network connectivity issues\n• Content behind authentication\n\nPlease copy and paste the article text manually for better summarization.',
+        'title': 'Web Article',
+        'isSuccess': false,
+        'errorMessage': e.toString(),
+      };
     }
-    
-    return 'Web Article from: $url\nNote: Unable to extract content automatically. Please paste the article text for better summarization.';
   }
-  
-  /// Extract text content from HTML
-  String _extractTextFromHtml(String html) {
-    try {
-      // Remove script and style tags
-      html = html.replaceAll(RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true), '');
-      html = html.replaceAll(RegExp(r'<style[^>]*>.*?</style>', caseSensitive: false, dotAll: true), '');
-      
-      // Remove HTML tags
-      html = html.replaceAll(RegExp(r'<[^>]*>'), ' ');
-      
-      // Clean up whitespace
-      html = html.replaceAll(RegExp(r'\s+'), ' ').trim();
-      
-      // Limit content length
-      if (html.length > 5000) {
-        html = '${html.substring(0, 5000)}...';
+
+  /// Extract title from HTML document
+  String _extractTitle(dom.Document document, String url) {
+    // Try different methods to get title
+    final titleSources = [
+      document.querySelector('meta[property="og:title"]')?.attributes['content'],
+      document.querySelector('meta[name="twitter:title"]')?.attributes['content'],
+      document.querySelector('h1')?.text,
+      document.querySelector('title')?.text,
+    ];
+
+    for (final title in titleSources) {
+      if (title != null && title.trim().isNotEmpty) {
+        return title.trim();
       }
-      
-      return html;
-    } catch (e) {
-      return '';
     }
+
+    // Fallback to URL-based title
+    try {
+      final uri = Uri.parse(url);
+      return uri.host.replaceAll('www.', '');
+    } catch (e) {
+      return 'Web Article';
+    }
+  }
+
+  /// Extract main content from HTML document
+  String _extractMainContent(dom.Document document) {
+    // Remove unwanted elements
+    final unwantedSelectors = [
+      'script', 'style', 'nav', 'header', 'footer', 'aside',
+      '.advertisement', '.ads', '.sidebar', '.menu', '.navigation',
+      '.social-share', '.comments', '.related-posts'
+    ];
+
+    for (final selector in unwantedSelectors) {
+      document.querySelectorAll(selector).forEach((element) => element.remove());
+    }
+
+    // Try to find main content using common selectors
+    final contentSelectors = [
+      'article',
+      'main',
+      '.content',
+      '.post-content',
+      '.entry-content',
+      '.article-content',
+      '.main-content',
+      '#content',
+      '#main',
+    ];
+
+    for (final selector in contentSelectors) {
+      final element = document.querySelector(selector);
+      if (element != null) {
+        final text = _extractTextFromElement(element);
+        if (text.length > 200) { // Minimum content length
+          return text;
+        }
+      }
+    }
+
+    // Fallback: extract from body
+    final body = document.querySelector('body');
+    if (body != null) {
+      return _extractTextFromElement(body);
+    }
+
+    return document.body?.text ?? '';
+  }
+
+  /// Extract clean text from HTML element
+  String _extractTextFromElement(dom.Element element) {
+    // Get text content and clean it up
+    String text = element.text ?? '';
+    
+    // Clean up whitespace
+    text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    
+    return text;
   }
   
   /// Generate AI-powered summary from content
@@ -124,20 +302,31 @@ class SummarizerService {
       
       developer.log('Gemini API key found, proceeding with AI generation', name: 'SummarizerService');
 
-      // Process content based on type
+      // Process content based on type using enhanced extractor
       String processedContent = request.content;
+      String? extractedTitle;
       
       // If it's a URL, try to extract content
       if (request.contentType == ContentType.url && request.contentSource != null) {
-        final extractedContent = await extractContentFromUrl(request.contentSource!);
-        if (extractedContent != null && extractedContent.isNotEmpty) {
-          processedContent = extractedContent;
+        final extractedData = await extractContentFromUrl(request.contentSource!);
+        
+        if (extractedData['isSuccess'] == true && extractedData['content'].toString().isNotEmpty) {
+          processedContent = extractedData['content'].toString();
+          extractedTitle = extractedData['title']?.toString();
+          
+          developer.log('Successfully extracted content: ${extractedTitle ?? 'Unknown'}', name: 'SummarizerService');
+        } else {
+          // Use the extracted content even if not fully successful (might contain helpful info)
+          processedContent = extractedData['content'].toString();
+          extractedTitle = extractedData['title']?.toString();
+          
+          developer.log('Partial content extraction: ${extractedData['errorMessage'] ?? 'Unknown error'}', name: 'SummarizerService');
         }
       }
 
       // Create modified request with processed content
       final processedRequest = SummaryRequestModel(
-        title: request.title,
+        title: request.title ?? extractedTitle,
         content: processedContent,
         contentType: request.contentType,
         contentSource: request.contentSource,
@@ -305,20 +494,23 @@ class SummarizerService {
     // Content type specific instructions
     switch (request.contentType) {
       case ContentType.url:
-        if (request.contentSource != null && _isYouTubeUrl(request.contentSource!)) {
+        if (request.contentSource != null && request.contentSource!.contains('youtube')) {
           buffer.writeln('The content is from a YouTube video URL.');
           buffer.writeln('Create a summary based on the video information provided.');
           buffer.writeln('If transcript or description is available, use it for detailed analysis.');
           buffer.writeln('Focus on educational value and key learning points.');
+          buffer.writeln('If only basic video info is available, provide insights based on title and description.');
         } else {
           buffer.writeln('The content is from a web article/URL.');
           buffer.writeln('Extract the main ideas, arguments, and important information.');
+          buffer.writeln('Focus on the core message and key insights from the article.');
         }
         break;
       case ContentType.file:
-        buffer.writeln('The content is from a file/document (PDF, text, etc.).');
+        buffer.writeln('The content is from a PDF document or file.');
         buffer.writeln('Analyze the document structure and extract key information.');
         buffer.writeln('Identify main topics, conclusions, and important details.');
+        buffer.writeln('Focus on the document\'s primary purpose and key findings.');
         break;
       case ContentType.text:
         buffer.writeln('The content is plain text or pasted content.');
@@ -358,14 +550,12 @@ class SummarizerService {
     buffer.writeln();
     buffer.writeln('IMPORTANT: Provide meaningful content analysis, not just metadata.');
     buffer.writeln('Extract actual insights, main arguments, and educational value.');
-    buffer.writeln('Generate relevant tags based on topics, not just URLs or filenames.');
     buffer.writeln();
     buffer.writeln('RESPONSE FORMAT (JSON only):');
     buffer.writeln('{');
     buffer.writeln('  "title": "Descriptive title based on content",');
     buffer.writeln('  "summary": "Comprehensive summary with main ideas and insights",');
     buffer.writeln('  "key_points": ["Specific actionable point", "Key insight", "Important concept"],');
-    buffer.writeln('  "tags": ["topic-based-tag", "subject-area", "concept"],');
     buffer.writeln('  "difficulty_level": "beginner|intermediate|advanced",');
     buffer.writeln('  "estimated_read_time": 5');
     buffer.writeln('}');
@@ -418,7 +608,7 @@ $content
           'title': data['title'] ?? request.title ?? 'Untitled Summary',
           'summary': data['summary'] ?? '',
           'key_points': _parseStringList(data['key_points']),
-          'tags': _parseStringList(data['tags']),
+          'tags': [], // No auto-generated tags
           'difficulty_level': data['difficulty_level'] ?? 'beginner',
           'estimated_read_time': data['estimated_read_time'] ?? 5,
         };
@@ -476,7 +666,7 @@ $content
       'title': request.title ?? 'Content Summary',
       'summary': summary.isNotEmpty ? summary : 'Summary not available',
       'key_points': _extractFallbackKeyPoints(content, 3),
-      'tags': _generateFallbackTags(content, 3),
+      'tags': [], // No auto-generated tags
       'difficulty_level': request.targetDifficulty?.value ?? 'intermediate',
       'estimated_read_time': ContentSummaryModel.estimateReadingTime(wordCount),
     };

@@ -9,6 +9,7 @@ import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/learning_path_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/project_provider.dart';
 import '../models/learning_path_model.dart';
 import '../services/youtube_search_service.dart';
 
@@ -145,9 +146,12 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
               context.goToCreatePath();
               break;
             case 3:
-              context.goToSummarizer();
+              context.goToProjects();
               break;
             case 4:
+              context.goToSummarizer();
+              break;
+            case 5:
               context.goToAnalytics();
               break;
           }
@@ -180,6 +184,11 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
             icon: Icon(Icons.add_circle_outline, size: AppDimensions.bottomNavIconSize),
             activeIcon: Icon(Icons.add_circle, size: AppDimensions.bottomNavIconSize),
             label: 'Create',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.build_outlined, size: AppDimensions.bottomNavIconSize),
+            activeIcon: Icon(Icons.build, size: AppDimensions.bottomNavIconSize),
+            label: 'Projects',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.article_outlined, size: AppDimensions.bottomNavIconSize),
@@ -993,43 +1002,551 @@ class _ViewPathScreenState extends State<ViewPathScreen> with TickerProviderStat
   }
 
   Widget _buildProjectsTab() {
-    if (_learningPath!.projectRecommendations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.work_outline,
-              size: 64,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with learning path info
+          _buildProjectsHeader(),
+          const SizedBox(height: 24),
+          
+          // Project recommendations
+          if (_learningPath!.projectRecommendations.isEmpty)
+            _buildNoProjectsMessage()
+          else
+            _buildProjectsList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProjectsHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary.withValues(alpha: 0.1), AppColors.primary.withValues(alpha: 0.05)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.build,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Projects for ${_learningPath!.topic}',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Build practical projects to reinforce your learning',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.goToProjects(),
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: const Text('View All'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(color: AppColors.primary),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Complete projects to build your portfolio and showcase your skills',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoProjectsMessage() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(
+            Icons.work_outline,
+            size: 80,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Project Recommendations',
+            style: AppTextStyles.headlineSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'This learning path doesn\'t include project recommendations yet.',
+            style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textTertiary,
             ),
-            const SizedBox(height: 16),
-            Text(
-              'No Project Recommendations',
-              style: AppTextStyles.headlineSmall.copyWith(
-                color: AppColors.textSecondary,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tip: You can still create projects manually',
+                  style: AppTextStyles.titleSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Visit the Projects tab to browse available project templates',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () => context.goToProjects(),
+                  icon: const Icon(Icons.build, size: 16),
+                  label: const Text('Go to Projects'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProjectsList() {
+    return Column(
+      children: _learningPath!.projectRecommendations
+          .map((project) => _buildEnhancedProjectCard(project))
+          .toList(),
+    );
+  }
+
+  Widget _buildEnhancedProjectCard(ProjectRecommendation project) {
+    Color difficultyColor;
+    switch (project.difficulty?.toLowerCase()) {
+      case 'beginner':
+        difficultyColor = AppColors.success;
+        break;
+      case 'intermediate':
+        difficultyColor = AppColors.warning;
+        break;
+      case 'advanced':
+        difficultyColor = AppColors.error;
+        break;
+      default:
+        difficultyColor = AppColors.textTertiary;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.build,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            project.title,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (project.difficulty != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: difficultyColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    project.difficulty!.toUpperCase(),
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: difficultyColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              if (project.estimatedHours != null) ...[
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: AppColors.textTertiary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${project.estimatedHours}h',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  project.description,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Project benefits
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.star_outline,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'This project will reinforce your learning and add to your portfolio',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Action buttons
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'This learning path doesn\'t include project recommendations.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textTertiary,
+            child: Row(
+              children: [
+                if (project.url != null) ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _launchProjectUrl(project.url!),
+                      icon: const Icon(Icons.open_in_new, size: 16),
+                      label: const Text('View Details'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _startProjectFromViewPath(project),
+                    icon: const Icon(Icons.play_arrow, size: 16),
+                    label: const Text('Start Project'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _launchProjectUrl(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          SnackbarUtils.showError(context, 'Could not open project URL');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarUtils.showError(context, 'Error opening URL: $e');
+      }
+    }
+  }
+
+  Future<void> _startProjectFromViewPath(ProjectRecommendation project) async {
+    final authProvider = context.read<AuthProvider>();
+    final projectProvider = context.read<ProjectProvider>();
+    
+    if (authProvider.currentUser == null) {
+      SnackbarUtils.showError(context, 'Please log in to start a project');
+      return;
+    }
+
+    if (_learningPath == null) {
+      SnackbarUtils.showError(context, 'Learning path not found');
+      return;
+    }
+
+    // Start project from learning path
+    final success = await projectProvider.startProjectFromLearningPath(
+      userId: authProvider.currentUser!.id,
+      learningPathId: _learningPath!.id,
+      projectRecommendation: project,
+    );
+
+    if (success && mounted) {
+      SnackbarUtils.showSuccess(context, 'Project "${project.title}" started successfully!');
+      
+      // Show dialog to navigate to projects
+      _showProjectStartedDialog(project);
+    } else if (mounted) {
+      SnackbarUtils.showError(context, projectProvider.error ?? 'Failed to start project');
+    }
+  }
+
+  void _showProjectStartedDialog(ProjectRecommendation project) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              textAlign: TextAlign.center,
+              child: Icon(
+                Icons.check_circle,
+                color: AppColors.success,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Project Started!',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _learningPath!.projectRecommendations.length,
-      itemBuilder: (context, index) {
-        final project = _learningPath!.projectRecommendations[index];
-        return _buildProjectCard(project);
-      },
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your project "${project.title}" has been started successfully.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You can track your progress and manage your project in the Projects tab.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Continue Learning',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.goToProjects();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Go to Projects'),
+          ),
+        ],
+      ),
     );
   }
 

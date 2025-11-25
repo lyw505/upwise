@@ -65,11 +65,24 @@ class ProjectProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final response = await _supabase
-          .from('user_projects_with_progress')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
+      List<dynamic> response;
+      
+      // Try to use view first, fallback to table if view doesn't exist
+      try {
+        response = await _supabase
+            .from('user_projects_with_progress')
+            .select()
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
+      } catch (viewError) {
+        print('View not available, using table directly: $viewError');
+        // Fallback to direct table query
+        response = await _supabase
+            .from('user_projects')
+            .select()
+            .eq('user_id', userId)
+            .order('created_at', ascending: false);
+      }
 
       _userProjects = (response as List)
           .map((json) => UserProject.fromJson(json))
@@ -96,8 +109,10 @@ class ProjectProvider with ChangeNotifier {
       _clearError();
 
       print('🚀 Starting project for userId: $userId, templateId: $templateId');
+      print('🔐 Current auth user: ${_supabase.auth.currentUser?.id}');
 
       // Get template details
+      print('📋 Fetching template with ID: $templateId');
       final templateResponse = await _supabase
           .from('project_templates')
           .select()
@@ -158,11 +173,147 @@ class ProjectProvider with ChangeNotifier {
       return true;
     } catch (e) {
       print('❌ Error starting project: $e');
+      String errorMessage = 'Failed to start project';
+      
+      if (e.toString().contains('relation "user_projects" does not exist') || 
+          e.toString().contains('relation "project_templates" does not exist')) {
+        errorMessage = 'Database tables not found. Please deploy the database schema first.';
+      } else if (e.toString().contains('400')) {
+        errorMessage = 'Database error (400). Check if tables exist and RLS policies are configured.';
+      } else if (e.toString().contains('authentication')) {
+        errorMessage = 'Authentication error. Please login again.';
+      } else {
+        errorMessage = 'Failed to start project: ${e.toString().length > 100 ? e.toString().substring(0, 100) + '...' : e.toString()}';
+      }
+      
+      _setError(errorMessage);
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Start a project from learning path recommendation
+  Future<bool> startProjectFromLearningPath({
+    required String userId,
+    required String learningPathId,
+    required dynamic projectRecommendation, // ProjectRecommendation from learning_path_model
+  }) async {
+    try {
+      _setLoading(true);
+      _clearError();
+
+      print('🚀 Starting project from learning path for userId: $userId');
+
+      // Create project steps based on recommendation
+      final projectSteps = _generateProjectStepsFromRecommendation(projectRecommendation);
+      
+      // Create user project
+      final projectData = {
+        'user_id': userId,
+        'learning_path_id': learningPathId,
+        'title': projectRecommendation.title,
+        'description': projectRecommendation.description,
+        'status': 'not_started',
+        'total_steps': projectSteps.length,
+        'estimated_hours': projectRecommendation.estimatedHours,
+      };
+
+      print('💾 Project data to insert: $projectData');
+
+      final projectResponse = await _supabase
+          .from('user_projects')
+          .insert(projectData)
+          .select()
+          .single();
+
+      print('✅ Project created: $projectResponse');
+
+      final userProject = UserProject.fromJson(projectResponse);
+
+      // Create step completions
+      final stepCompletions = projectSteps.asMap().entries.map((entry) {
+        final index = entry.key;
+        final step = entry.value;
+        return {
+          'user_project_id': userProject.id,
+          'step_number': index + 1,
+          'step_title': step['title'],
+          'is_completed': false,
+        };
+      }).toList();
+
+      await _supabase
+          .from('project_step_completions')
+          .insert(stepCompletions);
+
+      print('📝 Step completions created: ${stepCompletions.length} steps');
+
+      // Reload user projects
+      await loadUserProjects(userId);
+      
+      print('🎉 Project from learning path started successfully!');
+      return true;
+    } catch (e) {
+      print('❌ Error starting project from learning path: $e');
       _setError('Failed to start project: $e');
       return false;
     } finally {
       _setLoading(false);
     }
+  }
+
+  // Generate project steps from learning path recommendation
+  List<Map<String, dynamic>> _generateProjectStepsFromRecommendation(dynamic projectRecommendation) {
+    // Generate basic project steps based on difficulty level
+    final difficulty = projectRecommendation.difficulty?.toLowerCase() ?? 'beginner';
+    final estimatedHours = projectRecommendation.estimatedHours ?? 10;
+    
+    List<Map<String, dynamic>> steps = [];
+    
+    // Basic steps for any project
+    steps.add({
+      'title': 'Project Setup & Planning',
+      'description': 'Set up project structure and plan the implementation approach',
+      'estimatedHours': (estimatedHours * 0.1).ceil(),
+    });
+    
+    steps.add({
+      'title': 'Core Implementation',
+      'description': 'Implement the main functionality of the project',
+      'estimatedHours': (estimatedHours * 0.6).ceil(),
+    });
+    
+    steps.add({
+      'title': 'Testing & Debugging',
+      'description': 'Test the project thoroughly and fix any issues',
+      'estimatedHours': (estimatedHours * 0.2).ceil(),
+    });
+    
+    steps.add({
+      'title': 'Documentation & Deployment',
+      'description': 'Document the project and prepare for deployment',
+      'estimatedHours': (estimatedHours * 0.1).ceil(),
+    });
+    
+    // Add more steps for intermediate/advanced projects
+    if (difficulty == 'intermediate' || difficulty == 'advanced') {
+      steps.insert(2, {
+        'title': 'Advanced Features',
+        'description': 'Implement advanced features and optimizations',
+        'estimatedHours': (estimatedHours * 0.15).ceil(),
+      });
+    }
+    
+    if (difficulty == 'advanced') {
+      steps.insert(3, {
+        'title': 'Performance Optimization',
+        'description': 'Optimize performance and implement best practices',
+        'estimatedHours': (estimatedHours * 0.1).ceil(),
+      });
+    }
+    
+    return steps;
   }
 
   // Update project status

@@ -71,6 +71,15 @@ dependencies:
   # URL launcher for opening YouTube videos
   url_launcher: ^6.2.2
 
+  # HTML parsing for better web content extraction
+  html: ^0.15.4
+
+  # PDF parsing for PDF file support
+  syncfusion_flutter_pdf: ^26.2.14
+
+  # File picker for selecting PDF files
+  file_picker: ^8.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -10,12 +10,14 @@ import '../../screens/view_path_screen.dart';
 import '../../screens/daily_tracker_screen.dart';
 import '../../screens/settings_screen.dart';
 import '../../screens/config_status_screen.dart';
+import '../../screens/project_debug_screen.dart';
+import '../../screens/project_detail_screen.dart';
+import '../../screens/project_start_debug_screen.dart';
 import '../../screens/splash_screen.dart';
 import '../../screens/onboarding_screen.dart';
 import '../../screens/main_navigation_screen.dart';
-import '../../screens/ai_chat_screen.dart';
-import '../../screens/conversation_viewer_screen.dart';
-import '../../models/content_summary_model.dart';
+
+
 
 import '../../test_integration.dart';
 
@@ -43,7 +45,7 @@ class AppRouter {
         final isOnSplashPage = currentPath == '/splash';
         final isOnOnboardingPage = currentPath == '/onboarding';
         final isOnAuthPages = ['/welcome', '/login', '/register', '/forgot-password'].contains(currentPath);
-        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/analytics', '/settings', '/summarizer'].contains(currentPath);
+        final isOnProtectedPages = ['/dashboard', '/create-path', '/view-path', '/daily', '/projects', '/analytics', '/settings', '/summarizer'].contains(currentPath);
         
         // Allow splash and onboarding screens to load
         if (isOnSplashPage || isOnOnboardingPage) {
@@ -132,6 +134,14 @@ class AppRouter {
           },
         ),
         
+        GoRoute(
+          path: '/project/:projectId',
+          name: 'project-detail',
+          builder: (context, state) {
+            final projectId = state.pathParameters['projectId']!;
+            return ProjectDetailScreen(projectId: projectId);
+          },
+        ),
 
         
         GoRoute(
@@ -141,9 +151,15 @@ class AppRouter {
         ),
         
         GoRoute(
+          path: '/projects',
+          name: 'projects',
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 3),
+        ),
+        
+        GoRoute(
           path: '/analytics',
           name: 'analytics',
-          builder: (context, state) => const MainNavigationScreen(initialIndex: 4),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 5),
         ),
         
         GoRoute(
@@ -155,40 +171,10 @@ class AppRouter {
         GoRoute(
           path: '/summarizer',
           name: 'summarizer',
-          builder: (context, state) => const MainNavigationScreen(initialIndex: 3),
+          builder: (context, state) => const MainNavigationScreen(initialIndex: 4),
         ),
 
-        GoRoute(
-          path: '/ai-chat',
-          name: 'ai-chat',
-          builder: (context, state) {
-            final extra = state.extra as Map<String, dynamic>?;
-            return AiChatScreen(
-              initialContent: extra?['content'],
-              initialUrl: extra?['url'],
-              contentType: extra?['contentType'] ?? ContentType.text,
-              title: extra?['title'],
-              targetDifficulty: extra?['targetDifficulty'],
-              tags: extra?['tags'] ?? [],
-              includeKeyPoints: extra?['includeKeyPoints'] ?? true,
-              learningPathId: extra?['learningPathId'],
-            );
-          },
-        ),
-        
-        GoRoute(
-          path: '/conversation-viewer',
-          name: 'conversation-viewer',
-          builder: (context, state) {
-            final extra = state.extra as ContentSummaryModel?;
-            if (extra == null) {
-              return const Scaffold(
-                body: Center(child: Text('Conversation not found')),
-              );
-            }
-            return ConversationViewerScreen(conversation: extra);
-          },
-        ),
+
 
         // Integration Test Route (for development)
         GoRoute(
@@ -201,6 +187,18 @@ class AppRouter {
           path: '/config-status',
           name: 'config-status',
           builder: (context, state) => const ConfigStatusScreen(),
+        ),
+
+        GoRoute(
+          path: '/project-debug',
+          name: 'project-debug',
+          builder: (context, state) => const ProjectDebugScreen(),
+        ),
+
+        GoRoute(
+          path: '/project-start-debug',
+          name: 'project-start-debug',
+          builder: (context, state) => const ProjectStartDebugScreen(),
         ),
       ],
       
@@ -250,9 +248,11 @@ extension AppRouterExtension on BuildContext {
   void goToDashboard() => go('/dashboard');
   void goToCreatePath() => go('/create-path');
   void goToViewPath(String pathId) => go('/view-path/$pathId');
+  void goToProjectDetail(String projectId) => go('/project/$projectId');
 
   void goToDaily() => go('/daily');
   void goToLearningPaths() => go('/learning-paths');
+  void goToProjects() => go('/projects');
   void goToAnalytics() => go('/analytics');
   void goToSettings() => go('/settings');
   void goToSummarizer() => go('/summarizer');
@@ -281,6 +281,7 @@ class AppRoutes {
   static const String viewPath = '/view-path';
   static const String daily = '/daily';
   static const String learningPaths = '/learning-paths';
+  static const String projects = '/projects';
   static const String analytics = '/analytics';
   static const String settings = '/settings';
 }

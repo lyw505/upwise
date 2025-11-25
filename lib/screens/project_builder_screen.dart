@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/constants/app_dimensions.dart';
@@ -7,7 +8,9 @@ import '../core/router/app_router.dart';
 import '../core/utils/snackbar_utils.dart';
 import '../providers/auth_provider.dart';
 import '../providers/project_provider.dart';
+import '../providers/learning_path_provider.dart';
 import '../models/project_model.dart';
+import '../models/learning_path_model.dart' as learning_path;
 
 class ProjectBuilderScreen extends StatefulWidget {
   const ProjectBuilderScreen({super.key});
@@ -39,12 +42,15 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
 
   Future<void> _loadData() async {
     final projectProvider = context.read<ProjectProvider>();
+    final learningPathProvider = context.read<LearningPathProvider>();
     final authProvider = context.read<AuthProvider>();
     
-    await projectProvider.loadProjectTemplates();
-    
     if (authProvider.currentUser != null) {
+      // Load learning paths first to get active learning path projects
+      await learningPathProvider.loadLearningPaths(authProvider.currentUser!.id);
+      
       await Future.wait([
+        projectProvider.loadProjectTemplates(),
         projectProvider.loadUserProjects(authProvider.currentUser!.id),
         projectProvider.loadProjectAnalytics(authProvider.currentUser!.id),
         projectProvider.loadProjectRecommendations(authProvider.currentUser!.id),
@@ -65,7 +71,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildRecommendedTab(),
+                  _buildLearningPathProjectsTab(),
                   _buildMyProjectsTab(),
                   _buildCompletedTab(),
                 ],
@@ -112,37 +118,57 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
                   ],
                 ),
               ),
-              Consumer<ProjectProvider>(
-                builder: (context, projectProvider, child) {
-                  final analytics = projectProvider.analytics;
-                  if (analytics == null) return const SizedBox.shrink();
-                  
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          color: AppColors.primary,
-                          size: 16,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Debug button
+                  IconButton(
+                    onPressed: () => context.go('/project-debug'),
+                    icon: const Icon(Icons.bug_report_outlined),
+                    tooltip: 'Debug Project Builder',
+                    iconSize: 20,
+                  ),
+                  // Start Debug button
+                  IconButton(
+                    onPressed: () => context.go('/project-start-debug'),
+                    icon: const Icon(Icons.play_circle_outlined),
+                    tooltip: 'Debug Project Start',
+                    iconSize: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Consumer<ProjectProvider>(
+                    builder: (context, projectProvider, child) {
+                      final analytics = projectProvider.analytics;
+                      if (analytics == null) return const SizedBox.shrink();
+                      
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${analytics.completedProjects}',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: AppColors.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${analytics.completedProjects}',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                ],
               ),
             ],
           ),
@@ -214,7 +240,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
         unselectedLabelColor: AppColors.textSecondary,
         indicatorColor: AppColors.primary,
         tabs: const [
-          Tab(text: 'Recommended'),
+          Tab(text: 'From Learning Path'),
           Tab(text: 'My Projects'),
           Tab(text: 'Completed'),
         ],
@@ -222,25 +248,29 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
     );
   }
 
-  Widget _buildRecommendedTab() {
-    return Consumer<ProjectProvider>(
-      builder: (context, projectProvider, child) {
-        if (projectProvider.isLoading) {
+  Widget _buildLearningPathProjectsTab() {
+    return Consumer2<LearningPathProvider, ProjectProvider>(
+      builder: (context, learningPathProvider, projectProvider, child) {
+        if (learningPathProvider.isLoading || projectProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
+
+        // Get active learning paths
+        final activeLearningPaths = learningPathProvider.learningPaths
+            .where((path) => path.status == learning_path.LearningPathStatus.inProgress)
+            .toList();
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildProjectBuilderFeatures(),
+              _buildLearningPathProjectsHeader(),
               const SizedBox(height: 24),
-              _buildFilters(),
-              const SizedBox(height: 16),
-              _buildSearchBar(),
-              const SizedBox(height: 24),
-              _buildRecommendedProjects(),
+              if (activeLearningPaths.isEmpty)
+                _buildNoActiveLearningPathsMessage()
+              else
+                _buildActiveLearningPathProjects(activeLearningPaths),
             ],
           ),
         );
@@ -248,7 +278,7 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
     );
   }
 
-  Widget _buildProjectBuilderFeatures() {
+  Widget _buildLearningPathProjectsHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -262,13 +292,13 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
           Row(
             children: [
               Icon(
-                Icons.diamond,
+                Icons.school,
                 color: AppColors.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
-                'Project Builder Features',
+                'Learning Path Projects',
                 style: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -278,13 +308,320 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
           ),
           const SizedBox(height: 12),
           _buildFeatureItem(
-            'Get personalized project recommendations based on your learning path.',
+            'Projects are automatically generated based on your active learning paths.',
           ),
           _buildFeatureItem(
-            'Step-by-step project roadmap with detailed instructions and resources.',
+            'Complete projects to reinforce your learning and build your portfolio.',
           ),
           _buildFeatureItem(
-            'Build portfolio-ready projects to showcase your skills.',
+            'Track your progress and showcase your completed work.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoActiveLearningPathsMessage() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Icon(
+            Icons.school_outlined,
+            size: 80,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No Active Learning Paths',
+            style: AppTextStyles.headlineSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Start a learning path to see project recommendations here.',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => _tabController.animateTo(1), // Go to Learning Paths
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'Browse Learning Paths',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveLearningPathProjects(List<learning_path.LearningPathModel> activePaths) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: activePaths.map((path) => _buildLearningPathSection(path)).toList(),
+    );
+  }
+
+  Widget _buildLearningPathSection(learning_path.LearningPathModel learningPath) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Learning Path Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary.withValues(alpha: 0.1), AppColors.primary.withValues(alpha: 0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.school,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        learningPath.topic,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${learningPath.progressPercentage.toStringAsFixed(0)}% Complete • ${learningPath.durationDays} days',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'ACTIVE',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Projects from this learning path
+          if (learningPath.projectRecommendations.isEmpty)
+            _buildNoProjectsForPath()
+          else
+            ...learningPath.projectRecommendations.map((project) => 
+              _buildLearningPathProjectCard(project, learningPath)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoProjectsForPath() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: AppColors.textTertiary,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No projects available for this learning path yet.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLearningPathProjectCard(learning_path.ProjectRecommendation project, learning_path.LearningPathModel learningPath) {
+    Color difficultyColor;
+    switch (project.difficulty?.toLowerCase()) {
+      case 'beginner':
+        difficultyColor = AppColors.success;
+        break;
+      case 'intermediate':
+        difficultyColor = AppColors.warning;
+        break;
+      case 'advanced':
+        difficultyColor = AppColors.error;
+        break;
+      default:
+        difficultyColor = AppColors.textTertiary;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.build,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            project.title,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              if (project.difficulty != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: difficultyColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(
+                                    project.difficulty!.toUpperCase(),
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: difficultyColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              if (project.estimatedHours != null) ...[
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: AppColors.textTertiary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${project.estimatedHours}h',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  project.description,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+              ),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _startProjectFromLearningPath(project, learningPath),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Start Project',
+                  style: AppTextStyles.buttonMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -957,6 +1294,30 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
     }
   }
 
+  Future<void> _startProjectFromLearningPath(learning_path.ProjectRecommendation project, learning_path.LearningPathModel learningPath) async {
+    final authProvider = context.read<AuthProvider>();
+    final projectProvider = context.read<ProjectProvider>();
+    
+    if (authProvider.currentUser == null) {
+      SnackbarUtils.showError(context, 'Please log in to start a project');
+      return;
+    }
+
+    // Create a project from learning path recommendation
+    final success = await projectProvider.startProjectFromLearningPath(
+      userId: authProvider.currentUser!.id,
+      learningPathId: learningPath.id,
+      projectRecommendation: project,
+    );
+
+    if (success && mounted) {
+      SnackbarUtils.showSuccess(context, 'Project "${project.title}" started successfully!');
+      _tabController.animateTo(1); // Switch to My Projects tab
+    } else if (mounted) {
+      SnackbarUtils.showError(context, projectProvider.error ?? 'Failed to start project');
+    }
+  }
+
   Future<void> _startExistingProject(UserProject project) async {
     final projectProvider = context.read<ProjectProvider>();
     
@@ -972,12 +1333,12 @@ class _ProjectBuilderScreenState extends State<ProjectBuilderScreen> with Ticker
 
   void _continueProject(UserProject project) {
     // Navigate to project detail screen
-    SnackbarUtils.showInfo(context, 'Opening project: ${project.title}');
+    context.goToProjectDetail(project.id);
   }
 
   void _viewProjectDetails(UserProject project) {
     // Navigate to project detail screen
-    SnackbarUtils.showInfo(context, 'Viewing project: ${project.title}');
+    context.goToProjectDetail(project.id);
   }
 }
 

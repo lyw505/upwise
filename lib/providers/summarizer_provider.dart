@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/content_summary_model.dart';
 import '../services/summarizer_service.dart';
+import '../services/enhanced_summarizer_service.dart';
 
 class SummarizerProvider with ChangeNotifier {
   final SummarizerService _summarizerService = SummarizerService();
+  final EnhancedSummarizerService _enhancedSummarizerService = EnhancedSummarizerService();
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // State variables
@@ -134,9 +136,18 @@ class SummarizerProvider with ChangeNotifier {
       }
       developer.log('User authenticated: $userId', name: 'SummarizerProvider');
 
-      // Generate summary using AI service
-      developer.log('Calling AI service for summary generation...', name: 'SummarizerProvider');
-      final summaryData = await _summarizerService.generateSummary(request: request);
+      // Generate summary using Enhanced AI service
+      developer.log('🚀 Calling Enhanced AI service for summary generation...', name: 'SummarizerProvider');
+      
+      // Try enhanced service first
+      Map<String, dynamic>? summaryData;
+      try {
+        summaryData = await _enhancedSummarizerService.generateEnhancedSummary(request: request);
+        developer.log('✅ Enhanced AI service completed successfully', name: 'SummarizerProvider');
+      } catch (e) {
+        developer.log('⚠️ Enhanced AI service failed, falling back to original: $e', name: 'SummarizerProvider');
+        summaryData = await _summarizerService.generateSummary(request: request);
+      }
       
       if (summaryData == null) {
         throw Exception('AI service returned null. Check API configuration.');
@@ -158,7 +169,7 @@ class SummarizerProvider with ChangeNotifier {
         contentSource: request.contentSource,
         summary: summaryData['summary'] ?? '',
         keyPoints: List<String>.from(summaryData['key_points'] ?? []),
-        tags: List<String>.from(summaryData['tags'] ?? []),
+        tags: request.tags ?? [], // Use user-provided tags only
         wordCount: wordCount,
         estimatedReadTime: readingTime,
         difficultyLevel: DifficultyLevel.fromString(summaryData['difficulty_level'] ?? 'intermediate'),

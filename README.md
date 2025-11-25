@@ -119,11 +119,16 @@ lib/
 
 ## Documentation
 
-- [**Supabase Setup Guide**](SUPABASE_SETUP.md) - Complete backend setup instructions
-- [**API Setup Guide**](README_API_SETUP.md) - Gemini AI configuration
+📚 **[Complete Documentation](docs/README.md)** - Comprehensive documentation index
+
+### Quick Links:
+- [**Setup Guide**](docs/SETUP_GUIDE.md) - Complete setup instructions
+- [**Supabase Setup**](docs/SUPABASE_SETUP.md) - Backend setup guide
+- [**API Setup**](docs/README_API_SETUP.md) - Gemini AI configuration
+- [**Enhanced AI Implementation**](docs/ENHANCED_AI_IMPLEMENTATION.md) - Advanced AI features
+- [**Enhanced Summarizer**](docs/ENHANCED_SUMMARIZER_IMPLEMENTATION.md) - Content summarization
 - [User Flow](docs/userflow.md) - Complete user flow documentation
-- [Product Requirements](docs/prd.md) - Detailed product requirements document
-- [Database Schema](supabase_schema.sql) - Complete SQL schema for Supabase
+- [Product Requirements](docs/prd.md) - Detailed product requirements
 
 ## Testing
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_text_styles.dart';
 import '../core/config/env_config.dart';
@@ -66,6 +67,10 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   String? _selectedLearningPathId;
   bool _showCreateForm = false;
   String _searchQuery = '';
+  
+  // File handling
+  String? _selectedFilePath;
+  String? _selectedFileName;
 
   @override
   void initState() {
@@ -613,22 +618,25 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+            ] else if (_selectedContentType == ContentType.file) ...[
+              _buildFilePickerSection(),
+              const SizedBox(height: 16),
+              Text(
+                'Additional Notes (Optional)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
             
             _buildModernTextArea(
               controller: _contentController,
-              label: _selectedContentType == ContentType.url 
-                  ? 'Add context or specific instructions...'
-                  : 'Paste or type your content here...',
+              label: _getContentInputLabel(),
               hint: _getContentHint(),
-              validator: _selectedContentType == ContentType.url 
-                  ? null 
-                  : (value) {
-                      if (value?.isEmpty ?? true) {
-                        return 'Please enter content to summarize';
-                      }
-                      return null;
-                    },
+              validator: _getContentValidator(),
             ),
           ],
         ),
@@ -1369,14 +1377,8 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          // Check if this is a chat conversation
-          if (summary.tags.contains('conversation') && summary.tags.contains('ai-chat')) {
-            // Navigate to conversation viewer
-            context.pushNamed('conversation-viewer', extra: summary);
-          } else {
-            // Show summary details in a dialog
-            _showSummaryDetailsDialog(summary);
-          }
+          // Show summary details in a dialog
+          _showSummaryDetailsDialog(summary);
         },
         borderRadius: BorderRadius.circular(8),
         child: Padding(
@@ -1404,16 +1406,30 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                   ),
                   Consumer<SummarizerProvider>(
                     builder: (context, provider, child) {
-                      return IconButton(
-                        onPressed: () => provider.toggleFavorite(summary.id),
-                        icon: Icon(
-                          summary.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: summary.isFavorite
-                              ? Colors.red
-                              : Colors.grey[400],
-                        ),
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => provider.toggleFavorite(summary.id),
+                            icon: Icon(
+                              summary.isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: summary.isFavorite
+                                  ? Colors.red
+                                  : Colors.grey[400],
+                            ),
+                            tooltip: summary.isFavorite ? 'Remove from favorites' : 'Add to favorites',
+                          ),
+                          IconButton(
+                            onPressed: () => _showDeleteConfirmation(summary),
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.grey[400],
+                            ),
+                            tooltip: 'Delete summary',
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -1448,17 +1464,24 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                 children: [
                   Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 4),
-                  Text(
-                    '${summary.estimatedReadTime ?? 0} min read',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                  Flexible(
+                    child: Text(
+                      '${summary.estimatedReadTime ?? 0} min read',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    _formatDate(summary.createdAt),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _formatDate(summary.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
                     ),
                   ),
                 ],
@@ -1510,6 +1533,12 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       content = _contentController.text.trim().isEmpty 
           ? contentSource 
           : _contentController.text.trim();
+    } else if (_selectedContentType == ContentType.file) {
+      contentSource = _selectedFilePath;
+      // Use additional notes if provided, otherwise use file path
+      content = _contentController.text.trim().isEmpty 
+          ? (_selectedFileName ?? 'PDF Document')
+          : _contentController.text.trim();
     } else {
       content = _contentController.text.trim();
       contentSource = null;
@@ -1548,11 +1577,78 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       );
 
       if (summary != null && mounted) {
-        // Show summary result dialog
-        _showSummaryResultDialog(summary);
-        
         // Clear form after successful generation
         _clearForm();
+        
+        // Go back to library view and show the new summary
+        setState(() {
+          _showCreateForm = false;
+        });
+        
+        // Small delay to ensure UI updates smoothly
+        await Future.delayed(const Duration(milliseconds: 300));
+        
+        // Show success message with better UX
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Summary Created!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        '"${summary.title}"',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green[600],
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            action: SnackBarAction(
+              label: 'View Details',
+              textColor: Colors.white,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              onPressed: () {
+                _showSummaryDetailsDialog(summary);
+              },
+            ),
+          ),
+        );
       } else if (mounted) {
         // Show error if generation failed
         final summarizerProvider = context.read<SummarizerProvider>();
@@ -1577,6 +1673,8 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       _targetDifficulty = null;
       _selectedLearningPathId = null;
       _includeKeyPoints = true;
+      _selectedFilePath = null;
+      _selectedFileName = null;
     });
   }
 
@@ -1673,9 +1771,12 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
                 children: [
                   Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 8),
-                  Text(
-                    '${summary.contentTypeDisplay} • ${summary.estimatedReadTime ?? 0} min read',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  Flexible(
+                    child: Text(
+                      '${summary.contentTypeDisplay} • ${summary.estimatedReadTime ?? 0} min read',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -1749,6 +1850,17 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
   }
 
 
+  String _getContentInputLabel() {
+    switch (_selectedContentType) {
+      case ContentType.text:
+        return 'Paste or type your content here...';
+      case ContentType.url:
+        return 'Add context or specific instructions...';
+      case ContentType.file:
+        return 'Additional notes about the file (optional)...';
+    }
+  }
+
   String _getContentHint() {
     switch (_selectedContentType) {
       case ContentType.text:
@@ -1756,8 +1868,186 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       case ContentType.url:
         return 'Additional context or specific points to focus on...';
       case ContentType.file:
-        return 'Paste file content here...';
+        return 'Describe what you want to focus on in the document...';
     }
+  }
+
+  String? Function(String?)? _getContentValidator() {
+    switch (_selectedContentType) {
+      case ContentType.text:
+        return (value) {
+          if (value?.isEmpty ?? true) {
+            return 'Please enter content to summarize';
+          }
+          return null;
+        };
+      case ContentType.url:
+        return null; // URL validation is handled separately
+      case ContentType.file:
+        return (value) {
+          if (_selectedFilePath == null) {
+            return 'Please select a PDF file';
+          }
+          return null;
+        };
+    }
+  }
+
+  Widget _buildFilePickerSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        children: [
+          if (_selectedFilePath == null) ...[
+            // File picker button
+            InkWell(
+              onTap: _pickFile,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.upload_file,
+                      size: 48,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Select PDF File',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tap to browse and select a PDF document',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            // Selected file display
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.picture_as_pdf,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedFileName ?? 'Selected File',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'PDF Document',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _clearSelectedFile,
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Remove file',
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickFile,
+                      icon: const Icon(Icons.swap_horiz),
+                      label: const Text('Change File'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        setState(() {
+          _selectedFilePath = file.path;
+          _selectedFileName = file.name;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Selected: ${file.name}'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error selecting file: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _clearSelectedFile() {
+    setState(() {
+      _selectedFilePath = null;
+      _selectedFileName = null;
+    });
   }
 
 
@@ -1784,6 +2074,235 @@ class _SummarizerScreenState extends State<SummarizerScreen> {
       return '${difference.inDays} days ago';
     } else {
       return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  /// Show delete confirmation dialog
+  void _showDeleteConfirmation(ContentSummaryModel summary) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.delete_outline,
+                color: Colors.red[600],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Delete Summary',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to delete this summary?',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _getContentTypeIcon(summary.contentType),
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      summary.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This action cannot be undone.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.red[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _deleteSummary(summary);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[600],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Delete summary with feedback
+  Future<void> _deleteSummary(ContentSummaryModel summary) async {
+    final summarizerProvider = context.read<SummarizerProvider>();
+    
+    // Show loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Deleting summary...'),
+          ],
+        ),
+        backgroundColor: Colors.orange[600],
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+
+    final success = await summarizerProvider.deleteSummary(summary.id);
+    
+    if (success && mounted) {
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Summary Deleted',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      '"${summary.title}" has been removed',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green[600],
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } else if (mounted) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Failed to delete summary. Please try again.'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.red[600],
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
     }
   }
 }
@@ -2466,26 +2985,32 @@ class _SummaryResultDialogState extends State<SummaryResultDialog>
                 size: 16,
                 color: Colors.grey[600],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Reading Time: ${widget.summary.estimatedReadTime ?? 0} min',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  'Reading Time: ${widget.summary.estimatedReadTime ?? 0} min',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Icon(
                 Icons.text_fields,
                 size: 16,
                 color: Colors.grey[600],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Words: ${widget.summary.wordCount ?? 0}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  'Words: ${widget.summary.wordCount ?? 0}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -2499,26 +3024,32 @@ class _SummaryResultDialogState extends State<SummaryResultDialog>
                   size: 16,
                   color: Colors.grey[600],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Level: ${widget.summary.difficultyLevelDisplay}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'Level: ${widget.summary.difficultyLevelDisplay}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Icon(
                   Icons.category,
                   size: 16,
                   color: Colors.grey[600],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Type: ${widget.summary.contentTypeDisplay}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    'Type: ${widget.summary.contentTypeDisplay}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -2541,30 +3072,6 @@ class _SummaryResultDialogState extends State<SummaryResultDialog>
       ),
       child: Row(
         children: [
-          // Chat Button (Optional)
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                // Navigate to chat with this summary
-                context.pushNamed('ai-chat', extra: {
-                  'content': widget.summary.originalContent,
-                  'url': widget.summary.contentSource,
-                  'contentType': widget.summary.contentType,
-                  'title': widget.summary.title,
-                  'summary': widget.summary,
-                });
-              },
-              icon: const Icon(Icons.chat_bubble_outline),
-              label: const Text('Chat About This'),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-          
-          const SizedBox(width: 12),
-          
           // View Details Button
           Expanded(
             child: ElevatedButton.icon(

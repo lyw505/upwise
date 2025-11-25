@@ -1,270 +1,193 @@
-# Supabase Setup Guide for Upwise
+# 🚀 Upwise Supabase Backend Setup Guide
 
-This guide will help you set up Supabase backend for the Upwise application.
+## Step 1: Create Supabase Project
 
-## 1. Create Supabase Project
+1. **Go to Supabase Dashboard**
+   - Visit: https://app.supabase.com
+   - Sign in with your account
 
-1. Go to [supabase.com](https://supabase.com)
-2. Sign up or log in to your account
-3. Click "New Project"
-4. Fill in the project details:
-   - Name: `upwise`
-   - Database Password: Choose a strong password
-   - Region: Choose the closest region to your users
-5. Click "Create new project"
+2. **Create New Project**
+   - Click "New Project"
+   - Name: `upwise-first` (or your preferred name)
+   - Choose a region close to your users
+   - Generate a strong database password
+   - Click "Create new project"
 
-## 2. Database Schema
+3. **Wait for Setup**
+   - Project creation takes ~2 minutes
+   - Wait until status shows "Active"
 
-Once your project is created, go to the SQL Editor and run the following SQL commands:
+## Step 2: Get Project Credentials
 
-### Create Profiles Table
+1. **Navigate to Project Settings**
+   - Click on your project
+   - Go to `Settings` → `API`
 
-```sql
--- Create a table for user profiles
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
-  email TEXT NOT NULL,
-  name TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  current_streak INTEGER DEFAULT 0,
-  longest_streak INTEGER DEFAULT 0,
-  last_active_date TIMESTAMP WITH TIME ZONE
-);
-
--- Set up Row Level Security (RLS)
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Public profiles are viewable by everyone." 
-ON profiles FOR SELECT 
-USING (true);
-
-CREATE POLICY "Users can insert their own profile." 
-ON profiles FOR INSERT 
-WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile." 
-ON profiles FOR UPDATE 
-USING (auth.uid() = id);
-```
-
-### Create Learning Paths Table
-
-```sql
--- Create learning paths table
-CREATE TABLE learning_paths (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL,
-  topic TEXT NOT NULL,
-  description TEXT,
-  duration_days INTEGER NOT NULL,
-  daily_time_minutes INTEGER NOT NULL,
-  experience_level TEXT NOT NULL CHECK (experience_level IN ('beginner', 'intermediate', 'advanced')),
-  learning_style TEXT NOT NULL CHECK (learning_style IN ('visual', 'auditory', 'kinesthetic', 'readingWriting')),
-  output_goal TEXT NOT NULL,
-  include_projects BOOLEAN DEFAULT FALSE,
-  include_exercises BOOLEAN DEFAULT FALSE,
-  notes TEXT,
-  status TEXT DEFAULT 'notStarted' CHECK (status IN ('notStarted', 'inProgress', 'completed', 'paused')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  started_at TIMESTAMP WITH TIME ZONE,
-  completed_at TIMESTAMP WITH TIME ZONE
-);
-
--- Set up RLS
-ALTER TABLE learning_paths ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can view own learning paths." 
-ON learning_paths FOR SELECT 
-USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own learning paths." 
-ON learning_paths FOR INSERT 
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own learning paths." 
-ON learning_paths FOR UPDATE 
-USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own learning paths." 
-ON learning_paths FOR DELETE 
-USING (auth.uid() = user_id);
-```
-
-### Create Daily Tasks Table
-
-```sql
--- Create daily tasks table
-CREATE TABLE daily_tasks (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  learning_path_id UUID REFERENCES learning_paths(id) ON DELETE CASCADE NOT NULL,
-  day_number INTEGER NOT NULL,
-  main_topic TEXT NOT NULL,
-  sub_topic TEXT NOT NULL,
-  material_url TEXT,
-  material_title TEXT,
-  exercise TEXT,
-  status TEXT DEFAULT 'notStarted' CHECK (status IN ('notStarted', 'inProgress', 'completed', 'skipped')),
-  completed_at TIMESTAMP WITH TIME ZONE,
-  time_spent_minutes INTEGER,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Set up RLS
-ALTER TABLE daily_tasks ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can view tasks from own learning paths." 
-ON daily_tasks FOR SELECT 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can insert tasks for own learning paths." 
-ON daily_tasks FOR INSERT 
-WITH CHECK (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can update tasks from own learning paths." 
-ON daily_tasks FOR UPDATE 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can delete tasks from own learning paths." 
-ON daily_tasks FOR DELETE 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-```
-
-### Create Project Recommendations Table
-
-```sql
--- Create project recommendations table
-CREATE TABLE project_recommendations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  learning_path_id UUID REFERENCES learning_paths(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  url TEXT,
-  difficulty TEXT CHECK (difficulty IN ('beginner', 'intermediate', 'advanced')),
-  estimated_hours INTEGER,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Set up RLS
-ALTER TABLE project_recommendations ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can view project recommendations from own learning paths." 
-ON project_recommendations FOR SELECT 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can insert project recommendations for own learning paths." 
-ON project_recommendations FOR INSERT 
-WITH CHECK (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can update project recommendations from own learning paths." 
-ON project_recommendations FOR UPDATE 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-
-CREATE POLICY "Users can delete project recommendations from own learning paths." 
-ON project_recommendations FOR DELETE 
-USING (
-  learning_path_id IN (
-    SELECT id FROM learning_paths WHERE user_id = auth.uid()
-  )
-);
-```
-
-## 3. Get API Keys
-
-1. Go to Settings > API in your Supabase dashboard
-2. Copy the following values:
-   - Project URL
-   - Anon public key
-
-## 4. Configure Flutter App
-
-1. Open `lib/main.dart`
-2. Replace the placeholder values:
-   ```dart
-   await Supabase.initialize(
-     url: 'YOUR_SUPABASE_URL', // Replace with your Project URL
-     anonKey: 'YOUR_SUPABASE_ANON_KEY', // Replace with your Anon public key
-   );
+2. **Copy Project URL and Keys**
+   ```
+   Project URL: https://your-project-ref.supabase.co
+   anon public key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
 
-## 5. Set up Google Gemini API (Optional)
+## Step 3: Configure Environment Variables
 
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Open `lib/services/gemini_service.dart`
-4. Replace the placeholder:
-   ```dart
-   static const String _apiKey = 'YOUR_GEMINI_API_KEY'; // Replace with your API key
+1. **Update `.env` file**
+   Replace the placeholders in your `.env` file:
+   ```env
+   # Supabase Configuration
+   SUPABASE_URL=https://your-project-ref.supabase.co
+   SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   
+   # Google Gemini AI Configuration
+   GEMINI_API_KEY=AIzaSyAB7DAlcP6M9LH7lJWquEPIXHOnQ_ibxME
    ```
 
-## 6. Authentication Setup
+## Step 4: Set Up Database Schema
 
-The authentication is already configured to work with Supabase Auth. Users can:
-- Sign up with email and password
-- Sign in with email and password
-- Reset password (feature to be implemented)
+1. **Open SQL Editor**
+   - In your Supabase dashboard
+   - Go to `SQL Editor`
 
-## 7. Testing the Setup
+2. **Run Schema Script**
+   - Copy the entire content of `supabase_schema.sql`
+   - Paste it into the SQL Editor
+   - Click "Run" to execute
 
-1. Run the Flutter app
-2. Try creating a new account
-3. Check your Supabase dashboard to see if the user was created in the Authentication section
-4. Check if a profile was created in the profiles table
+3. **Verify Tables Created**
+   - Go to `Table Editor`
+   - You should see these tables:
+     - `profiles`
+     - `learning_paths`
+     - `daily_learning_tasks`
+     - `project_recommendations`
+
+## Step 5: Configure Authentication
+
+1. **Enable Email Authentication**
+   - Go to `Authentication` → `Settings`
+   - Ensure "Enable email confirmations" is configured as needed
+   - For development, you can disable email confirmations
+
+2. **Set Up Auth Policies**
+   - The schema includes Row Level Security (RLS)
+   - Users can only access their own data
+   - Policies are automatically created by the schema
+
+## Step 6: Test the Connection
+
+1. **Run Flutter App**
+   ```bash
+   flutter pub get
+   flutter run
+   ```
+
+2. **Test Registration**
+   - Open the app
+   - Try creating a new account
+   - Check if profile is created in Supabase
+
+3. **Test Learning Path Creation**
+   - Create a new learning path
+   - Verify data appears in `learning_paths` table
+
+## Step 7: Verify Database Functions
+
+The schema includes several automated features:
+
+### ✅ Automatic Profile Creation
+- When user signs up, profile is auto-created
+- Check `profiles` table after registration
+
+### ✅ Streak Tracking
+- Completing tasks updates user streaks
+- Test by marking tasks as complete
+
+### ✅ Timestamp Management
+- `updated_at` fields are automatically maintained
+- No manual intervention needed
 
 ## Troubleshooting
 
-### Common Issues:
+### Common Issues
 
-1. **RLS Policies**: Make sure all RLS policies are correctly set up
-2. **API Keys**: Ensure you're using the correct Project URL and Anon key
-3. **Network**: Check if your network allows connections to Supabase
+#### ❌ "Invalid API credentials"
+**Solution**: Double-check your SUPABASE_URL and SUPABASE_ANON_KEY in `.env`
 
-### Useful Supabase Commands:
+#### ❌ "Row Level Security policy violation"
+**Solution**: Ensure you're signed in when testing, RLS blocks unauthorized access
 
-```sql
--- Check if user profiles are being created
-SELECT * FROM profiles;
+#### ❌ "Table does not exist"
+**Solution**: Re-run the schema script in SQL Editor
 
--- Check learning paths
-SELECT * FROM learning_paths;
+#### ❌ "Authentication not working"
+**Solution**: Check Authentication settings in Supabase dashboard
 
--- Check daily tasks
-SELECT * FROM daily_tasks;
+### Debug Steps
 
--- Check project recommendations
-SELECT * FROM project_recommendations;
-```
+1. **Check Environment Loading**
+   ```dart
+   // Add to your app for debugging
+   print('Supabase URL: ${EnvConfig.supabaseUrl}');
+   print('Supabase Key: ${EnvConfig.supabaseAnonKey.substring(0, 20)}...');
+   ```
+
+2. **Verify Database Connection**
+   ```dart
+   // Test in your app
+   final response = await Supabase.instance.client
+       .from('profiles')
+       .select()
+       .limit(1);
+   print('Database connected: ${response.length}');
+   ```
+
+3. **Check RLS Policies**
+   - Go to `Authentication` → `Users`
+   - Verify users are being created
+   - Check `profiles` table for corresponding entries
+
+## Production Considerations
+
+### Security
+- ✅ RLS is enabled on all tables
+- ✅ Users can only access their own data
+- ✅ API keys are environment-specific
+
+### Performance
+- ✅ Indexes are created for common queries
+- ✅ Foreign key constraints maintain data integrity
+- ✅ Automatic cleanup on user deletion
+
+### Backup
+- Supabase automatically backs up your database
+- Consider exporting schema for version control
+
+## Next Steps
+
+After successful setup:
+
+1. **Test All Features**
+   - User registration/login
+   - Learning path creation
+   - Daily task management
+   - Streak tracking
+
+2. **Deploy to Production**
+   - Use environment-specific Supabase projects
+   - Configure production authentication settings
+   - Set up monitoring and alerts
+
+3. **Monitor Usage**
+   - Check Supabase dashboard for API usage
+   - Monitor database performance
+   - Set up error tracking
+
+## Support
+
+- **Supabase Docs**: https://supabase.com/docs
+- **Flutter Integration**: https://supabase.com/docs/reference/dart
+- **Project Repository**: Check README.md for additional setup instructions
+
+---
+
+🎉 **Your Upwise backend is now ready!** The app should work exactly as it did before with full Supabase integration.
